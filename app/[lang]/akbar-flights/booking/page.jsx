@@ -765,7 +765,7 @@ export default function BookingPage() {
   const [touched, setTouched] = useState({});
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
-  const [selectedCardType, setSelectedCardType] = useState('saved');
+  const [selectedCardType, setSelectedCardType] = useState('new');
   const [voucherCode, setVoucherCode] = useState('');
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
@@ -843,6 +843,7 @@ export default function BookingPage() {
           }
           if (window.Moyasar) {
             try {
+              targetEl.innerHTML = '';
               window.Moyasar.init({
                 element: targetEl,
                 amount: Math.round(calculateTotal() * 100) || 50459,
