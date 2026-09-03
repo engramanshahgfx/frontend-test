@@ -364,7 +364,7 @@ export default function CustomPaymentPage() {
 
             {/* Security Info */}
             <div className={styles.securityInfo}>
-              <p>🔒 Your payment is secure and encrypted</p>
+              <p> Your payment is secure and encrypted</p>
               <p>Powered by Moyasar Payment Gateway</p>
             </div>
           </div>
