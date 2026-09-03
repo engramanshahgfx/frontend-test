@@ -893,11 +893,18 @@ export default function BookingPage() {
     }
   }, [currentStep, orderReference, selectedCardType]);
 
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+
   useEffect(() => {
-    if (!holdExpiresAt) return;
+    // 15-Minute Flight Hold Expiry Timer (Almosafer Standard)
+    const expiryTime = holdExpiresAt ? new Date(holdExpiresAt) : new Date(Date.now() + 15 * 60 * 1000);
     const timer = setInterval(() => {
-      const diff = Math.max(0, Math.floor((new Date(holdExpiresAt) - new Date()) / 1000));
-      if (diff <= 0) { setError('Hold expired. Please start over.'); clearInterval(timer); return; }
+      const diff = Math.max(0, Math.floor((expiryTime - new Date()) / 1000));
+      if (diff <= 0) {
+        setShowSessionExpiredModal(true);
+        clearInterval(timer);
+        return;
+      }
       setHoldRemainingTime(`${Math.floor(diff / 60)}:${String(diff % 60).padStart(2, '0')}`);
     }, 1000);
     return () => clearInterval(timer);
@@ -2459,6 +2466,57 @@ export default function BookingPage() {
           )}
         </div>
       </div>
+
+      {/* Session Expired Modal (Almosafer Standard) */}
+      {showSessionExpiredModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          backdropFilter: 'blur(6px)',
+          padding: 20
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: 16,
+            padding: '36px 32px',
+            maxWidth: 380,
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>⏱️</div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+              Still around?
+            </h3>
+            <p style={{ fontSize: '0.92rem', color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
+              Your session has expired
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push(`/${lang}/akbar-flights`)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#0284c7',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
+            >
+              Go back to search
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
