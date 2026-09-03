@@ -816,6 +816,61 @@ export default function BookingPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (currentStep === STEPS.PAYMENT || currentStep === STEPS.CHECKOUT) {
+      if (typeof window !== 'undefined') {
+        const loadMoyasar = () => {
+          if (window.Moyasar) {
+            try {
+              window.Moyasar.init({
+                element: '.mysr-form',
+                amount: Math.round(calculateTotal() * 100),
+                currency: 'SAR',
+                description: `NDC Flight Booking (${orderReference || 'REF'})`,
+                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
+                callback_url: `${window.location.origin}/${lang}/akbar-flights/booking?payment_status=paid&order_ref=${orderReference || ''}`,
+                methods: ['creditcard', 'applepay', 'stcpay'],
+                on_completed: async function (payment) {
+                  console.log('Moyasar payment callback completed:', payment);
+                  if (payment && payment.id) {
+                    try {
+                      await apiCall('/v2/akbar/bookings/pay', 'POST', {
+                        order_reference: orderReference,
+                        payment_id: payment.id
+                      });
+                      setCurrentStep(STEPS.CONFIRMATION);
+                      fetchBookingDetails(orderReference);
+                    } catch (err) {
+                      console.error('Ticketing issuance error:', err);
+                    }
+                  }
+                }
+              });
+            } catch (err) {
+              console.warn('Moyasar init error:', err);
+            }
+          }
+        };
+
+        if (window.Moyasar) {
+          loadMoyasar();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.umd.min.js';
+          script.onload = loadMoyasar;
+          document.head.appendChild(script);
+
+          if (!document.querySelector('link[href*="moyasar.css"]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.css';
+            document.head.appendChild(link);
+          }
+        }
+      }
+    }
+  }, [currentStep, orderReference]);
+
+  useEffect(() => {
     if (!holdExpiresAt) return;
     const timer = setInterval(() => {
       const diff = Math.max(0, Math.floor((new Date(holdExpiresAt) - new Date()) / 1000));
@@ -1622,28 +1677,8 @@ export default function BookingPage() {
 
             {selectedCardType === 'new' && (
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Cardholder Name</label>
-                  <input type="text" name="cardHolder" value={cardForm.cardHolder} onChange={handleCardInput} placeholder="e.g. AHMED MOHAMMAD" style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.88rem' }} />
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Card Number</label>
-                  <input type="text" name="cardNumber" value={cardForm.cardNumber} onChange={handleCardInput} placeholder="4111 1111 1111 1111" maxLength="19" style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.88rem' }} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Expiry Month</label>
-                    <input type="text" name="expiryMonth" placeholder="MM" value={cardForm.expiryMonth} onChange={handleCardInput} maxLength="2" style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.88rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Expiry Year</label>
-                    <input type="text" name="expiryYear" placeholder="YY" value={cardForm.expiryYear} onChange={handleCardInput} maxLength="2" style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.88rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>CVV</label>
-                    <input type="password" name="cvv" placeholder="123" value={cardForm.cvv} onChange={handleCardInput} maxLength="4" style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.88rem' }} />
-                  </div>
-                </div>
+                {/* Official Moyasar Payment SDK Form Mount Container */}
+                <div className="mysr-form"></div>
               </div>
             )}
           </div>
