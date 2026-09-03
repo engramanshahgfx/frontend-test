@@ -1685,105 +1685,11 @@ export default function BookingPage() {
       {selectedPaymentMethod === 'card' && (
         <div className="card" style={{ marginBottom: 20, border: '1px solid #e2e8f0', borderRadius: 12 }}>
           <div className="card-header" style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
-            <span className="card-title" style={{ fontSize: 15, fontWeight: 700 }}>{t('flightBooking.paymentStep.selectOrAddCard')}</span>
+            <span className="card-title" style={{ fontSize: 15, fontWeight: 700 }}>Enter your card details</span>
           </div>
           <div className="card-body" style={{ padding: 20 }}>
-            {/* Saved Card Option 1 */}
-            <div
-              onClick={() => setSelectedCardType('saved')}
-              style={{
-                border: selectedCardType === 'saved' ? '2px solid #00875a' : '1px solid #e2e8f0',
-                borderRadius: 8,
-                padding: 16,
-                marginBottom: 12,
-                background: selectedCardType === 'saved' ? '#f0fdf4' : '#fff',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between'
-              }}
-            >
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <input
-                  type="radio"
-                  name="cardSelection"
-                  checked={selectedCardType === 'saved'}
-                  onChange={() => setSelectedCardType('saved')}
-                  style={{ marginTop: 3, accentColor: '#00875a' }}
-                />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b', marginBottom: 4 }}>
-                    **** **** **** 8410
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                    {t('flightBooking.paymentStep.cardExpiry')}: 01/30
-                  </div>
-                  {selectedCardType === 'saved' && (
-                    <div style={{ marginTop: 12, width: 140 }}>
-                      <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-                        {t('flightBooking.paymentStep.cvv')} *
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type="password"
-                          maxLength="4"
-                          placeholder="123"
-                          value={cardForm.cvv}
-                          onChange={handleCardInput}
-                          name="cvv"
-                          style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.85rem' }}
-                        />
-                        <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#94a3b8' }}>ⓘ</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 800, background: '#00875a', color: '#fff', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>
-                  {t('flightBooking.paymentStep.defaultCard')}
-                </span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>Mada / Visa</span>
-              </div>
-            </div>
-
-            {/* Add New Card Option 2 */}
-            <div
-              onClick={() => setSelectedCardType('new')}
-              style={{
-                border: selectedCardType === 'new' ? '2px solid #00875a' : '1px solid #e2e8f0',
-                borderRadius: 8,
-                padding: 16,
-                background: selectedCardType === 'new' ? '#f0fdf4' : '#fff',
-                cursor: 'pointer'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <input
-                  type="radio"
-                  name="cardSelection"
-                  checked={selectedCardType === 'new'}
-                  onChange={() => setSelectedCardType('new')}
-                  style={{ accentColor: '#00875a' }}
-                />
-                <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1e293b' }}>
-                  {t('flightBooking.paymentStep.addNewCard')}
-                </span>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 16,
-                  paddingTop: 16,
-                  borderTop: '1px solid #e2e8f0',
-                  display: selectedCardType === 'new' ? 'block' : 'none'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Official Moyasar Payment SDK Form Mount Container */}
-                <div className="mysr-form"></div>
-              </div>
-            </div>
+            {/* Official Moyasar Payment SDK Form Mount Container */}
+            <div className="mysr-form"></div>
           </div>
         </div>
       )}
