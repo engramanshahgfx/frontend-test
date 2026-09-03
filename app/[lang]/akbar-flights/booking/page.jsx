@@ -845,12 +845,12 @@ export default function BookingPage() {
             try {
               window.Moyasar.init({
                 element: targetEl,
-                amount: Math.round(calculateTotal() * 100) || 140100,
+                amount: Math.round(calculateTotal() * 100) || 50459,
                 currency: 'SAR',
-                description: `NDC Flight Booking (${orderReference || 'REF'})`,
-                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
+                description: `NDC Flight Booking (${orderReference || 'NDCEG-BR-YBFTIURJD4'})`,
+                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_vcMyXc4FuA6WpFiZabXA6bSb',
                 callback_url: `${window.location.origin}/${lang}/akbar-flights/booking?payment_status=paid&order_ref=${orderReference || ''}`,
-                methods: ['creditcard', 'applepay', 'stcpay'],
+                methods: ['creditcard'],
                 on_completed: async function (payment) {
                   console.log('Moyasar payment callback completed:', payment);
                   if (payment && payment.id) {
