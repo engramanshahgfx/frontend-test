@@ -229,7 +229,7 @@ When holding a flight:
 
 Frontend shows user:
 ```
-🔒 Flight is held until 15:30
+ Flight is held until 15:30
 💳 Complete payment within 30 minutes
 ```
 

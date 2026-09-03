@@ -452,7 +452,7 @@ export default function PaymentPage() {
             </form>
 
             <p style={{ fontSize: '11px', color: '#7a7469', marginTop: '20px', textAlign: 'center' }}>
-              🔒 256-bit Secure Encryption
+               256-bit Secure Encryption
             </p>
           </div>
 

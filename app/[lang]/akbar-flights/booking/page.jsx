@@ -1760,8 +1760,79 @@ export default function BookingPage() {
 
             {selectedCardType === 'new' && (
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b', marginBottom: 12 }}>
+                  Enter your card details
+                </div>
+
+                {/* Unified Almosafer-Style 3-Row Card Box */}
+                <div style={{
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  background: '#fff',
+                  marginBottom: 16
+                }}>
+                  {/* Row 1: Card number */}
+                  <div style={{ padding: '12px 14px', borderBottom: '1px solid #cbd5e1' }}>
+                    <input
+                      type="text"
+                      name="cardNumber"
+                      placeholder="Card number"
+                      value={cardForm.cardNumber}
+                      onChange={handleCardInput}
+                      maxLength="19"
+                      style={{ width: '100%', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b', background: 'transparent' }}
+                    />
+                  </div>
+
+                  {/* Row 2: MM/YY & CVV */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #cbd5e1' }}>
+                    <div style={{ padding: '12px 14px', borderRight: '1px solid #cbd5e1' }}>
+                      <input
+                        type="text"
+                        name="expiryMonth"
+                        placeholder="MM/YY"
+                        value={cardForm.expiryMonth ? `${cardForm.expiryMonth}/${cardForm.expiryYear || ''}` : ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          const m = val.slice(0, 2);
+                          const y = val.slice(2, 4);
+                          setCardForm(prev => ({ ...prev, expiryMonth: m, expiryYear: y }));
+                        }}
+                        maxLength="5"
+                        style={{ width: '100%', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b', background: 'transparent' }}
+                      />
+                    </div>
+                    <div style={{ padding: '12px 14px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="password"
+                        name="cvv"
+                        placeholder="CVV"
+                        value={cardForm.cvv}
+                        onChange={handleCardInput}
+                        maxLength="4"
+                        style={{ width: '100%', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b', background: 'transparent' }}
+                      />
+                      <span style={{ fontSize: 13, color: '#0284c7', cursor: 'pointer', fontWeight: 'bold' }}>ⓘ</span>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Name on card */}
+                  <div style={{ padding: '12px 14px' }}>
+                    <input
+                      type="text"
+                      name="cardHolder"
+                      placeholder="Name on card"
+                      value={cardForm.cardHolder}
+                      onChange={handleCardInput}
+                      style={{ width: '100%', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b', background: 'transparent' }}
+                    />
+                  </div>
+                </div>
+
                 {/* Official Moyasar Payment SDK Form Mount Container */}
-                <div className="mysr-form"></div>
+                <div className="mysr-form" style={{ marginTop: 12 }}></div>
               </div>
             )}
           </div>
