@@ -805,12 +805,29 @@ export default function BookingPage() {
     const bundleData = savedBundle ? JSON.parse(savedBundle) : null;
     setFlight(flightData);
     setBundle(bundleData || { name: 'Economy', price: flightData.price || 0 });
+
     const paymentStatus = searchParams.get('payment_status');
-    const orderRef = searchParams.get('order_ref');
-    if (paymentStatus === 'paid' && orderRef) {
+    const orderRef = searchParams.get('order_ref') || searchParams.get('order_reference');
+    const paymentId = searchParams.get('id');
+
+    if ((paymentStatus === 'paid' || paymentId) && orderRef) {
       setOrderReference(orderRef);
-      setCurrentStep(STEPS.CONFIRMATION);
-      fetchBookingDetails(orderRef);
+      setProcessing(true);
+      
+      // Verify payment with backend & issue airline ticket
+      apiCall('/v2/akbar/bookings/pay', 'POST', {
+        order_reference: orderRef,
+        payment_id: paymentId
+      }).then(() => {
+        setCurrentStep(STEPS.CONFIRMATION);
+        fetchBookingDetails(orderRef);
+      }).catch(err => {
+        console.error('3DS callback ticketing error:', err);
+        setCurrentStep(STEPS.CONFIRMATION);
+        fetchBookingDetails(orderRef);
+      }).finally(() => {
+        setProcessing(false);
+      });
     }
     setLoading(false);
   }, [searchParams]);
