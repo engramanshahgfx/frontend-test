@@ -836,11 +836,16 @@ export default function BookingPage() {
     if (currentStep === STEPS.PAYMENT || currentStep === STEPS.CHECKOUT) {
       if (typeof window !== 'undefined') {
         const loadMoyasar = () => {
+          const targetEl = document.querySelector('.mysr-form');
+          if (!targetEl) {
+            setTimeout(loadMoyasar, 150);
+            return;
+          }
           if (window.Moyasar) {
             try {
               window.Moyasar.init({
-                element: '.mysr-form',
-                amount: Math.round(calculateTotal() * 100),
+                element: targetEl,
+                amount: Math.round(calculateTotal() * 100) || 140100,
                 currency: 'SAR',
                 description: `NDC Flight Booking (${orderReference || 'REF'})`,
                 publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
@@ -885,7 +890,7 @@ export default function BookingPage() {
         }
       }
     }
-  }, [currentStep, orderReference]);
+  }, [currentStep, orderReference, selectedCardType]);
 
   useEffect(() => {
     if (!holdExpiresAt) return;
