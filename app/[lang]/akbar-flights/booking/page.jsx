@@ -843,7 +843,7 @@ export default function BookingPage() {
           }
           if (window.Moyasar) {
             try {
-              targetEl.innerHTML = '';
+              if (targetEl.children.length > 0) return;
               window.Moyasar.init({
                 element: targetEl,
                 amount: Math.round(calculateTotal() * 100) || 50459,
@@ -1764,12 +1764,18 @@ export default function BookingPage() {
                 </span>
               </div>
 
-              {selectedCardType === 'new' && (
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
-                  {/* Official Moyasar Payment SDK Form Mount Container */}
-                  <div className="mysr-form"></div>
-                </div>
-              )}
+              <div
+                style={{
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: '1px solid #e2e8f0',
+                  display: selectedCardType === 'new' ? 'block' : 'none'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Official Moyasar Payment SDK Form Mount Container */}
+                <div className="mysr-form"></div>
+              </div>
             </div>
           </div>
         </div>
