@@ -12,100 +12,82 @@ export default function ForgotPassword() {
   const params = useParams();
   const lang = params?.lang || 'en';
 
-  const [step, setStep] = useState(1); // 1: phone, 2: OTP, 3: password
-  const [phone, setPhone] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const [step, setStep] = useState(1); // 1: Email, 2: New Password & Token
+  const [email, setEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [devToken, setDevToken] = useState(null);
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
-  const [devOtp, setDevOtp] = useState(null);
 
   const translations = {
     en: {
       title: "Forgot Password",
-      step1Title: "Enter Phone Number",
-      step1Subtitle: "Enter your phone number to receive an OTP",
-      step2Title: "Verify OTP",
-      step2Subtitle: "Enter the OTP sent to your phone",
-      step3Title: "Set New Password",
-      step3Subtitle: "Enter your new password",
-      phonePlaceholder: "0501234567",
-      otpPlaceholder: "Enter 6-digit OTP",
-      passwordPlaceholder: "New password",
-      confirmPasswordPlaceholder: "Confirm new password",
-      sendOtp: "Send OTP",
-      verifyOtp: "Verify OTP",
-      resetPassword: "Reset Password",
-      success: "Password reset successfully! Redirecting to login...",
+      step1Title: "Recover Your Account",
+      step1Subtitle: "Enter the email used during registration or guest booking",
+      step2Title: "Set New Password",
+      step2Subtitle: "Enter the reset token sent to your email and your new password",
+      emailPlaceholder: "you@example.com",
+      tokenPlaceholder: "Reset Token",
+      passwordPlaceholder: "New Password (min 6 chars)",
+      confirmPasswordPlaceholder: "Confirm New Password",
+      sendEmail: "Send Reset Link",
+      resetPassword: "Set New Password & Login",
+      success: "Password reset successfully! Logging you in...",
       back: "Back",
     },
     ar: {
       title: "نسيت كلمة المرور",
-      step1Title: "أدخل رقم الجوال",
-      step1Subtitle: "أدخل رقم جوالك لتلقي رمز التحقق",
-      step2Title: "تحقق من الرمز",
-      step2Subtitle: "أدخل الرمز المرسل إلى جوالك",
-      step3Title: "تعيين كلمة مرور جديدة",
-      step3Subtitle: "أدخل كلمة المرور الجديدة",
-      phonePlaceholder: "0501234567",
-      otpPlaceholder: "أدخل رمز التحقق المكون من 6 أرقام",
-      passwordPlaceholder: "كلمة المرور الجديدة",
+      step1Title: "استعادة الحساب",
+      step1Subtitle: "أدخل البريد الإلكتروني المستخدَم في التسجيل أو حجز الزائر",
+      step2Title: "تعيين كلمة مرور جديدة",
+      step2Subtitle: "أدخل رمز إعادة التعيين المرسل إلى بريدك وكلمة المرور الجديدة",
+      emailPlaceholder: "you@example.com",
+      tokenPlaceholder: "رمز إعادة التعيين",
+      passwordPlaceholder: "كلمة المرور الجديدة (6 أحرف على الأقل)",
       confirmPasswordPlaceholder: "تأكيد كلمة المرور الجديدة",
-      sendOtp: "إرسال الرمز",
-      verifyOtp: "التحقق من الرمز",
-      resetPassword: "تعيين كلمة المرور",
-      success: "تم إعادة تعيين كلمة المرور بنجاح! جاري التحويل إلى تسجيل الدخول...",
+      sendEmail: "إرسال رابط التعيين",
+      resetPassword: "تعيين كلمة المرور وتسجيل الدخول",
+      success: "تم إعادة تعيين كلمة المرور بنجاح! جاري تسجيل الدخول...",
       back: "رجوع",
     },
     zh: {
       title: "忘记密码",
-      step1Title: "输入手机号码",
-      step1Subtitle: "输入您的手机号码以接收验证码",
-      step2Title: "验证验证码",
-      step2Subtitle: "输入发送到您手机的验证码",
-      step3Title: "设置新密码",
-      step3Subtitle: "输入您的新密码",
-      phonePlaceholder: "0501234567",
-      otpPlaceholder: "输入6位验证码",
-      passwordPlaceholder: "新密码",
+      step1Title: "恢复您的账户",
+      step1Subtitle: "请输入注册或游客预订时使用的电子邮箱",
+      step2Title: "设置新密码",
+      step2Subtitle: "请输入发送到您邮箱的重置令牌及新密码",
+      emailPlaceholder: "you@example.com",
+      tokenPlaceholder: "重置令牌",
+      passwordPlaceholder: "新密码（至少6位）",
       confirmPasswordPlaceholder: "确认新密码",
-      sendOtp: "发送验证码",
-      verifyOtp: "验证验证码",
-      resetPassword: "重置密码",
-      success: "密码重置成功！正在跳转到登录页面...",
+      sendEmail: "发送重置链接",
+      resetPassword: "设置新密码并登录",
+      success: "密码重置成功！正在为您登录...",
       back: "返回",
     }
   };
 
   const t = translations[lang] || translations.en;
 
-  const handleSendOtp = async (e) => {
+  const handleSendEmail = async (e) => {
     e && e.preventDefault();
-    setLoading(true);
-    try {
-      const data = await authAPI.sendOtp(phone, 'reset');
-      setDevOtp(data.dev_otp || null);
-      setStep(2); // Move to OTP verification step
-      toast.success('OTP sent successfully');
-    } catch (err) {
-      console.error('sendOtp error', err);
-      toast.error(err.message || 'Failed to send OTP');
-    } finally {
-      setLoading(false);
+    if (!email || !email.includes('@')) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email');
+      return;
     }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e && e.preventDefault();
     setLoading(true);
     try {
-      const data = await authAPI.verifyOtp(phone, otpCode, 'reset');
-      if (!data.success) throw new Error(data.message || 'OTP verification failed');
-      setStep(3); // Move to password reset step
-      toast.success('OTP verified successfully');
+      const data = await authAPI.forgotPassword(email.trim());
+      if (data.dev_token) {
+        setDevToken(data.dev_token);
+        setResetToken(data.dev_token);
+      }
+      setStep(2);
+      toast.success(data.message || (lang === 'ar' ? 'تم إرسال تعليمات إعادة التعيين إلى بريدك' : 'Reset instructions sent to your email'));
     } catch (err) {
-      console.error('verifyOtp error', err);
-      toast.error(err.message || 'OTP verification failed');
+      console.error('forgotPassword error', err);
+      toast.error(err.message || (lang === 'ar' ? 'فشل إرسال تعليمات إعادة التعيين' : 'Failed to send reset instructions'));
     } finally {
       setLoading(false);
     }
@@ -114,22 +96,29 @@ export default function ForgotPassword() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (password !== passwordConfirmation) {
-      toast.error('Passwords do not match');
+      toast.error(lang === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error(lang === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+      return;
+    }
+    if (!resetToken) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال رمز إعادة التعيين' : 'Please enter the reset token');
       return;
     }
     setLoading(true);
     try {
-      const data = await authAPI.resetPassword(phone, otpCode, password, passwordConfirmation);
+      const data = await authAPI.resetPasswordWithToken(email.trim(), resetToken.trim(), password, passwordConfirmation);
       if (!data.success) throw new Error(data.message || 'Reset failed');
+      
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+      }
       toast.success(t.success);
-      // Redirect to login page after 2 seconds
       setTimeout(() => {
-        window.location.href = `/${lang}/login`;
-      }, 2000);
+        window.location.href = `/${lang}/dashboard`;
+      }, 1500);
     } catch (err) {
       console.error('Reset password error:', err);
       toast.error(err.message || 'Reset failed');
@@ -144,90 +133,73 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="d-flex align-items-center" style={{ minHeight: "calc(100vh - 88px)", backgroundColor: "#000" }}>
-      <div className="container py-5">
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px", backgroundColor: "#f8fafc" }}>
+      <div className="container py-3">
         <div className="d-flex flex-column align-items-center">
-          <div className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.formWidth}`} style={{ borderRadius: "25px", border: "1px solid rgba(202, 218, 231, 1)", background: "linear-gradient(180deg, #E2F2FF 0%, rgba(255, 255, 255, 0) 78.01%)" }}>
+          <div className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.formWidth}`} style={{ borderRadius: "25px", border: "1px solid rgba(202, 218, 231, 1)", background: "linear-gradient(180deg, #E2F2FF 0%, #ffffff 78.01%)", boxShadow: "0 10px 30px rgba(0,0,0,0.06)" }}>
 
             {/* Icon */}
             <div className="d-flex justify-content-center align-items-center mb-4" style={{ width: "61px", height: "61px", backgroundColor: "white", borderRadius: "12px", boxShadow: "0px 0px 16.15px 0px rgba(0, 0, 0, 0.07)" }}>
-              {step === 1 && <LuAtSign style={{ width: "30px", height: "30px" }} />}
-              {step === 2 && <FiShield style={{ width: "30px", height: "30px" }} />}
-              {step === 3 && <GoLock style={{ width: "30px", height: "30px" }} />}
+              {step === 1 ? <LuAtSign style={{ width: "30px", height: "30px" }} /> : <GoLock style={{ width: "30px", height: "30px" }} />}
             </div>
 
             {/* Title & Subtitle */}
             <div className="fs-4 text-center mb-2" style={{ fontWeight: 600 }}>
-              {step === 1 && t.step1Title}
-              {step === 2 && t.step2Title}
-              {step === 3 && t.step3Title}
+              {step === 1 ? t.step1Title : t.step2Title}
             </div>
             <div className="text-secondary text-center mb-4" style={{ fontSize: "14px" }}>
-              {step === 1 && t.step1Subtitle}
-              {step === 2 && t.step2Subtitle}
-              {step === 3 && t.step3Subtitle}
+              {step === 1 ? t.step1Subtitle : t.step2Subtitle}
             </div>
 
-            {/* Step 1: Enter Phone */}
+            {/* Step 1: Enter Email */}
             {step === 1 && (
-              <form className="w-100" onSubmit={handleSendOtp}>
+              <form className="w-100" onSubmit={handleSendEmail}>
                 <div className="mb-3 position-relative">
+                  <label className="form-label small fw-semibold">{lang === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</label>
                   <input
-                    type="tel"
+                    type="email"
                     className="form-control"
-                    style={{ borderRadius: "15px", paddingLeft: lang === "ar" ? "" : "40px", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }}
-                    placeholder={t.phonePlaceholder}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    style={{ borderRadius: "15px", height: "50px" }}
+                    placeholder={t.emailPlaceholder}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <button type="submit" className="primaryButton w-100" style={{ borderWidth: 0, borderRadius: "15px", height: "44px" }} disabled={loading}>
-                  {loading ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : t.sendOtp}
+                  {loading ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : t.sendEmail}
                 </button>
               </form>
             )}
 
-            {/* Step 2: Verify OTP */}
+            {/* Step 2: Set New Password */}
             {step === 2 && (
-              <form className="w-100" onSubmit={handleVerifyOtp}>
-                <div className="mb-3 position-relative">
+              <form className="w-100" onSubmit={handleResetPassword}>
+                {devToken && (
+                  <div className="alert alert-info w-100 text-center mb-3" style={{ fontSize: "13px" }}>
+                    Dev Reset Token: <strong>{devToken}</strong>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label small fw-semibold">{t.tokenPlaceholder}</label>
                   <input
                     type="text"
-                    className="form-control text-center"
-                    style={{ borderRadius: "15px", height: "50px", fontSize: "24px", letterSpacing: "8px", fontWeight: "bold" }}
-                    placeholder={t.otpPlaceholder}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
+                    className="form-control"
+                    style={{ borderRadius: "15px", height: "50px" }}
+                    placeholder={t.tokenPlaceholder}
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
                     required
                   />
                 </div>
 
-                {devOtp && (
-                  <div style={{ marginBottom: '10px', padding: '8px', background: '#e7f5e7', color: '#2d7d2d', borderRadius: '6px', textAlign: 'center' }}>
-                    Dev OTP: <strong>{devOtp}</strong>
-                  </div>
-                )}
-
-                <button type="submit" className="primaryButton w-100 mb-2" style={{ borderWidth: 0, borderRadius: "15px", height: "44px" }} disabled={loading || otpCode.length !== 6}>
-                  {loading ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : t.verifyOtp}
-                </button>
-
-                <button type="button" className="btn btn-outline-secondary w-100" onClick={goBack} style={{ borderRadius: "15px", height: "44px" }}>
-                  {t.back}
-                </button>
-              </form>
-            )}
-
-            {/* Step 3: Set New Password */}
-            {step === 3 && (
-              <form className="w-100" onSubmit={handleResetPassword}>
                 <div className="mb-3 position-relative">
+                  <label className="form-label small fw-semibold">{t.passwordPlaceholder}</label>
                   <input
                     type="password"
                     className="form-control"
-                    style={{ borderRadius: "15px", paddingLeft: lang === "ar" ? "" : "40px", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }}
+                    style={{ borderRadius: "15px", height: "50px" }}
                     placeholder={t.passwordPlaceholder}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -236,11 +208,12 @@ export default function ForgotPassword() {
                   />
                 </div>
 
-                <div className="mb-3 position-relative">
+                <div className="mb-4 position-relative">
+                  <label className="form-label small fw-semibold">{t.confirmPasswordPlaceholder}</label>
                   <input
                     type="password"
                     className="form-control"
-                    style={{ borderRadius: "15px", paddingLeft: lang === "en" ? "40px" : "", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }}
+                    style={{ borderRadius: "15px", height: "50px" }}
                     placeholder={t.confirmPasswordPlaceholder}
                     value={passwordConfirmation}
                     onChange={(e) => setPasswordConfirmation(e.target.value)}

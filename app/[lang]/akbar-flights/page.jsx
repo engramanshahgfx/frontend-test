@@ -5,6 +5,7 @@ export const metadata = {
   description: 'Search and compare domestic & international flights in Saudi Arabia via Akbar Travels B2B',
 };
 
-export default function AkbarFlightsPage() {
-  return <AkbarFlights />;
+export default async function AkbarFlightsPage({ params }) {
+  const { lang } = await params;
+  return <AkbarFlights initialParams={{ lang }} />;
 }

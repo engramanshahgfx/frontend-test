@@ -51,7 +51,7 @@ export default function LocalBookingSuccess({ params }) {
 
         <div style={{ marginTop: '30px' }}>
           <Link href={`/${lang}`} style={{ color: '#dfa528', textDecoration: 'none', fontWeight: 'bold', marginRight: '20px' }}>
-            {isRTL ? '← العودة إلى الصفحة الرئيسية' : '← Back to Home'}
+            {isRTL ? 'العودة إلى الصفحة الرئيسية →' : '← Back to Home'}
           </Link>
         </div>
       </div>

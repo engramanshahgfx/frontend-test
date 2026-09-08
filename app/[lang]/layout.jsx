@@ -16,6 +16,7 @@ import ChatAssistant from "@/components/ChatAssistant";
 import AuthModal from "@/components/AuthModal";
 import BookingModal from "@/components/BookingModal";
 import ReservationModal from "@/components/ReservationModal";
+import UserDrawer from "@/components/UserDrawer";
 
 export async function generateStaticParams() {
   return [{ lang: "en" }, { lang: "ar" }, { lang: "zh" }];
@@ -128,6 +129,7 @@ export default async function RootLayout({ children, params }) {
             <AuthModal />
             <BookingModal />
             <ReservationModal />
+            <UserDrawer />
           </UIProvider>
         </AuthProvider>
         <div id="modal-root"></div>

@@ -334,14 +334,14 @@ select.form-control option {
   right: 0;
   width: 100%;
   z-index: 1000; /* --z-header */
-  height: 80px;
+  height: 72px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
 }
 .main-header.scrolled {
   top: 0;
-  height: 68px;
+  height: 64px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 30px rgba(28, 0, 82, 0.05);
   border-bottom-color: rgba(28, 0, 82, 0.04);

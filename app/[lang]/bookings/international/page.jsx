@@ -69,7 +69,7 @@ export default function InternationalBookingSuccess({ params }) {
 
         <div style={{ marginTop: '30px', textAlign: isRTL ? 'right' : 'left' }}>
           <Link href={`/${lang}`} style={{ color: '#dfa528', textDecoration: 'none', fontWeight: 'bold', marginRight: '20px' }}>
-            {lang === 'ar' ? '← العودة إلى الصفحة الرئيسية' :
+            {lang === 'ar' ? 'العودة إلى الصفحة الرئيسية →' :
               lang === 'zh' ? '← 返回首页' :
                 '← Back to Home'}
           </Link>

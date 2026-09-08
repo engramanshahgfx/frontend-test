@@ -23,6 +23,7 @@ export default function UIProvider({ children }) {
     return match ? match[1] : 'en';
   };
 
+  const [userDrawerOpen, setUserDrawerOpen] = useState(false);
   const [authModal, setAuthModal] = useState({ open: false, mode: "login" });
   const [bookingModal, setBookingModal] = useState({
     open: false,
@@ -35,6 +36,14 @@ export default function UIProvider({ children }) {
   const [pendingTrip, setPendingTrip] = useState(null);
   const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
   const triggerDashboardRefresh = React.useCallback(() => setDashboardRefreshKey(k => k + 1), []);
+
+  const openUserDrawer = React.useCallback(() => {
+    setUserDrawerOpen(true);
+  }, []);
+
+  const closeUserDrawer = React.useCallback(() => {
+    setUserDrawerOpen(false);
+  }, []);
 
   const openAuthModal = React.useCallback((mode = "login") => {
     const lang = getCurrentLang();
@@ -92,12 +101,17 @@ export default function UIProvider({ children }) {
     }
     setPendingTrip(null);
   }, [pendingTrip, closeAuthModal, openBookingModal]);
+
   const value = useMemo(
     () => ({
       authModal,
       bookingModal,
       reservationModal,
       pendingTrip,
+      // User Drawer State
+      isUserDrawerOpen: userDrawerOpen,
+      openUserDrawer,
+      closeUserDrawer,
       // Dashboard refresh helpers
       dashboardRefreshKey,
       triggerDashboardRefresh,
@@ -113,7 +127,7 @@ export default function UIProvider({ children }) {
       setBookingModal,
       setReservationModal,
     }),
-    [authModal, bookingModal, reservationModal, isAuthenticated, pendingTrip, dashboardRefreshKey]
+    [authModal, bookingModal, reservationModal, isAuthenticated, pendingTrip, dashboardRefreshKey, userDrawerOpen, openUserDrawer, closeUserDrawer]
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

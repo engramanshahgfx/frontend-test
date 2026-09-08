@@ -62,6 +62,7 @@ export default function Navbar({ lang }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
+  const { openUserDrawer, openAuthModal } = useUI();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
@@ -356,6 +357,7 @@ export default function Navbar({ lang }) {
       const relatedTarget = e.relatedTarget;
       const isInsideDropdown =
         relatedTarget &&
+        typeof relatedTarget.closest === 'function' &&
         (relatedTarget.closest(".dropdown-menu-wrapper") ||
           relatedTarget.closest(".dropdown-packages"));
 
@@ -632,25 +634,25 @@ export default function Navbar({ lang }) {
 
           <div className="header-actions">
             <LanguageSwitcher lang={lang} showFlagOnly />
-            {isAuthenticated && (
-              <div className="user-menu" ref={userMenuRef}>
+            {isAuthenticated ? (
+              <div className="user-menu">
                 <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  onClick={() => openUserDrawer()}
                   className="user-trigger"
+                  title={lang === "ar" ? "حسابي" : "My Account"}
                 >
-                  <FaUserCircle size={20} />
+                  <FaUserCircle size={22} color="var(--primary-color)" />
                 </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown" style={{ zIndex: 1001 }}>
-                    <Link href={`/${lang}/dashboard`} className="user-link">
-                      <FaUser /> Dashboard
-                    </Link>
-                    <button onClick={logout} className="user-link logout">
-                      <FaSignOutAlt /> Logout
-                    </button>
-                  </div>
-                )}
               </div>
+            ) : (
+              <button
+                onClick={() => openAuthModal("login")}
+                className="user-trigger"
+                title={lang === "ar" ? "تسجيل الدخول" : "Login"}
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+              >
+                <FaUserCircle size={22} color="#6b7280" />
+              </button>
             )}
             <button
               className="mobile-toggle"
@@ -724,43 +726,43 @@ export default function Navbar({ lang }) {
                           <div className="mobile-nested-menu">
                             {item.type === "packages"
                               ? Object.entries(displayDestinations).map(
-                                  ([regionKey, data]) => (
-                                    <div
-                                      key={regionKey}
-                                      className="mobile-region-section"
-                                    >
-                                      <Link
-                                        href={`/${lang}/destinations?region=${regionKey}`}
-                                        className="mobile-region-btn text-decoration-none"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        style={{
-                                          color: "#E85D1F",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "10px",
-                                          padding: "10px 16px",
-                                          fontWeight: "600",
-                                          fontSize: "15px",
-                                        }}
-                                      >
-                                        {data.icon} {getRegionLabel(regionKey)}
-                                      </Link>
-                                    </div>
-                                  ),
-                                )
-                              : getDropdownData(item.type).map((d, idx) => (
-                                  <Link
-                                    key={idx}
-                                    href={`/${lang}${d.href}`}
-                                    className="mobile-dropdown-link"
-                                    onClick={() => setMobileMenuOpen(false)}
+                                ([regionKey, data]) => (
+                                  <div
+                                    key={regionKey}
+                                    className="mobile-region-section"
                                   >
-                                    <span className="mobile-link-icon">
-                                      {d.icon}
-                                    </span>
-                                    {localize(d.title)}
-                                  </Link>
-                                ))}
+                                    <Link
+                                      href={`/${lang}/destinations?region=${regionKey}`}
+                                      className="mobile-region-btn text-decoration-none"
+                                      onClick={() => setMobileMenuOpen(false)}
+                                      style={{
+                                        color: "#E85D1F",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                        padding: "10px 16px",
+                                        fontWeight: "600",
+                                        fontSize: "15px",
+                                      }}
+                                    >
+                                      {data.icon} {getRegionLabel(regionKey)}
+                                    </Link>
+                                  </div>
+                                ),
+                              )
+                              : getDropdownData(item.type).map((d, idx) => (
+                                <Link
+                                  key={idx}
+                                  href={`/${lang}${d.href}`}
+                                  className="mobile-dropdown-link"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                >
+                                  <span className="mobile-link-icon">
+                                    {d.icon}
+                                  </span>
+                                  {localize(d.title)}
+                                </Link>
+                              ))}
                           </div>
                         )}
                       </>

@@ -198,7 +198,7 @@ export default function TourismOfferDetails() {
       bankTransfer: "Bank Transfer",
     },
     ar: {
-      back: " ← العودة للعروض",
+      back: "العودة للعروض →",
       description: "الوصف",
       details: "التفاصيل",
       price: "السعر",

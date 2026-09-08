@@ -197,7 +197,7 @@ export default function JamoulaOfferDetails() {
       electronicPaymentDesc: "We provide a secure electronic payment gateway by sending a payment link for the required amount"
     },
     ar: {
-      back: " ← العودة للعروض",
+      back: "العودة للعروض →",
       description: "الوصف",
       details: "التفاصيل",
       price: "السعر",

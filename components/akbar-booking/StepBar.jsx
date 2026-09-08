@@ -1,17 +1,18 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-
-const steps = [
-  { n: 1, label: 'Choose your flight', path: '' },
-  { n: 2, label: 'Enter your details', path: '/passengers' },
-  { n: 3, label: 'Payment Details', path: '/checkout' },
-];
+import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function StepBar({ currentStep = 1, onStepChange }) {
   const router = useRouter();
-  const params = useParams();
-  const lang = params?.lang || 'en';
+  const { t, language } = useTranslation();
+  const lang = language || 'en';
+
+  const steps = [
+    { n: 1, label: lang === 'ar' ? 'اختر رحلتك' : 'Choose your flight', path: '' },
+    { n: 2, label: lang === 'ar' ? 'أدخل بياناتك' : 'Enter your details', path: '/passengers' },
+    { n: 3, label: lang === 'ar' ? 'تفاصيل الدفع' : 'Payment Details', path: '/checkout' },
+  ];
 
   const handleStepClick = (s) => {
     if (onStepChange) {

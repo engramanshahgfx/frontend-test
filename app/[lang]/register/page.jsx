@@ -45,10 +45,10 @@ export default function RegisterPage({ params }) {
       subtitle: "Join us today! Fill in your details to get started",
       name: "Full Name",
       namePlaceholder: "Enter your full name",
-      email: "Email (optional)",
-      emailPlaceholder: "you@example.com (optional)",
-      phone: "Phone",
-      phonePlaceholder: "+966xxxxxxxxx",
+      email: "Email",
+      emailPlaceholder: "you@example.com",
+      phone: "Phone ",
+      phonePlaceholder: "+966xxxxxxxxx ",
       password: "Password",
       passwordPlaceholder: "Create a password (min 6 chars)",
       confirmPassword: "Confirm Password",
@@ -56,13 +56,6 @@ export default function RegisterPage({ params }) {
       register: "Create Account",
       haveAccount: "Have an account?",
       login: "Login",
-      otpTitle: "Verify Your Phone",
-      otpSubtitle: "Enter the verification code sent to your phone",
-      otpPlaceholder: "Enter 6-digit code",
-      verify: "Verify",
-      resendCode: "Resend Code",
-      backToRegister: "Back to Registration",
-      codeSentTo: "Code sent to",
       emailAvailable: "Email available",
       emailTaken: "This email is already registered.",
       checkingEmail: "Checking email...",
@@ -72,10 +65,10 @@ export default function RegisterPage({ params }) {
       subtitle: "انضم إلينا اليوم! أكمل بياناتك للبدء",
       name: "الاسم الكامل",
       namePlaceholder: "أدخل اسمك الكامل",
-      email: "البريد الإلكتروني (اختياري)",
-      emailPlaceholder: "you@example.com (اختياري)",
-      phone: "رقم الجوال",
-      phonePlaceholder: "+966xxxxxxxxx",
+      email: "البريد الإلكتروني",
+      emailPlaceholder: "you@example.com",
+      phone: "رقم الجوال (اختياري)",
+      phonePlaceholder: "+966xxxxxxxxx (اختياري)",
       password: "كلمة المرور",
       passwordPlaceholder: "أنشئ كلمة مرور (6 أحرف على الأقل)",
       confirmPassword: "تأكيد كلمة المرور",
@@ -83,27 +76,19 @@ export default function RegisterPage({ params }) {
       register: "إنشاء حساب",
       haveAccount: "لديك حساب؟",
       login: "تسجيل الدخول",
-      otpTitle: "تحقق من رقم الجوال",
-      otpSubtitle: "أدخل رمز التحقق المرسل إلى هاتفك",
-      otpPlaceholder: "أدخل الرمز المكون من 6 أرقام",
-      verify: "تحقق",
-      resendCode: "إعادة إرسال الرمز",
-      backToRegister: "العودة للتسجيل",
-      codeSentTo: "تم إرسال الرمز إلى",
       emailAvailable: "البريد الإلكتروني متاح",
       emailTaken: "هذا البريد مسجل مسبقاً.",
       checkingEmail: "جاري التحقق من البريد...",
     },
-
     zh: {
       title: "创建账户",
       subtitle: "立即加入我们！填写您的信息开始使用",
       name: "全名",
       namePlaceholder: "请输入您的全名",
-      email: "电子邮箱（选填）",
-      emailPlaceholder: "you@example.com（可选）",
-      phone: "电话号码",
-      phonePlaceholder: "+966xxxxxxxxx",
+      email: "电子邮箱",
+      emailPlaceholder: "you@example.com",
+      phone: "电话号码（选填）",
+      phonePlaceholder: "+966xxxxxxxxx（可选）",
       password: "密码",
       passwordPlaceholder: "设置密码（至少6位）",
       confirmPassword: "确认密码",
@@ -111,13 +96,6 @@ export default function RegisterPage({ params }) {
       register: "创建账户",
       haveAccount: "已有账户？",
       login: "登录",
-      otpTitle: "验证您的手机",
-      otpSubtitle: "请输入发送到您手机的验证码",
-      otpPlaceholder: "输入6位数字验证码",
-      verify: "验证",
-      resendCode: "重新发送验证码",
-      backToRegister: "返回注册",
-      codeSentTo: "验证码已发送至",
       emailAvailable: "电子邮箱可用",
       emailTaken: "该电子邮箱已被注册。",
       checkingEmail: "正在检查电子邮箱...",
@@ -494,6 +472,7 @@ export default function RegisterPage({ params }) {
                   placeholder={t.emailPlaceholder}
                   value={formData.email}
                   onChange={handleDataChange}
+                  required
                 />
                 {checkingEmail && (
                   <small className="text-muted">{t.checkingEmail}</small>
@@ -534,7 +513,6 @@ export default function RegisterPage({ params }) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleDataChange}
-                  required
                 />
               </div>
 

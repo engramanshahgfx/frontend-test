@@ -6,36 +6,40 @@ import zh from "@/public/locales/zh/common.json";
 
 const LOCALE_MAP = { en, ar, zh };
 
+const getInitialLang = () => {
+  if (typeof window !== "undefined") {
+    const lang = window.location.pathname.split("/")[1];
+    if (LOCALE_MAP[lang]) return lang;
+  }
+  return "en";
+};
+
 export function useTranslation() {
   const router = useRouter();
-  const [translations, setTranslations] = useState({});
-  const [language, setLanguage] = useState("en");
-  const [isLoading, setIsLoading] = useState(true);
+  const [language, setLanguage] = useState(getInitialLang);
+  const [translations, setTranslations] = useState(() => LOCALE_MAP[getInitialLang()] || LOCALE_MAP.en);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadTranslations = () => {
       try {
-        setIsLoading(true);
-        // Get language from URL
         const pathname = window.location.pathname;
         const lang = pathname.split("/")[1] || "en";
         setLanguage(lang);
-
-        // Use static imports to avoid dynamic import issues in production
         const loaded = LOCALE_MAP[lang] || LOCALE_MAP.en;
         setTranslations(loaded || {});
       } catch (error) {
         console.error("Failed to load translations:", error);
-        setTranslations({});
-      } finally {
-        setIsLoading(false);
       }
     };
 
     loadTranslations();
   }, [router]);
 
-  const t = (key, interpolationObj = {}) => {
+  const t = (key, fallbackOrObj = {}) => {
+    const fallback = typeof fallbackOrObj === "string" ? fallbackOrObj : null;
+    const interpolationObj = typeof fallbackOrObj === "object" && fallbackOrObj !== null ? fallbackOrObj : {};
+
     const keys = key.split(".");
     let value = translations;
 
@@ -43,12 +47,12 @@ export function useTranslation() {
       if (value && typeof value === "object" && k in value) {
         value = value[k];
       } else {
-        return key;
+        return fallback !== null ? fallback : key;
       }
     }
 
     if (typeof value !== "string") {
-      return key;
+      return fallback !== null ? fallback : key;
     }
 
     let result = value;
