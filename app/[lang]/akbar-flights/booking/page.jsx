@@ -793,15 +793,14 @@ const formatDatePretty = (dateStr) => {
 };
 const formatTimePretty = (timeStr) => {
   if (!timeStr) return '06:05 AM';
+  let targetTime = timeStr;
   if (typeof timeStr === 'string' && timeStr.includes('T')) {
-    const d = new Date(timeStr);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
+    targetTime = timeStr.split('T')[1]?.substring(0, 5) || timeStr;
   }
-  if (typeof timeStr === 'string' && timeStr.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-    const [h, m] = timeStr.split(':');
-    const hour = parseInt(h, 10);
+  if (typeof targetTime === 'string' && targetTime.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
+    const parts = targetTime.split(':');
+    const hour = parseInt(parts[0], 10);
+    const m = parts[1];
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${String(formattedHour).padStart(2, '0')}:${m} ${ampm}`;
@@ -859,6 +858,30 @@ export default function BookingPage() {
   const [voucherCode, setVoucherCode] = useState('');
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
+
+  const [redirectCountdown, setRedirectCountdown] = useState(12);
+
+  useEffect(() => {
+    if (currentStep === STEPS.CONFIRMATION) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('selectedFlight');
+      }
+      setRedirectCountdown(12);
+      const timer = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push(`/${lang}`);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [currentStep, lang, router]);
+
   const [sessionId, setSessionId] = useState('');
   const [backendPrice, setBackendPrice] = useState(null);
 
@@ -2031,18 +2054,31 @@ export default function BookingPage() {
           <span className="card-title">{t('flightBooking.checkout.flightItinerary')}</span>
         </div>
         <div className="card-body">
-          {flight?.legs?.map((leg, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: i < flight.legs.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <div>
-                <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 22, marginBottom: 4 }}>{leg.from} <span style={{ color: 'var(--gold)' }}>→</span> {leg.to}</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{leg.airline} · {leg.flightNo} · {leg.date}</div>
+          {flight?.legs?.map((leg, i) => {
+            const legCode = leg.airlineCode || leg.airline_code || flight?.airlineCode || flight?.airline_code || (leg.flightNo && leg.flightNo.includes('-') ? leg.flightNo.split('-')[0] : (leg.flightNo && leg.flightNo.includes(' ') ? leg.flightNo.split(' ')[0] : 'SV'));
+            return (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: i < flight.legs.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 3, flexShrink: 0 }}>
+                    <img
+                      src={leg.logo || flight?.logo || flight?.airlineLogo || `https://pics.avs.io/100/100/${legCode}.png`}
+                      alt={leg.airline}
+                      onError={(e) => { e.target.onerror = null; e.target.src = `https://images.kiwi.com/airlines/64x64/${legCode}.png`; }}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 22, marginBottom: 4 }}>{leg.from} <span style={{ color: 'var(--gold)' }}>→</span> {leg.to}</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>{leg.airline} · {leg.flightNo} · {leg.date}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 500 }}>{leg.dep} – {leg.arr}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{leg.duration}</div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 500 }}>{leg.dep} – {leg.arr}</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{leg.duration}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -2251,14 +2287,14 @@ export default function BookingPage() {
     }
     return [
       {
-        from: flight?.origin || 'JED',
-        to: flight?.destination || 'CAI',
-        date: flight?.departureDate || 'Sep 8, 2026',
-        dep: flight?.dep || flight?.departureTime || '07:15 AM',
-        arr: flight?.arr || flight?.arrivalTime || '09:30 AM',
-        duration: flight?.duration || '02h 15m',
-        airline: flight?.airline || 'Saudi Arabian Airlines (Saudia)',
-        flightNo: flight?.flightNumber || flight?.legs?.[0]?.flightNo || 'SV-304',
+        from: flight?.origin || '',
+        to: flight?.destination || '',
+        date: flight?.departureDate || '',
+        dep: flight?.dep || flight?.departureTime || '',
+        arr: flight?.arr || flight?.arrivalTime || '',
+        duration: flight?.duration || '',
+        airline: flight?.airline || '',
+        flightNo: flight?.flightNumber || flight?.legs?.[0]?.flightNo || '',
         isReturn: false,
       }
     ];
@@ -2266,13 +2302,14 @@ export default function BookingPage() {
 
   const tkt = {
     paxName: passengers[0] ? `${passengers[0].lastName || ''} / ${passengers[0].firstName || ''} ${(passengers[0].title || '').toUpperCase()}`.toUpperCase() : 'PASSENGER',
-    origin: flight?.origin || flight?.legs?.[0]?.from || 'JED',
-    destination: flight?.destination || flight?.legs?.[0]?.to || 'CAI',
+    origin: flight?.origin || flight?.legs?.[0]?.from || '',
+    destination: flight?.destination || flight?.legs?.[0]?.to || '',
     departureDate: flight?.departureDate || flight?.legs?.[0]?.date || '',
-    airline: flight?.airline || flight?.legs?.[0]?.airline || 'Saudi Arabian Airlines',
+    airline: flight?.airline || flight?.legs?.[0]?.airline || '',
     flightNo: flight?.flightNumber || flight?.legs?.[0]?.flightNo || '',
     cabin: bundle?.name || 'Economy',
   };
+
 
   const handlePrintETicket = () => {
     window.print();
@@ -2305,7 +2342,62 @@ export default function BookingPage() {
         .eticket-wrap td, .eticket-wrap th { vertical-align: top; }
       `}} />
 
+      {/* ── Success & Auto-Redirect Banner ── */}
+      <div className="no-print" style={{
+        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        color: '#ffffff',
+        borderRadius: 12,
+        padding: '18px 24px',
+        marginBottom: 20,
+        boxShadow: '0 8px 24px rgba(5, 150, 105, 0.25)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 16
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+            ✅
+          </div>
+          <div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 2px 0' }}>
+              {isRTL ? 'تمت عملية الدفع وتأكيد الحجز بنجاح!' : 'Payment Completed & Booking Confirmed!'}
+            </div>
+            <div style={{ fontSize: '0.86rem', opacity: 0.95 }}>
+              {isRTL
+                ? `تم إرسال التذكرة الإلكترونية إلى بريدك الإلكتروني. سيتم توجيهك تلقائياً إلى الصفحة الرئيسية خلال ${redirectCountdown} ثانية...`
+                : `Your E-Ticket receipt has been sent to your email. Redirecting to home page in ${redirectCountdown}s...`
+              }
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined') localStorage.removeItem('selectedFlight');
+              router.push(`/${lang}`);
+            }}
+            style={{
+              padding: '10px 20px',
+              background: '#ffffff',
+              color: '#047857',
+              border: 'none',
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+            }}
+          >
+            {isRTL ? 'الذهاب إلى الرئيسية الآن' : 'Go to Home Now'}
+          </button>
+        </div>
+      </div>
+
       <div className="eticket-wrap" style={{ background: '#fff', border: '2px solid #E85D1F', borderRadius: 12, overflow: 'hidden', boxShadow: '0 10px 40px rgba(232, 93, 31, 0.08)' }}>
+
 
         {/* ── Brand Header Bar ── */}
         <div style={{ background: '#0b1329', color: '#fff', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '4px solid #E85D1F' }}>
@@ -2367,17 +2459,19 @@ export default function BookingPage() {
         {/* ── Flight Segments (Exact Reference Layout) ── */}
         <div style={{ padding: '20px 24px', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
           {getLegsList().map((leg, i, arr) => {
-            const depTimeRaw = leg.dep || leg.departure || leg.departureTime || leg.departure_time || flight?.dep || flight?.departureTime || '07:15 AM';
-            const arrTimeRaw = leg.arr || leg.arrival || leg.arrivalTime || leg.arrival_time || flight?.arr || flight?.arrivalTime || '09:30 AM';
+            const depTimeRaw = leg.dep || leg.departure || leg.departureTime || leg.departure_time || flight?.dep || flight?.departureTime || '';
+            const arrTimeRaw = leg.arr || leg.arrival || leg.arrivalTime || leg.arrival_time || flight?.arr || flight?.arrivalTime || '';
             const depTime = formatTimePretty(depTimeRaw);
             const arrTime = formatTimePretty(arrTimeRaw);
-            const dur = leg.duration || leg.flightDuration || flight?.duration || '02h 15m';
-            const durationStr = typeof dur === 'number' ? `${Math.floor(dur / 60)}h ${dur % 60}m` : dur || '02h 15m';
-            const fromCode = leg.from || (leg.isReturn ? tkt.destination : tkt.origin) || 'JED';
-            const toCode = leg.to || (leg.isReturn ? tkt.origin : tkt.destination) || 'RUH';
-            const legDate = formatDatePretty(leg.date || tkt.departureDate) || 'Sep 8, 2026';
-            const flightNum = leg.flightNo || leg.flightNumber || tkt.flightNo || 'SV-304';
-            const airlineName = leg.airline || flight?.airline || tkt.airline || 'Saudi Arabian Airlines (Saudia)';
+            const dur = leg.duration || leg.flightDuration || flight?.duration || '';
+            const durationStr = typeof dur === 'number' ? `${Math.floor(dur / 60)}h ${dur % 60}m` : (dur || '');
+            const fromCode = leg.from || (leg.isReturn ? tkt.destination : tkt.origin) || '';
+            const toCode = leg.to || (leg.isReturn ? tkt.origin : tkt.destination) || '';
+            const legDate = formatDatePretty(leg.date || tkt.departureDate) || '';
+            const flightNum = leg.flightNo || leg.flightNumber || tkt.flightNo || '';
+            const airlineName = leg.airline || flight?.airline || tkt.airline || '';
+            const legAirlineCode = leg.airlineCode || leg.airline_code || flight?.airlineCode || flight?.airline_code || tkt.airlineCode || (flightNum.includes('-') ? flightNum.split('-')[0] : (flightNum.includes(' ') ? flightNum.split(' ')[0] : flightNum.slice(0, 2))) || 'SV';
+
 
             return (
               <div key={i} style={{ marginBottom: i < arr.length - 1 ? 20 : 0 }}>
@@ -2402,8 +2496,16 @@ export default function BookingPage() {
 
                   {/* Center Column: Airline Logo, Airline Name, Flight Number & Dashed Flight Arrow */}
                   <div style={{ flexGrow: 1, margin: '0 24px', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, background: '#1e293b', color: '#ff9868', borderRadius: 10, fontSize: 20, marginBottom: 8, boxShadow: '0 4px 10px rgba(15, 23, 42, 0.15)' }}>
-                      ✈
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 12, padding: 6, marginBottom: 8, boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)' }}>
+                      <img
+                        src={leg.logo || flight?.logo || flight?.airlineLogo || `https://pics.avs.io/100/100/${legAirlineCode}.png`}
+                        alt={airlineName}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://images.kiwi.com/airlines/64x64/${legAirlineCode}.png`;
+                        }}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
                     </div>
 
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>

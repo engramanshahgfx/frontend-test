@@ -72,7 +72,7 @@ export async function sendBookingEmail(formData) {
             
             <div class="content">
               <div class="section">
-                <h2>📍 Destination Details</h2>
+                <h2> Destination Details</h2>
                 <p><span class="label">Destination:</span> ${formData.destination}</p>
                 <p><span class="label">Language:</span> ${formData.lang === 'ar' ? 'Arabic' : 'English'}</p>
               </div>

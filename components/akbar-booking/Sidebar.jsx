@@ -64,6 +64,16 @@ export default function Sidebar({ flight, step, passengerName, addInsurance, ext
 
   const displayAirline = (lang === 'ar' && AIRLINE_TRANSLATIONS[leg.airline]) ? AIRLINE_TRANSLATIONS[leg.airline] : leg.airline;
 
+  const legCode = 
+    leg.airlineCode || 
+    leg.airline_code || 
+    flight?.airlineCode || 
+    flight?.airline_code || 
+    (leg.flightNo && leg.flightNo.includes('-') ? leg.flightNo.split('-')[0] : '') ||
+    (leg.flightNo && leg.flightNo.includes(' ') ? leg.flightNo.split(' ')[0] : '') ||
+    (flight?.flightNo && flight.flightNo.includes('-') ? flight.flightNo.split('-')[0] : '') ||
+    (leg.flightNo && leg.flightNo.length >= 2 ? leg.flightNo.slice(0, 2) : 'SV');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 140 }}>
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
@@ -83,8 +93,16 @@ export default function Sidebar({ flight, step, passengerName, addInsurance, ext
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#701a75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800 }}>
-                {leg.airline?.[0] || 'F'}
+              <div style={{ width: 28, height: 28, borderRadius: 6, background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 3, flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <img
+                  src={leg.logo || flight?.logo || flight?.airlineLogo || `https://pics.avs.io/100/100/${legCode}.png`}
+                  alt={displayAirline}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://images.kiwi.com/airlines/64x64/${legCode}.png`;
+                  }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
               </div>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
                 {displayAirline} · {leg.flightNo}

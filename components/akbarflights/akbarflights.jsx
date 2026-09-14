@@ -37,12 +37,33 @@ export default function AkbarFlights({ initialParams }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
+  const CITY_AR_MAP = {
+    'Mumbai': 'مومباي', 'New Delhi': 'نيودلهي', 'Delhi': 'دلهي', 'Kolkata': 'كولكاتا',
+    'Aurangabad': 'أورانجاباد', 'Ziro, Arunachal Pradesh': 'زيرو، أروناتشال براديش',
+    'Srinagar': 'سرينغار', 'Guwahati': 'غواهاتي', 'Hyderabad': 'حيدر أباد', 'Chandigarh': 'تشانتديغار',
+    'Bangalore': 'بنغالور', 'Bengaluru': 'بنغالورو', 'Chennai': 'تشيناي', 'Cochin': 'كوتشين',
+    'Kochi': 'كوتشي', 'Goa': 'غوا', 'Jaipur': 'جايپور', 'Lucknow': 'لكهنؤ', 'Varanasi': 'فاراناسي',
+    'Amritsar': 'أمريتسار', 'London, GB': 'لندن', 'London Heathrow': 'لندن هيثرو',
+    'Riyadh': 'الرياض', 'Jeddah': 'جدة', 'Dammam': 'الدمام', 'Madinah': 'المدينة المنورة',
+    'Medina': 'المدينة المنورة', 'Cairo': 'القاهرة', 'Dubai': 'دبي', 'Abu Dhabi': 'أبو ظبي',
+    'Sharjah': 'الشارقة', 'Istanbul': 'إسطنبول', 'Dharamsala': 'دهارامسالا', 'Pondicherry': 'بونديشيري'
+  };
+
+  const COUNTRY_AR_MAP = {
+    'India': 'الهند', 'Saudi Arabia': 'المملكة العربية السعودية',
+    'United Arab Emirates': 'الإمارات العربية المتحدة', 'Egypt': 'مصر',
+    'United Kingdom': 'المملكة المتحدة', 'USA': 'الولايات المتحدة',
+    'Australia': 'أستراليا', 'Pakistan': 'باكستان', 'Turkey.': 'تركيا', 'Turkey': 'تركيا'
+  };
+
   const getAirportDetails = (code) => {
     if (!code) return { city: '', name: '' };
     const ap = ALL_AIRPORTS.find(a => a.Code.toUpperCase() === code.toUpperCase());
     if (ap) {
+      const cityAr = ap.CityNameAr || ap.city_ar || CITY_AR_MAP[ap.CityName] || ap.CityName;
+      const cntryAr = ap.CountryAr || ap.country_ar || COUNTRY_AR_MAP[ap.Country] || ap.Country;
       const cityStr = isRTL 
-        ? `${ap.CityNameAr || ap.city_ar || ap.CityName}، ${ap.CountryAr || ap.country_ar || ap.Country}`
+        ? `${cityAr}، ${cntryAr}`
         : `${ap.CityName}, ${ap.Country}`;
       const nameStr = isRTL
         ? (ap.NameAr || ap.name_ar || ap.Name)
@@ -75,8 +96,75 @@ export default function AkbarFlights({ initialParams }) {
   const [infants, setInfants] = useState(0);
   const [cabinClass, setCabinClass] = useState(initialParams?.cabinClass?.toLowerCase() || "economy");
 
+  const [multiCityLegs, setMultiCityLegs] = useState([
+    {
+      origin: initialOrigCode || "RUH",
+      originCity: initialOrigCode ? getAirportDetails(initialOrigCode).city : (isRTL ? "الرياض، المملكة العربية السعودية" : "Riyadh, Saudi Arabia"),
+      originAirportName: initialOrigCode ? getAirportDetails(initialOrigCode).name : "King Khalid International Airport",
+      destination: initialDestCode || "JED",
+      destinationCity: initialDestCode ? getAirportDetails(initialDestCode).city : (isRTL ? "جدة، المملكة العربية السعودية" : "Jeddah, Saudi Arabia"),
+      destAirportName: initialDestCode ? getAirportDetails(initialDestCode).name : "King Abdulaziz International Airport",
+      departDate: initialParams?.departDate || getTomorrowISO(),
+    },
+    {
+      origin: initialDestCode || "JED",
+      originCity: initialDestCode ? getAirportDetails(initialDestCode).city : (isRTL ? "جدة، المملكة العربية السعودية" : "Jeddah, Saudi Arabia"),
+      originAirportName: initialDestCode ? getAirportDetails(initialDestCode).name : "King Abdulaziz International Airport",
+      destination: "MED",
+      destinationCity: isRTL ? "المدينة المنورة، المملكة العربية السعودية" : "Madinah, Saudi Arabia",
+      destAirportName: "Prince Mohammad bin Abdulaziz International Airport",
+      departDate: getDayAfterTomorrowISO(),
+    }
+  ]);
+
+  const addMultiCityLeg = () => {
+    if (multiCityLegs.length >= 5) return;
+    const lastLeg = multiCityLegs[multiCityLegs.length - 1];
+    const newOrigin = lastLeg ? lastLeg.destination : "MED";
+    const newOriginDetails = getAirportDetails(newOrigin);
+    const nextDate = getNextDayISO(lastLeg ? lastLeg.departDate : getTomorrowISO());
+    const defaultDestDetails = getAirportDetails("DXB");
+
+    setMultiCityLegs([
+      ...multiCityLegs,
+      {
+        origin: newOrigin,
+        originCity: lastLeg ? lastLeg.destinationCity : newOriginDetails.city,
+        originAirportName: lastLeg ? lastLeg.destAirportName : newOriginDetails.name,
+        destination: "DXB",
+        destinationCity: defaultDestDetails.city || (isRTL ? "دبي، الإمارات العربية المتحدة" : "Dubai, United Arab Emirates"),
+        destAirportName: defaultDestDetails.name || "Dubai International Airport",
+        departDate: nextDate
+      }
+    ]);
+  };
+
+  const removeMultiCityLeg = (index) => {
+    if (multiCityLegs.length <= 2) return;
+    setMultiCityLegs(multiCityLegs.filter((_, i) => i !== index));
+  };
+
+  const swapMultiCityLeg = (index) => {
+    setMultiCityLegs(prev => {
+      const copy = [...prev];
+      const leg = copy[index];
+      if (leg) {
+        copy[index] = {
+          ...leg,
+          origin: leg.destination,
+          originCity: leg.destinationCity,
+          originAirportName: leg.destAirportName,
+          destination: leg.origin,
+          destinationCity: leg.originCity,
+          destAirportName: leg.originAirportName,
+        };
+      }
+      return copy;
+    });
+  };
+
   const [showPaxModal, setShowPaxModal] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null); // 'origin' | 'dest' | null
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'origin' | 'dest' | 'leg-X-origin' | 'leg-X-dest' | null
   const [searchQuery, setSearchQuery] = useState("");
   const [backendAirports, setBackendAirports] = useState([]);
 
@@ -86,16 +174,15 @@ export default function AkbarFlights({ initialParams }) {
   const [error, setError] = useState(null);
 
   const dropdownRef = useRef(null);
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+  const API_BASE = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${window.location.hostname}:8000/api`)
+    : (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api");
+
 
   const totalPassengers = adults + children + infants;
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setBackendAirports([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
+    const fetchAirports = async () => {
       try {
         const res = await akbarApi.getAirports(searchQuery);
         if (res.ok && res.data?.data) {
@@ -104,9 +191,12 @@ export default function AkbarFlights({ initialParams }) {
       } catch (err) {
         console.error('Failed fetching backend airports:', err);
       }
-    }, 250);
+    };
+
+    const delay = searchQuery.trim() ? 250 : 0;
+    const timer = setTimeout(fetchAirports, delay);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, activeDropdown]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -243,8 +333,6 @@ export default function AkbarFlights({ initialParams }) {
     });
 
   const selectAirport = (ap, type) => {
-    let newOrigin = origin;
-    let newDest = destination;
     const cityStr = isRTL
       ? `${ap.CityNameAr || ap.city_ar || ap.CityName}، ${ap.CountryAr || ap.country_ar || ap.Country}`
       : `${ap.CityName}, ${ap.Country}`;
@@ -252,23 +340,62 @@ export default function AkbarFlights({ initialParams }) {
       ? (ap.NameAr || ap.name_ar || ap.Name)
       : ap.Name;
 
-    if (type === "origin") {
-      newOrigin = ap.Code;
-      setOrigin(ap.Code);
-      setOriginCity(cityStr);
-      setOriginAirportName(nameStr);
+    if (typeof type === 'string' && type.startsWith("leg-")) {
+      const parts = type.split("-"); // ["leg", "0", "origin"]
+      const index = parseInt(parts[1], 10);
+      const field = parts[2]; // "origin" or "dest"
+
+      setMultiCityLegs(prev => {
+        const copy = [...prev];
+        if (copy[index]) {
+          if (field === "origin") {
+            copy[index] = { ...copy[index], origin: ap.Code, originCity: cityStr, originAirportName: nameStr };
+          } else {
+            copy[index] = { ...copy[index], destination: ap.Code, destinationCity: cityStr, destAirportName: nameStr };
+            if (copy[index + 1]) {
+              copy[index + 1] = { ...copy[index + 1], origin: ap.Code, originCity: cityStr, originAirportName: nameStr };
+            }
+          }
+        }
+        return copy;
+      });
+
+      if (index === 0) {
+        if (field === "origin") {
+          setOrigin(ap.Code);
+          setOriginCity(cityStr);
+          setOriginAirportName(nameStr);
+        } else {
+          setDestination(ap.Code);
+          setDestinationCity(cityStr);
+          setDestAirportName(nameStr);
+        }
+      }
     } else {
-      newDest = ap.Code;
-      setDestination(ap.Code);
-      setDestinationCity(cityStr);
-      setDestAirportName(nameStr);
+      let newOrigin = origin;
+      let newDest = destination;
+
+      if (type === "origin") {
+        newOrigin = ap.Code;
+        setOrigin(ap.Code);
+        setOriginCity(cityStr);
+        setOriginAirportName(nameStr);
+      } else {
+        newDest = ap.Code;
+        setDestination(ap.Code);
+        setDestinationCity(cityStr);
+        setDestAirportName(nameStr);
+      }
+      setActiveDropdown(null);
+      setSearchQuery("");
+
+      setTimeout(() => {
+        handleSearch(null, false, null, newOrigin, newDest);
+      }, 50);
+      return;
     }
     setActiveDropdown(null);
     setSearchQuery("");
-
-    setTimeout(() => {
-      handleSearch(null, false, null, newOrigin, newDest);
-    }, 50);
   };
 
   const formatTimeStr = (str) => {
@@ -284,48 +411,83 @@ export default function AkbarFlights({ initialParams }) {
     if (e && e.preventDefault) e.preventDefault();
     setError(null);
 
-    const activeDepartDate = customDate || initialParams?.departDate || departDate;
+    const activeDepartDate = customDate || departDate || initialParams?.departDate || getTomorrowISO();
     if (customDate) {
       setDepartDate(customDate);
     }
 
-    const activeOrigin = ((overrideOrigin !== null ? overrideOrigin : (origin || initialParams?.origin)) || "").toUpperCase();
-    const activeDest = ((overrideDest !== null ? overrideDest : (destination || initialParams?.destination)) || "").toUpperCase();
+    const activeOrigin = ((overrideOrigin !== null ? overrideOrigin : origin) || initialParams?.origin || "").toUpperCase();
+    const activeDest = ((overrideDest !== null ? overrideDest : destination) || initialParams?.destination || "").toUpperCase();
 
-    if (!activeOrigin || !activeDest) {
-      setLoading(false);
-      setOffers([]);
-      if (!isInitial) {
-        setError(isRTL ? "يرجى اختيار مطار المغادرة والوصول أولاً." : "Please select origin and destination airports.");
+    let searchPayload = {};
+
+    if (tripType === 'multicity') {
+      const activeLegs = multiCityLegs.map(l => ({
+        origin: (l.origin || "").toUpperCase(),
+        destination: (l.destination || "").toUpperCase(),
+        departure_date: l.departDate
+      }));
+
+      for (let i = 0; i < activeLegs.length; i++) {
+        if (!activeLegs[i].origin || !activeLegs[i].destination) {
+          setLoading(false);
+          setOffers([]);
+          setError(isRTL ? `يرجى اختيار مطار المغادرة والوصول للرحلة رقم ${i + 1}` : `Please select origin and destination for Flight ${i + 1}`);
+          return;
+        }
+        if (activeLegs[i].origin === activeLegs[i].destination) {
+          setLoading(false);
+          setOffers([]);
+          setError(isRTL ? `مطار المغادرة والوصول يجب أن يكونا مختلفين للرحلة رقم ${i + 1}` : `Origin and destination must be different for Flight ${i + 1}`);
+          return;
+        }
       }
-      return;
-    }
 
-    setLoading(true);
+      setLoading(true);
 
-    if (activeOrigin === activeDest) {
-      setLoading(false);
-      setOffers([]);
-      setError(isRTL ? "يرجى اختيار مطارين مختلفين للمغادرة والوصول." : "Origin and Destination airports must be different.");
-      return;
-    }
-
-    const activeReturnDate = tripType === 'roundtrip' ? (returnDate || initialParams?.returnDate || getNextDayISO(activeDepartDate)) : null;
-
-    // Update browser URL slug with exact route and departure date matching Almosafer structure
-    if (typeof window !== 'undefined') {
-      const cabinLabel = cabinClass ? (cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)) : 'Economy';
-      const cleanUrl = `/${lang}/flights/${activeOrigin}-${activeDest}/${activeDepartDate}${activeReturnDate ? '/' + activeReturnDate : ''}/${cabinLabel}/${adults}Adult`;
-
-      if (e) {
-        router.push(cleanUrl);
-      } else if (!isInitial && window.history) {
-        window.history.pushState(null, '', cleanUrl);
+      searchPayload = {
+        legs: activeLegs,
+        adults,
+        children,
+        infants,
+        cabin_class: cabinClass,
+        direct_only: directOnly,
+      };
+    } else {
+      if (!activeOrigin || !activeDest) {
+        setLoading(false);
+        setOffers([]);
+        if (!isInitial) {
+          setError(isRTL ? "يرجى اختيار مطار المغادرة والوصول أولاً." : "Please select origin and destination airports.");
+        }
+        return;
       }
-    }
 
-    try {
-      const searchPayload = {
+
+      setLoading(true);
+
+      if (activeOrigin === activeDest) {
+        setLoading(false);
+        setOffers([]);
+        setError(isRTL ? "يرجى اختيار مطارين مختلفين للمغادرة والوصول." : "Origin and Destination airports must be different.");
+        return;
+      }
+
+      const activeReturnDate = tripType === 'roundtrip' ? (returnDate || initialParams?.returnDate || getNextDayISO(activeDepartDate)) : null;
+
+      // Update browser URL slug with exact route and departure date matching Almosafer structure
+      if (typeof window !== 'undefined') {
+        const cabinLabel = cabinClass ? (cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)) : 'Economy';
+        const cleanUrl = `/${lang}/flights/${activeOrigin}-${activeDest}/${activeDepartDate}${activeReturnDate ? '/' + activeReturnDate : ''}/${cabinLabel}/${adults}Adult`;
+
+        if (e) {
+          router.push(cleanUrl);
+        } else if (!isInitial && window.history) {
+          window.history.pushState(null, '', cleanUrl);
+        }
+      }
+
+      searchPayload = {
         origin: activeOrigin,
         destination: activeDest,
         departure_date: activeDepartDate,
@@ -336,18 +498,32 @@ export default function AkbarFlights({ initialParams }) {
         cabin_class: cabinClass,
         direct_only: directOnly,
       };
+    }
 
-      const response = await fetch(`${API_BASE}/v2/akbar/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Accept-Language": lang || "en"
-        },
-        body: JSON.stringify(searchPayload),
-      });
+    try {
+      let response;
+      try {
+        response = await fetch(`${API_BASE}/v2/akbar/search`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Accept-Language": lang || "en"
+          },
+          body: JSON.stringify(searchPayload),
+        });
+      } catch (e1) {
+        console.warn("Direct fetch failed, falling back to akbarApi...", e1);
+        const akbarRes = await akbarApi.search(searchPayload);
+        if (akbarRes.ok && akbarRes.data) {
+          response = { json: async () => akbarRes.data };
+        } else {
+          throw e1;
+        }
+      }
 
       const data = await response.json();
+
       const rawOffers = data?.data?.offers || data?.offers || [];
 
       const normalizedOffers = rawOffers.map(offer => {
@@ -378,8 +554,8 @@ export default function AkbarFlights({ initialParams }) {
           price: Math.round(priceVal * 100) / 100,
           currency: typeof offer.price === 'object' ? (offer.price?.currency || 'SAR') : 'SAR',
           cabin: offer.Cabin === 'B' ? 'Business' : (offer.cabin_class_label || offer.CabinClass || 'Economy'),
-          checkedBaggage: offer.checked_baggage || offer.Baggage || '20 KG Checked Baggage',
-          cabinBaggage: offer.cabin_baggage || '7 KG Cabin Baggage',
+          checkedBaggage: offer.CheckInBaggage || offer.BaggageInformation || offer.checked_baggage || offer.Baggage || offer.FreeBaggage || 'Total 30kg (1 piece only)',
+          cabinBaggage: offer.CabinBaggage || offer.cabin_baggage || '7 kg (1 piece)',
           raw: offer
         };
       });
@@ -421,6 +597,8 @@ export default function AkbarFlights({ initialParams }) {
       duration: offer.duration,
       price: offer.price,
       currency: offer.currency,
+      checkedBaggage: offer.checkedBaggage,
+      cabinBaggage: offer.cabinBaggage,
       adults: numAdults,
       children: numChildren,
       infants: numInfants,
@@ -430,23 +608,29 @@ export default function AkbarFlights({ initialParams }) {
           from: offer.departure,
           to: offer.arrival,
           airline: offer.airline,
+          airlineCode: offer.airlineCode,
           flightNo: offer.flightNumber,
           date: departDate,
           dep: offer.departureTime,
           arr: offer.arrivalTime,
           duration: offer.duration,
-          isDirect: true
+          checkedBaggage: offer.checkedBaggage,
+          cabinBaggage: offer.cabinBaggage,
+          isDirect: offer.stops === 0
         },
         ...(isRoundTrip ? [{
           from: offer.arrival,
           to: offer.departure,
           airline: offer.airline,
+          airlineCode: offer.airlineCode,
           flightNo: offer.flightNumber,
           date: returnDate,
           dep: offer.departureTime,
           arr: offer.arrivalTime,
           duration: offer.duration,
-          isDirect: true
+          checkedBaggage: offer.checkedBaggage,
+          cabinBaggage: offer.cabinBaggage,
+          isDirect: offer.stops === 0
         }] : [])
       ],
       raw: offer
@@ -489,16 +673,19 @@ export default function AkbarFlights({ initialParams }) {
           <div style={{
             background: '#ffffff',
             borderRadius: 20,
-            padding: '24px 28px',
+            padding: '20px 20px',
             boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-            border: '1px solid rgba(255, 255, 255, 0.8)'
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
+            width: '100%'
           }}>
 
             {/* ── Top Bar: Trip Type Pills & Checkboxes ── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
 
               {/* Trip Type Radio Pills */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -562,7 +749,7 @@ export default function AkbarFlights({ initialParams }) {
               </div>
 
               {/* Checkboxes */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.84rem', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
                   <input
                     type="checkbox"
@@ -585,407 +772,792 @@ export default function AkbarFlights({ initialParams }) {
             </div>
 
             {/* ── Main Unified Search Bar Row ── */}
-            <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'stretch', gap: 8, flexWrap: 'wrap' }} ref={dropdownRef}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: tripType === 'multicity' ? 'column' : 'row', alignItems: 'stretch', gap: 12, flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }} ref={dropdownRef}>
 
-              {/* 1. Joined From / To Airport Selector Box */}
-              <div style={{
-                flex: '2 1 380px',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #cbd5e1',
-                borderRadius: 12,
-                padding: '4px 10px',
-                background: '#ffffff',
-                position: 'relative'
-              }}>
-
-                {/* ── FROM FIELD ── */}
-                <div
-                  onClick={() => { setActiveDropdown('origin'); setSearchQuery(''); }}
-                  style={{
-                    flex: 1,
-                    padding: '8px 10px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    background: activeDropdown === 'origin' ? '#f0f9ff' : 'transparent',
-                    borderRadius: 8
-                  }}
-                >
-                  <FaPlane style={{ color: '#94a3b8', transform: 'rotate(-45deg)', fontSize: 16 }} />
-                  <div style={{ width: '100%', overflow: 'hidden' }}>
-                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{isRTL ? 'من' : 'From'}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{
-                        fontSize: '0.92rem',
-                        fontWeight: origin ? 800 : 500,
-                        color: origin ? '#0f172a' : '#94a3b8',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {origin
-                          ? originCity
-                          : (isRTL ? 'من أين؟' : 'Origin')}
+              {tripType === 'multicity' ? (
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14, boxSizing: 'border-box' }}>
+                  {/* Passenger & Cabin selection top bar for Multi-city */}
+                  <div style={{ display: 'flex', justifyContent: isRTL ? 'flex-start' : 'flex-end', marginBottom: 4 }}>
+                    <div
+                      onClick={() => setShowPaxModal(!showPaxModal)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 12,
+                        padding: '10px 16px',
+                        background: '#ffffff',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                    >
+                      <FaUser style={{ color: '#94a3b8', fontSize: 14 }} />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                        {isRTL ? `${totalPassengers} مسافر، ${cabinClass === 'business' ? 'درجة الأعمال' : 'الدرجة السياحية'}` : `${totalPassengers} Traveler${totalPassengers > 1 ? 's' : ''}, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}`}
                       </span>
-                    </div>
-                  </div>
-                </div>
+                      <FaChevronDown style={{ color: '#94a3b8', fontSize: 10 }} />
 
-                {/* Swap Circle Button */}
-                <button
-                  type="button"
-                  onClick={handleSwap}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#0284c7',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    zIndex: 2,
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
-                    flexShrink: 0
-                  }}
-                >
-                  <FaExchangeAlt style={{ fontSize: 12 }} />
-                </button>
-
-                {/* ── TO FIELD ── */}
-                <div
-                  onClick={() => { setActiveDropdown('dest'); setSearchQuery(''); }}
-                  style={{
-                    flex: 1,
-                    padding: '8px 10px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    background: activeDropdown === 'dest' ? '#f0f9ff' : 'transparent',
-                    borderRadius: 8
-                  }}
-                >
-                  <FaPlane style={{ color: '#94a3b8', transform: 'rotate(45deg)', fontSize: 16 }} />
-                  <div style={{ width: '100%', overflow: 'hidden' }}>
-                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{isRTL ? 'إلى' : 'To'}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{
-                        fontSize: '0.92rem',
-                        fontWeight: destination ? 800 : 500,
-                        color: destination ? '#0f172a' : '#94a3b8',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {destination
-                          ? destinationCity
-                          : (isRTL ? 'إلى أين؟' : 'Destination')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── LIVE AIRPORT SEARCH POPUP DROPDOWN ── */}
-                {activeDropdown && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '108%',
-                    left: isRTL ? 'auto' : (activeDropdown === 'origin' ? 0 : 'auto'),
-                    right: isRTL ? (activeDropdown === 'origin' ? 0 : 'auto') : (activeDropdown === 'dest' ? 0 : 'auto'),
-                    width: 380,
-                    background: '#ffffff',
-                    borderRadius: 14,
-                    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18)',
-                    border: '1px solid #e2e8f0',
-                    zIndex: 1000,
-                    overflow: 'hidden'
-                  }}>
-                    {/* Search Input Box */}
-                    <div style={{ padding: '12px 14px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <FaSearch style={{ color: '#94a3b8', fontSize: 14 }} />
-                      <input
-                        type="text"
-                        autoFocus
-                        placeholder={isRTL ? 'ابحث عن مدينة، دولة أو رمز المطار...' : 'Search city, country or airport code...'}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}
-                      />
-                    </div>
-
-                    {/* Section Header */}
-                    <div style={{ padding: '10px 16px 6px 16px', fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>
-                      {searchQuery ? (isRTL ? `نتائج البحث (${filteredAirports.length})` : `Search Results (${filteredAirports.length})`) : (isRTL ? 'الوجهات الشائعة' : 'Top destinations')}
-                    </div>
-
-                    {/* Airport Options List */}
-                    <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                      {filteredAirports.length > 0 ? (
-                        filteredAirports.map((ap) => (
-                          <div
-                            key={ap.Code}
-                            onClick={() => selectAirport(ap, activeDropdown)}
-                            style={{
-                              padding: '10px 16px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              cursor: 'pointer',
-                              borderBottom: '1px solid #f8fafc',
-                              transition: 'background 0.15s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <FaRegStar style={{ color: '#94a3b8', fontSize: 14, flexShrink: 0 }} />
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0f172a' }}>
-                                  {isRTL
-                                    ? `${ap.CityNameAr || ap.city_ar || ap.CityName}، ${ap.CountryAr || ap.country_ar || ap.Country}`
-                                    : `${ap.CityName}, ${ap.Country}`}
-                                </div>
-                                <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: 1 }}>
-                                  {isRTL
-                                    ? (ap.NameAr || ap.name_ar || ap.Name)
-                                    : ap.Name}
-                                </div>
-                              </div>
+                      {/* Pax Selector Dropdown Popup */}
+                      {showPaxModal && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            position: 'absolute',
+                            top: '110%',
+                            right: isRTL ? 'auto' : 0,
+                            left: isRTL ? 0 : 'auto',
+                            width: 280,
+                            maxWidth: '100%',
+                            background: '#ffffff',
+                            borderRadius: 12,
+                            padding: 16,
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                            border: '1px solid #e2e8f0',
+                            zIndex: 100,
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'بالغون (12+ سنة)' : 'Adults (12+ yrs)'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                              <span style={{ fontWeight: 700 }}>{adults}</span>
+                              <button type="button" onClick={() => setAdults(adults + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
                             </div>
-                            <span style={{
-                              background: '#f1f5f9',
-                              color: '#0f172a',
-                              fontWeight: 800,
-                              fontSize: '0.78rem',
-                              padding: '4px 8px',
-                              borderRadius: 6,
-                              letterSpacing: '0.5px'
-                            }}>
-                              {ap.Code}
-                            </span>
                           </div>
-                        ))
-                      ) : (
-                        <div style={{ padding: 20, textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-                          {isRTL ? `لم يتم العثور على مطارات لـ "${searchQuery}"` : `No airports found for "${searchQuery}"`}
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'أطفال (2-11 سنة)' : 'Children (2-11 yrs)'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                              <span style={{ fontWeight: 700 }}>{children}</span>
+                              <button type="button" onClick={() => setChildren(children + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'رضع (أقل من سنتين)' : 'Infants (< 2 yrs)'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                              <span style={{ fontWeight: 700 }}>{infants}</span>
+                              <button type="button" onClick={() => setInfants(infants + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
+                            </div>
+                          </div>
+
+                          <button type="button" onClick={() => setShowPaxModal(false)} style={{ width: '100%', padding: '8px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isRTL ? 'تطبيق' : 'Apply'}</button>
                         </div>
                       )}
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* 2. Departure & Return Dates Box */}
-              <div style={{
-                flex: '2 1 290px',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #cbd5e1',
-                borderRadius: 12,
-                background: '#ffffff',
-                overflow: 'hidden'
-              }}>
-                {/* Departure Box */}
-                <div style={{ flex: 1, padding: '8px 12px', borderLeft: isRTL ? 'none' : '1px solid #e2e8f0', borderRight: isRTL ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', gap: 10, position: 'relative', cursor: 'pointer' }}>
-                  <FaCalendarAlt style={{ color: '#94a3b8', fontSize: 16, flexShrink: 0 }} />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'المغادرة' : 'Departure'}</span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                      {formatDateLabel(departDate)}
-                    </span>
+                  {/* Multi-City Leg Cards */}
+                  {multiCityLegs.map((leg, index) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                      background: '#f8fafc',
+                      padding: '14px 16px',
+                      borderRadius: 14,
+                      border: '1px solid #e2e8f0',
+                      boxSizing: 'border-box',
+                      maxWidth: '100%'
+                    }}>
+                      <span style={{ background: '#0284c7', color: '#ffffff', fontSize: '0.78rem', fontWeight: 800, padding: '6px 12px', borderRadius: 8, flexShrink: 0 }}>
+                        {isRTL ? `الرحلة ${index + 1}` : `Flight ${index + 1}`}
+                      </span>
+
+                      {/* Joined From/To Box */}
+                      <div style={{
+                        flex: '1 1 300px',
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        alignItems: 'center',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 12,
+                        padding: '4px 8px',
+                        background: '#ffffff',
+                        position: 'relative'
+                      }}>
+                        {/* FROM */}
+                        <div
+                          onClick={() => { setActiveDropdown(`leg-${index}-origin`); setSearchQuery(''); }}
+                          style={{
+                            flex: 1,
+                            minWidth: 0,
+                            padding: '6px 6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            background: activeDropdown === `leg-${index}-origin` ? '#f0f9ff' : 'transparent',
+                            borderRadius: 8
+                          }}
+                        >
+                          <FaPlane style={{ color: '#94a3b8', transform: 'rotate(-45deg)', fontSize: 14, flexShrink: 0 }} />
+                          <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>{isRTL ? 'من' : 'From'}</div>
+                            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {leg.originCity || leg.origin || (isRTL ? 'من أين؟' : 'Origin')}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Swap Button */}
+                        <button
+                          type="button"
+                          onClick={() => swapMultiCityLeg(index)}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: '50%',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: '#0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            margin: '0 2px'
+                          }}
+                        >
+                          <FaExchangeAlt style={{ fontSize: 10 }} />
+                        </button>
+
+                        {/* TO */}
+                        <div
+                          onClick={() => { setActiveDropdown(`leg-${index}-dest`); setSearchQuery(''); }}
+                          style={{
+                            flex: 1,
+                            minWidth: 0,
+                            padding: '6px 6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            background: activeDropdown === `leg-${index}-dest` ? '#f0f9ff' : 'transparent',
+                            borderRadius: 8
+                          }}
+                        >
+                          <FaPlane style={{ color: '#94a3b8', transform: 'rotate(45deg)', fontSize: 14, flexShrink: 0 }} />
+                          <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>{isRTL ? 'إلى' : 'To'}</div>
+                            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {leg.destinationCity || leg.destination || (isRTL ? 'إلى أين؟' : 'Destination')}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Popup dropdown for multi-city leg */}
+                        {activeDropdown === `leg-${index}-origin` || activeDropdown === `leg-${index}-dest` ? (
+                          <div style={{
+                            position: 'absolute',
+                            top: '108%',
+                            left: 0,
+                            right: 0,
+                            width: '100%',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box',
+                            background: '#ffffff',
+                            borderRadius: 14,
+                            boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18)',
+                            border: '1px solid #e2e8f0',
+                            zIndex: 1000,
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{ padding: '12px 14px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <FaSearch style={{ color: '#94a3b8', fontSize: 14 }} />
+                              <input
+                                type="text"
+                                autoFocus
+                                placeholder={isRTL ? 'ابحث عن مدينة، دولة أو رمز المطار...' : 'Search city, country or airport code...'}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}
+                              />
+                            </div>
+                            <div style={{ padding: '10px 16px 6px 16px', fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>
+                              {searchQuery ? (isRTL ? `نتائج البحث (${filteredAirports.length})` : `Search Results (${filteredAirports.length})`) : (isRTL ? 'الوجهات الشائعة' : 'Top destinations')}
+                            </div>
+                            <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                              {filteredAirports.length > 0 ? (
+                                filteredAirports.map((ap) => (
+                                  <div
+                                    key={ap.Code}
+                                    onClick={() => selectAirport(ap, activeDropdown)}
+                                    style={{
+                                      padding: '10px 16px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      cursor: 'pointer',
+                                      borderBottom: '1px solid #f8fafc'
+                                    }}
+                                  >
+                                    <div>
+                                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0f172a' }}>
+                                        {isRTL ? `${ap.CityNameAr || ap.city_ar || ap.CityName}، ${ap.CountryAr || ap.country_ar || ap.Country}` : `${ap.CityName}, ${ap.Country}`}
+                                      </div>
+                                      <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{isRTL ? (ap.NameAr || ap.name_ar || ap.Name) : ap.Name}</div>
+                                    </div>
+                                    <span style={{ background: '#f1f5f9', color: '#0f172a', fontWeight: 800, fontSize: '0.78rem', padding: '4px 8px', borderRadius: 6 }}>{ap.Code}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <div style={{ padding: 20, textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                  {isRTL ? `لم يتم العثور على مطارات لـ "${searchQuery}"` : `No airports found for "${searchQuery}"`}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      {/* Leg Departure Date */}
+                      <div style={{
+                        flex: '1 1 180px',
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 12,
+                        padding: '8px 12px',
+                        background: '#ffffff',
+                        position: 'relative',
+                        cursor: 'pointer'
+                      }}>
+                        <FaCalendarAlt style={{ color: '#94a3b8', fontSize: 14 }} />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'المغادرة' : 'Departure'}</span>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>{formatDateLabel(leg.departDate)}</span>
+                        </div>
+                        <input
+                          type="date"
+                          value={leg.departDate}
+                          min={index > 0 ? multiCityLegs[index - 1].departDate : getTodayISO()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val) {
+                              setMultiCityLegs(prev => {
+                                const copy = [...prev];
+                                copy[index] = { ...copy[index], departDate: val };
+                                return copy;
+                              });
+                            }
+                          }}
+                          style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      {/* Remove Button */}
+                      {multiCityLegs.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMultiCityLeg(index)}
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: '50%',
+                            border: '1px solid #fecdd3',
+                            background: '#fff1f2',
+                            color: '#e11d48',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                        >
+                          <FaTimes style={{ fontSize: 14 }} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Actions Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, flexWrap: 'wrap', gap: 12 }}>
+                    {multiCityLegs.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={addMultiCityLeg}
+                        style={{
+                          background: '#f0f9ff',
+                          color: '#0284c7',
+                          border: '1px solid #bae6fd',
+                          borderRadius: 12,
+                          padding: '10px 20px',
+                          fontSize: '0.88rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8
+                        }}
+                      >
+                        <FaPlus style={{ fontSize: 12 }} />
+                        {isRTL ? 'إضافة رحلة جديدة' : 'Add another flight'}
+                      </button>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      style={{
+                        padding: '12px 36px',
+                        borderRadius: 12,
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+                        color: '#ffffff',
+                        fontSize: '0.95rem',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 10,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 16px rgba(244, 63, 94, 0.4)',
+                        marginLeft: isRTL ? 0 : 'auto',
+                        marginRight: isRTL ? 'auto' : 0
+                      }}
+                    >
+                      <FaSearch style={{ fontSize: 16 }} />
+                      <span>{loading ? (isRTL ? 'جارٍ البحث...' : 'Searching...') : (isRTL ? 'البحث عن الرحلات' : 'Search Flights')}</span>
+                    </button>
                   </div>
-                  <input
-                    type="date"
-                    value={departDate}
-                    min={getTodayISO()}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val) {
-                        setDepartDate(val);
-                        if (origin && destination) {
-                          handleSearch(null, false, val);
-                        }
-                      }
-                    }}
-                    style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                  />
                 </div>
+              ) : (
+                <>
+                  {/* 1. Joined From / To Airport Selector Box */}
+                  <div style={{
+                    flex: '1 1 320px',
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 12,
+                    padding: '4px 8px',
+                    background: '#ffffff',
+                    position: 'relative'
+                  }}>
 
-                {/* Return Box */}
-                <div style={{ flex: 1, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, position: 'relative', cursor: 'pointer' }}>
-                  {tripType === 'roundtrip' ? (
-                    <>
-                      <FaCalendarAlt style={{ color: '#0284c7', fontSize: 16, flexShrink: 0 }} />
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <span style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'العودة' : 'Return'}</span>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                          {formatDateLabel(returnDate || getNextDayISO(departDate))}
+                    {/* ── FROM FIELD ── */}
+                    <div
+                      onClick={() => { setActiveDropdown('origin'); setSearchQuery(''); }}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        padding: '8px 6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: activeDropdown === 'origin' ? '#f0f9ff' : 'transparent',
+                        borderRadius: 8
+                      }}
+                    >
+                      <FaPlane style={{ color: '#94a3b8', transform: 'rotate(-45deg)', fontSize: 15, flexShrink: 0 }} />
+                      <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+                        <div style={{ fontSize: '0.70rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{isRTL ? 'من' : 'From'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                          <span style={{
+                            fontSize: '0.88rem',
+                            fontWeight: origin ? 800 : 500,
+                            color: origin ? '#0f172a' : '#94a3b8',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'block',
+                            width: '100%'
+                          }}>
+                            {origin
+                              ? originCity
+                              : (isRTL ? 'من أين؟' : 'Origin')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Swap Circle Button */}
+                    <button
+                      type="button"
+                      onClick={handleSwap}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        border: '1px solid #cbd5e1',
+                        background: '#ffffff',
+                        color: '#0284c7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 2,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                        flexShrink: 0,
+                        margin: '0 2px'
+                      }}
+                    >
+                      <FaExchangeAlt style={{ fontSize: 11 }} />
+                    </button>
+
+                    {/* ── TO FIELD ── */}
+                    <div
+                      onClick={() => { setActiveDropdown('dest'); setSearchQuery(''); }}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        padding: '8px 6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: activeDropdown === 'dest' ? '#f0f9ff' : 'transparent',
+                        borderRadius: 8
+                      }}
+                    >
+                      <FaPlane style={{ color: '#94a3b8', transform: 'rotate(45deg)', fontSize: 15, flexShrink: 0 }} />
+                      <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+                        <div style={{ fontSize: '0.70rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{isRTL ? 'إلى' : 'To'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                          <span style={{
+                            fontSize: '0.88rem',
+                            fontWeight: destination ? 800 : 500,
+                            color: destination ? '#0f172a' : '#94a3b8',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'block',
+                            width: '100%'
+                          }}>
+                            {destination
+                              ? destinationCity
+                              : (isRTL ? 'إلى أين؟' : 'Destination')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── LIVE AIRPORT SEARCH POPUP DROPDOWN ── */}
+                    {activeDropdown === 'origin' || activeDropdown === 'dest' ? (
+                      <div style={{
+                        position: 'absolute',
+                        top: '108%',
+                        left: 0,
+                        right: 0,
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        background: '#ffffff',
+                        borderRadius: 14,
+                        boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18)',
+                        border: '1px solid #e2e8f0',
+                        zIndex: 1000,
+                        overflow: 'hidden'
+                      }}>
+                        {/* Search Input Box */}
+                        <div style={{ padding: '12px 14px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <FaSearch style={{ color: '#94a3b8', fontSize: 14 }} />
+                          <input
+                            type="text"
+                            autoFocus
+                            placeholder={isRTL ? 'ابحث عن مدينة، دولة أو رمز المطار...' : 'Search city, country or airport code...'}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}
+                          />
+                        </div>
+
+                        {/* Section Header */}
+                        <div style={{ padding: '10px 16px 6px 16px', fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>
+                          {searchQuery ? (isRTL ? `نتائج البحث (${filteredAirports.length})` : `Search Results (${filteredAirports.length})`) : (isRTL ? 'الوجهات الشائعة' : 'Top destinations')}
+                        </div>
+
+                        {/* Airport Options List */}
+                        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                          {filteredAirports.length > 0 ? (
+                            filteredAirports.map((ap) => (
+                              <div
+                                key={ap.Code}
+                                onClick={() => selectAirport(ap, activeDropdown)}
+                                style={{
+                                  padding: '10px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid #f8fafc',
+                                  transition: 'background 0.15s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                  <FaRegStar style={{ color: '#94a3b8', fontSize: 14, flexShrink: 0 }} />
+                                  <div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0f172a' }}>
+                                      {isRTL
+                                        ? `${ap.CityNameAr || ap.city_ar || CITY_AR_MAP[ap.CityName] || ap.CityName}، ${ap.CountryAr || ap.country_ar || COUNTRY_AR_MAP[ap.Country] || ap.Country}`
+                                        : `${ap.CityName}, ${ap.Country}`}
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: 1 }}>
+                                      {isRTL
+                                        ? (ap.NameAr || ap.name_ar || ap.Name)
+                                        : ap.Name}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span style={{
+                                  background: '#f1f5f9',
+                                  color: '#0f172a',
+                                  fontWeight: 800,
+                                  fontSize: '0.78rem',
+                                  padding: '4px 8px',
+                                  borderRadius: 6,
+                                  letterSpacing: '0.5px'
+                                }}>
+                                  {ap.Code}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div style={{ padding: 20, textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                              {isRTL ? `لم يتم العثور على مطارات لـ "${searchQuery}"` : `No airports found for "${searchQuery}"`}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* 2. Departure & Return Dates Box */}
+                  <div style={{
+                    flex: '1 1 240px',
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 12,
+                    background: '#ffffff',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Departure Box */}
+                    <div style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderLeft: isRTL ? 'none' : '1px solid #e2e8f0', borderRight: isRTL ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}>
+                      <FaCalendarAlt style={{ color: '#94a3b8', fontSize: 15, flexShrink: 0 }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'المغادرة' : 'Departure'}</span>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {formatDateLabel(departDate)}
                         </span>
                       </div>
                       <input
                         type="date"
-                        value={returnDate || getNextDayISO(departDate)}
-                        min={departDate || getTodayISO()}
+                        value={departDate}
+                        min={getTodayISO()}
                         onChange={(e) => {
-                          setReturnDate(e.target.value);
-                          if (origin && destination) {
-                            handleSearch(null, false, null);
+                          const val = e.target.value;
+                          if (val) {
+                            setDepartDate(val);
+                            if (origin && destination) {
+                              handleSearch(null, false, val);
+                            }
                           }
                         }}
                         style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                       />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTripType('oneway');
-                          setReturnDate('');
-                          if (origin && destination) {
-                            handleSearch(null, false, null);
-                          }
-                        }}
-                        style={{
-                          position: 'relative',
-                          zIndex: 10,
-                          width: 22,
-                          height: 22,
-                          borderRadius: '50%',
-                          border: '1px solid #cbd5e1',
-                          background: '#f8fafc',
-                          color: '#64748b',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          padding: 0,
-                          flexShrink: 0
-                        }}
-                      >
-                        <FaTimes style={{ fontSize: 10 }} />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTripType('roundtrip');
-                        const nextDate = getNextDayISO(departDate);
-                        setReturnDate(nextDate);
-                        if (origin && destination) {
-                          handleSearch(null, false, null);
-                        }
-                      }}
-                      style={{ border: 'none', background: 'transparent', color: '#0284c7', fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer', width: '100%', textAlign: isRTL ? 'right' : 'left' }}
-                    >
-                      {isRTL ? '+ إضافة عودة' : '+ Add return'}
-                    </button>
-                  )}
-                </div>
-              </div>
+                    </div>
 
-              {/* 3. Passengers & Cabin Class Field */}
-              <div
-                onClick={() => setShowPaxModal(!showPaxModal)}
-                style={{
-                  flex: '1 1 200px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: '1px solid #cbd5e1',
-                  borderRadius: 12,
-                  padding: '12px 14px',
-                  background: '#ffffff',
-                  cursor: 'pointer',
-                  position: 'relative'
-                }}
-              >
-                <FaUser style={{ color: '#94a3b8', fontSize: 14 }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                  {isRTL ? `${totalPassengers} مسافر، الدرجة السياحية` : `${totalPassengers} Traveler${totalPassengers > 1 ? 's' : ''}, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}`}
-                </span>
-                <FaChevronDown style={{ color: '#94a3b8', fontSize: 10, marginLeft: 'auto' }} />
+                    {/* Return Box */}
+                    <div style={{ flex: 1, minWidth: 0, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}>
+                      {tripType === 'roundtrip' ? (
+                        <>
+                          <FaCalendarAlt style={{ color: '#0284c7', fontSize: 15, flexShrink: 0 }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                            <span style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'العودة' : 'Return'}</span>
+                            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {formatDateLabel(returnDate || getNextDayISO(departDate))}
+                            </span>
+                          </div>
+                          <input
+                            type="date"
+                            value={returnDate || getNextDayISO(departDate)}
+                            min={departDate || getTodayISO()}
+                            onChange={(e) => {
+                              setReturnDate(e.target.value);
+                              if (origin && destination) {
+                                handleSearch(null, false, null);
+                              }
+                            }}
+                            style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setTripType('oneway');
+                              setReturnDate('');
+                              if (origin && destination) {
+                                handleSearch(null, false, null);
+                              }
+                            }}
+                            style={{
+                              position: 'relative',
+                              zIndex: 10,
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              border: '1px solid #cbd5e1',
+                              background: '#f8fafc',
+                              color: '#64748b',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              padding: 0,
+                              flexShrink: 0
+                            }}
+                          >
+                            <FaTimes style={{ fontSize: 10 }} />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTripType('roundtrip');
+                            const nextDate = getNextDayISO(departDate);
+                            setReturnDate(nextDate);
+                            if (origin && destination) {
+                              handleSearch(null, false, null);
+                            }
+                          }}
+                          style={{ border: 'none', background: 'transparent', color: '#0284c7', fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer', width: '100%', textAlign: isRTL ? 'right' : 'left' }}
+                        >
+                          {isRTL ? '+ إضافة عودة' : '+ Add return'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
-                {/* Pax Selector Dropdown Popup */}
-                {showPaxModal && (
+                  {/* 3. Passengers & Cabin Class Field */}
                   <div
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => setShowPaxModal(!showPaxModal)}
                     style={{
-                      position: 'absolute',
-                      top: '110%',
-                      right: isRTL ? 'auto' : 0,
-                      left: isRTL ? 0 : 'auto',
-                      width: 280,
-                      background: '#ffffff',
+                      flex: '1 1 180px',
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      border: '1px solid #cbd5e1',
                       borderRadius: 12,
-                      padding: 16,
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-                      border: '1px solid #e2e8f0',
-                      zIndex: 100
+                      padding: '12px 12px',
+                      background: '#ffffff',
+                      cursor: 'pointer',
+                      position: 'relative'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'بالغون (12+ سنة)' : 'Adults (12+ yrs)'}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
-                        <span style={{ fontWeight: 700 }}>{adults}</span>
-                        <button type="button" onClick={() => setAdults(adults + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
-                      </div>
-                    </div>
+                    <FaUser style={{ color: '#94a3b8', fontSize: 14, flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {isRTL ? `${totalPassengers} مسافر، الدرجة السياحية` : `${totalPassengers} Traveler${totalPassengers > 1 ? 's' : ''}, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}`}
+                    </span>
+                    <FaChevronDown style={{ color: '#94a3b8', fontSize: 10, marginLeft: 'auto', flexShrink: 0 }} />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'أطفال (2-11 سنة)' : 'Children (2-11 yrs)'}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
-                        <span style={{ fontWeight: 700 }}>{children}</span>
-                        <button type="button" onClick={() => setChildren(children + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
-                      </div>
-                    </div>
+                    {/* Pax Selector Dropdown Popup */}
+                    {showPaxModal && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'absolute',
+                          top: '110%',
+                          right: isRTL ? 'auto' : 0,
+                          left: isRTL ? 0 : 'auto',
+                          width: 280,
+                          maxWidth: '100%',
+                          boxSizing: 'border-box',
+                          background: '#ffffff',
+                          borderRadius: 12,
+                          padding: 16,
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                          border: '1px solid #e2e8f0',
+                          zIndex: 100
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'بالغون (12+ سنة)' : 'Adults (12+ yrs)'}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                            <span style={{ fontWeight: 700 }}>{adults}</span>
+                            <button type="button" onClick={() => setAdults(adults + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
+                          </div>
+                        </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'رضع (أقل من سنتين)' : 'Infants (< 2 yrs)'}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
-                        <span style={{ fontWeight: 700 }}>{infants}</span>
-                        <button type="button" onClick={() => setInfants(infants + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
-                      </div>
-                    </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'أطفال (2-11 سنة)' : 'Children (2-11 yrs)'}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                            <span style={{ fontWeight: 700 }}>{children}</span>
+                            <button type="button" onClick={() => setChildren(children + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
+                          </div>
+                        </div>
 
-                    <button type="button" onClick={() => setShowPaxModal(false)} style={{ width: '100%', padding: '8px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isRTL ? 'تطبيق' : 'Apply'}</button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{isRTL ? 'رضع (أقل من سنتين)' : 'Infants (< 2 yrs)'}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>-</button>
+                            <span style={{ fontWeight: 700 }}>{infants}</span>
+                            <button type="button" onClick={() => setInfants(infants + 1)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff' }}>+</button>
+                          </div>
+                        </div>
+
+                        <button type="button" onClick={() => setShowPaxModal(false)} style={{ width: '100%', padding: '8px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isRTL ? 'تطبيق' : 'Apply'}</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* 4. Vibrant Search Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  padding: '0 28px',
-                  height: 48,
-                  borderRadius: 12,
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
-                  color: '#ffffff',
-                  fontSize: '0.95rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(244, 63, 94, 0.4)',
-                  transition: 'all 0.2s',
-                  flexShrink: 0
-                }}
-              >
-                <FaSearch style={{ fontSize: 16 }} />
-                <span>{loading ? (isRTL ? 'جارٍ البحث...' : 'Searching...') : (isRTL ? 'بحث' : 'Search')}</span>
-              </button>
+                  {/* 4. Vibrant Search Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      flex: '1 1 120px',
+                      minWidth: '120px',
+                      padding: '0 24px',
+                      height: 48,
+                      borderRadius: 12,
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+                      color: '#ffffff',
+                      fontSize: '0.95rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 10,
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 16px rgba(244, 63, 94, 0.4)',
+                      transition: 'all 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <FaSearch style={{ fontSize: 16 }} />
+                    <span>{loading ? (isRTL ? 'جارٍ البحث...' : 'Searching...') : (isRTL ? 'بحث' : 'Search')}</span>
+                  </button>
+                </>
+              )}
 
             </form>
           </div>
@@ -1143,8 +1715,16 @@ export default function AkbarFlights({ initialParams }) {
                 <div key={idx} style={{ background: '#ffffff', borderRadius: 16, padding: '20px 24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#701a75', color: '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
-                        {offer.airlineCode}
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 4, flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+                        <img
+                          src={`https://pics.avs.io/100/100/${offer.airlineCode || 'SV'}.png`}
+                          alt={offer.airline}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://images.kiwi.com/airlines/64x64/${offer.airlineCode || 'SV'}.png`;
+                          }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
                       </div>
                       <div>
                         <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{offer.airline}</div>

@@ -897,7 +897,7 @@ export default function JamoulaOfferDetails() {
                   )}
                   {basicInfo.days_num && <div>📅 {t.days}: {basicInfo.days_num}</div>}
                   {basicInfo.destination_name && (
-                    <div>📍 {t.destination}: {getLocalizedText(basicInfo, "destination_name") || basicInfo.destination_name}</div>
+                    <div> {t.destination}: {getLocalizedText(basicInfo, "destination_name") || basicInfo.destination_name}</div>
                   )}
                   {basicInfo.available_to && (
                     <div>📆 {t.availableTo}: {basicInfo.available_to}</div>
