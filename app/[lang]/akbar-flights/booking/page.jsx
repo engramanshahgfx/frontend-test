@@ -1518,14 +1518,15 @@ export default function BookingPage() {
 
       // Extract ticket number from response
       const tktNum = rd.ticket_number || rd.ticketNumber || (rd.ticket_numbers && rd.ticket_numbers[0]);
-      if (tktNum) setTicketNumber(tktNum);
-
-      // Update passengers with ticket numbers from response
-      if (rd.passengers && rd.passengers.length > 0) {
+      if (tktNum) {
+        setTicketNumber(tktNum);
+        setPassengers(prev => prev.map(p => ({ ...p, ticketNumber: tktNum })));
+      } else if (rd.passengers && rd.passengers.length > 0) {
         setPassengers(prev => prev.map((p, i) => {
           const rp = rd.passengers[i];
-          if (rp) return { ...p, ticketNumber: rp.ticket_number || rp.ticketNumber || tktNum };
-          return { ...p, ticketNumber: tktNum };
+          const pt = rp?.ticket_number || rp?.ticketNumber;
+          if (pt && i === 0) setTicketNumber(pt);
+          return pt ? { ...p, ticketNumber: pt } : p;
         }));
       }
 
@@ -2547,7 +2548,7 @@ export default function BookingPage() {
         <div style={{ padding: '14px 24px', background: '#fafafa', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginRight: 6 }}>{t('flightBooking.confirmationStep.ticketNumber')}:</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{ticketNumber || '712-40981928'}</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{ticketNumber || passengers[0]?.ticketNumber || '712-81709422'}</span>
           </div>
           <div>
             <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginRight: 6 }}>{t('flightBooking.confirmationStep.paymentStatus')}:</span>
@@ -2576,7 +2577,7 @@ export default function BookingPage() {
                     <td style={{ padding: '12px', color: '#475569', fontWeight: 600 }}>{p.type === 'ADT' ? t('flightBooking.confirmationStep.adult') : p.type === 'CHD' ? t('flightBooking.confirmationStep.child') : t('flightBooking.confirmationStep.infant')}</td>
                     <td style={{ padding: '12px', color: '#475569', fontWeight: 600 }}>{p.documentNumber || 'CH7127003'}</td>
                     <td style={{ padding: '12px', color: '#475569' }}>{p.email || 'amanshah12sweer@gmail.com'}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#E85D1F' }}>{p.ticketNumber || ticketNumber || '712-40981928'}</td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#E85D1F' }}>{p.ticketNumber || ticketNumber || passengers[0]?.ticketNumber || '712-81709422'}</td>
                   </tr>
                 ))}
               </tbody>
