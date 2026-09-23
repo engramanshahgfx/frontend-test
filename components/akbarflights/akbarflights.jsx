@@ -380,18 +380,50 @@ export default function AkbarFlights({ initialParams }) {
         setOrigin(ap.Code);
         setOriginCity(cityStr);
         setOriginAirportName(nameStr);
+
+        if (ap.Code === destination) {
+          if (origin && origin !== ap.Code) {
+            const prevOrigDetails = getAirportDetails(origin);
+            newDest = origin;
+            setDestination(origin);
+            setDestinationCity(prevOrigDetails.city);
+            setDestAirportName(prevOrigDetails.name);
+          } else {
+            newDest = "";
+            setDestination("");
+            setDestinationCity("");
+            setDestAirportName("");
+          }
+        }
       } else {
         newDest = ap.Code;
         setDestination(ap.Code);
         setDestinationCity(cityStr);
         setDestAirportName(nameStr);
+
+        if (ap.Code === origin) {
+          if (destination && destination !== ap.Code) {
+            const prevDestDetails = getAirportDetails(destination);
+            newOrigin = destination;
+            setOrigin(destination);
+            setOriginCity(prevDestDetails.city);
+            setOriginAirportName(prevDestDetails.name);
+          } else {
+            newOrigin = "";
+            setOrigin("");
+            setOriginCity("");
+            setOriginAirportName("");
+          }
+        }
       }
       setActiveDropdown(null);
       setSearchQuery("");
 
-      setTimeout(() => {
-        handleSearch(null, false, null, newOrigin, newDest);
-      }, 50);
+      if (newOrigin && newDest && newOrigin !== newDest) {
+        setTimeout(() => {
+          handleSearch(null, false, null, newOrigin, newDest);
+        }, 50);
+      }
       return;
     }
     setActiveDropdown(null);

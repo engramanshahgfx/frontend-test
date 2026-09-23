@@ -1389,7 +1389,7 @@ export default function BookingPage() {
           price: calculateTotal(),
           total_amount: calculateTotal()
         },
-        passengers: passengers.map(p => ({ passenger_type: p.type, title: p.title, first_name: p.firstName, middle_name: p.middleName, last_name: p.lastName, date_of_birth: p.dateOfBirth, gender: p.gender, nationality: p.nationality, document_type: p.documentType, document_number: p.documentNumber, document_expiry: p.documentExpiry, document_issuing_country: p.documentIssuingCountry, email: p.email, phone: p.phone })),
+        passengers: passengers.map(p => ({ passenger_type: p.type, title: p.title, first_name: p.firstName, middle_name: p.middleName, last_name: p.lastName, date_of_birth: p.dateOfBirth, birth_date: p.dateOfBirth, dateOfBirth: p.dateOfBirth, gender: p.gender, nationality: p.nationality, document_type: p.documentType, document_number: p.documentNumber, passport_number: p.documentNumber, document_expiry: p.documentExpiry, passport_expiry: p.documentExpiry, document_issuing_country: p.documentIssuingCountry, email: p.email, phone: p.phone })),
       });
       const pd = data?.data || data;
       setBookingStatus(pd.booking_status || 'PASSENGERS_ADDED');
