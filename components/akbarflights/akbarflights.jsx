@@ -1065,7 +1065,16 @@ export default function AkbarFlights({ initialParams }) {
                         background: '#ffffff',
                         position: 'relative',
                         cursor: 'pointer'
-                      }}>
+                      }}
+                      onClick={(e) => {
+                        try {
+                          const input = e.currentTarget.querySelector('input[type="date"]');
+                          if (input && typeof input.showPicker === 'function') {
+                            input.showPicker();
+                          }
+                        } catch (_) {}
+                      }}
+                      >
                         <FaCalendarAlt style={{ color: '#94a3b8', fontSize: 14 }} />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'المغادرة' : 'Departure'}</span>
@@ -1075,6 +1084,14 @@ export default function AkbarFlights({ initialParams }) {
                           type="date"
                           value={leg.departDate}
                           min={index > 0 ? multiCityLegs[index - 1].departDate : getTodayISO()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            try {
+                              if (typeof e.target.showPicker === 'function') {
+                                e.target.showPicker();
+                              }
+                            } catch (_) {}
+                          }}
                           onChange={(e) => {
                             const val = e.target.value;
                             if (val) {
@@ -1386,7 +1403,17 @@ export default function AkbarFlights({ initialParams }) {
                     overflow: 'hidden'
                   }}>
                     {/* Departure Box */}
-                    <div style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderLeft: isRTL ? 'none' : '1px solid #e2e8f0', borderRight: isRTL ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}>
+                    <div
+                      onClick={(e) => {
+                        try {
+                          const input = e.currentTarget.querySelector('input[type="date"]');
+                          if (input && typeof input.showPicker === 'function') {
+                            input.showPicker();
+                          }
+                        } catch (_) {}
+                      }}
+                      style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderLeft: isRTL ? 'none' : '1px solid #e2e8f0', borderRight: isRTL ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}
+                    >
                       <FaCalendarAlt style={{ color: '#94a3b8', fontSize: 15, flexShrink: 0 }} />
                       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
                         <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>{isRTL ? 'المغادرة' : 'Departure'}</span>
@@ -1398,6 +1425,14 @@ export default function AkbarFlights({ initialParams }) {
                         type="date"
                         value={departDate}
                         min={getTodayISO()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            if (typeof e.target.showPicker === 'function') {
+                              e.target.showPicker();
+                            }
+                          } catch (_) {}
+                        }}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val) {
@@ -1412,7 +1447,17 @@ export default function AkbarFlights({ initialParams }) {
                     </div>
 
                     {/* Return Box */}
-                    <div style={{ flex: 1, minWidth: 0, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}>
+                    <div
+                      onClick={(e) => {
+                        try {
+                          const input = e.currentTarget.querySelector('input[type="date"]');
+                          if (input && typeof input.showPicker === 'function') {
+                            input.showPicker();
+                          }
+                        } catch (_) {}
+                      }}
+                      style={{ flex: 1, minWidth: 0, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', cursor: 'pointer' }}
+                    >
                       {tripType === 'roundtrip' ? (
                         <>
                           <FaCalendarAlt style={{ color: '#0284c7', fontSize: 15, flexShrink: 0 }} />
@@ -1426,6 +1471,14 @@ export default function AkbarFlights({ initialParams }) {
                             type="date"
                             value={returnDate || getNextDayISO(departDate)}
                             min={departDate || getTodayISO()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              try {
+                                if (typeof e.target.showPicker === 'function') {
+                                  e.target.showPicker();
+                                }
+                              } catch (_) {}
+                            }}
                             onChange={(e) => {
                               setReturnDate(e.target.value);
                               if (origin && destination) {
@@ -1658,12 +1711,15 @@ export default function AkbarFlights({ initialParams }) {
           {/* Date Pills Carousel */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
             {(() => {
-              const base = parseISODate(departDate || getTomorrowISO());
+              const todayISO = getTodayISO();
+              const effectiveDate = (!departDate || departDate < todayISO) ? todayISO : departDate;
+              const base = parseISODate(effectiveDate);
               const datePills = [];
 
               for (let i = -3; i <= 3; i++) {
                 const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
                 const iso = formatISODate(d);
+                const isPast = iso < todayISO;
                 const dayName = d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short" });
                 const monthDay = d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { day: "numeric", month: "short" });
                 const isSelected = iso === departDate;
@@ -1674,13 +1730,18 @@ export default function AkbarFlights({ initialParams }) {
                 datePills.push(
                   <div
                     key={iso}
-                    onClick={() => handleSearch(null, false, iso)}
+                    onClick={() => {
+                      if (isPast) return;
+                      setDepartDate(iso);
+                      handleSearch(null, false, iso);
+                    }}
                     style={{
                       flex: '1 0 135px',
                       minWidth: 125,
                       padding: '10px 14px',
                       borderRadius: 12,
-                      cursor: 'pointer',
+                      cursor: isPast ? 'not-allowed' : 'pointer',
+                      opacity: isPast ? 0.45 : 1,
                       background: isSelected ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : '#f8fafc',
                       color: isSelected ? '#ffffff' : '#0f172a',
                       border: isSelected ? '2px solid #0284c7' : '1px solid #e2e8f0',
@@ -1703,15 +1764,17 @@ export default function AkbarFlights({ initialParams }) {
                       fontSize: '0.72rem',
                       fontWeight: 800,
                       marginTop: 4,
-                      background: isSelected ? 'rgba(255,255,255,0.2)' : '#e0f2fe',
-                      color: isSelected ? '#ffffff' : '#0369a1',
+                      background: isSelected ? 'rgba(255,255,255,0.2)' : (isPast ? '#f1f5f9' : '#e0f2fe'),
+                      color: isSelected ? '#ffffff' : (isPast ? '#94a3b8' : '#0369a1'),
                       padding: '2px 8px',
                       borderRadius: 10,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 4
                     }}>
-                      {pillPrice ? (
+                      {isPast ? (
+                        <span>{isRTL ? 'تاريخ منتهي' : 'Past Date'}</span>
+                      ) : pillPrice ? (
                         <span>SAR {pillPrice}</span>
                       ) : (
                         <span>{isRTL ? 'عرض السعر' : 'View Fare'}</span>
