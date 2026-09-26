@@ -59,10 +59,7 @@
     "send": "发送",
     "sendMessage": "发送消息",
     "print": "打印",
-    "share": "分享",
-    "continue": "继续",
-    "returnHome": "返回首页",
-    "processing": "处理中..."
+    "share": "分享"
   },
   "forms": {
     "firstName": "名字",
@@ -291,71 +288,5 @@
   "faq": {
     "title": "常见问题",
     "description": "在这里您可以找到有关我们服务的常见问题解答。如有其他问题，请随时与我们联系。"
-  },
-  "flightBooking": {
-    "preparingJourney": "正在准备您的航班行程...",
-    "noFlightSelected": "未选择航班",
-    "searchFlightsFirst": "请先搜索并选择航班。",
-    "searchFlights": "搜索航班",
-    "yourJourney": "您的行程",
-    "priceBreakdown": "价格明细",
-    "secureBooking": "100% 安全航班预订",
-    "steps": {
-      "passengers": "乘客信息",
-      "extras": "升级体验",
-      "review": "核对信息",
-      "payment": "支付详情",
-      "confirmed": "预订成功"
-    },
-    "passengersStep": {
-      "title": "乘客 {number}",
-      "titleLabel": "称谓",
-      "adult": "(成人)",
-      "child": "(儿童)",
-      "infant": "(婴儿)",
-      "personalInformation": "个人信息",
-      "selectTitle": "选择称谓",
-      "mr": "先生",
-      "mrs": "女士",
-      "ms": "小姐",
-      "dr": "医生/博士"
-    },
-    "sidebar": {
-      "flightSummary": "航班摘要",
-      "details": "详情",
-      "departure": "出发",
-      "direct": "直飞",
-      "cancelAndDateChange": "退改签规则",
-      "nonRefundable": "不可退款",
-      "changeableWithFees": "有偿改签",
-      "flightInclVat": "机票 (含增值税)",
-      "serviceFee": "服务费",
-      "totalInclVat": "总计 (含增值税)",
-      "adultCount": "{count} 名成人",
-      "childCount": "{count} 名儿童",
-      "infantCount": "{count} 名婴儿"
-    },
-    "paymentStep": {
-      "title": "支付",
-      "howToPay": "您希望如何支付？",      "safeTransactions": "您的交易 100% 安全受保护",
-      "selectOrAddCard": "选择或添加信用卡/借记卡",
-      "addNewCard": "添加新的信用卡/借记卡",
-      "cardExpiry": "有效期",
-      "cvv": "CVV 安全码",
-      "defaultCard": "默认",
-      "addVoucher": "添加优惠券代码 (可选)",
-      "voucherCode": "优惠券代码",
-      "apply": "使用",
-      "selectReward": "选择您的奖励",
-      "rewardEligibility": "本次预订符合以下奖励条件",
-      "pointConversion": "1 积分 = ﷼ 1",
-      "almosaferPoints": "Almosafer 积分",
-      "qitafPoints": "Qitaf 积分",
-      "mokafaaPoints": "Mokafaa 积分",
-      "termsAgreement": "完成此预订即表示我承认并同意适用于此行程的隐私政策及条款与条件。",
-      "privacyPolicy": "隐私政策",
-      "termsConditions": "条款与条件",
-      "payNow": "立即支付"
-    }
   }
 }
