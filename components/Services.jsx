@@ -101,4 +101,3 @@ export default function Services({ lang, servicesData, sectionTitle, sectionDesc
     </section>
   );
 }
-

@@ -25,11 +25,11 @@ export default function BookingDetailsPage() {
       createdAt: '2026-02-20T10:30:00',
       updatedAt: '2026-02-20T10:35:00',
       passengers: [
-        {
-          type: 'ADT',
-          firstName: 'Ahmed',
-          lastName: 'Ali',
-          email: 'ahmed@example.com',
+        { 
+          type: 'ADT', 
+          firstName: 'Ahmed', 
+          lastName: 'Ali', 
+          email: 'ahmed@example.com', 
           phone: '+966501234567',
           gender: 'male',
           dateOfBirth: '1990-05-15',
@@ -101,11 +101,11 @@ export default function BookingDetailsPage() {
       createdAt: '2026-02-21T14:15:00',
       updatedAt: '2026-02-21T14:15:00',
       passengers: [
-        {
-          type: 'ADT',
-          firstName: 'Sara',
-          lastName: 'Mohammed',
-          email: 'sara@example.com',
+        { 
+          type: 'ADT', 
+          firstName: 'Sara', 
+          lastName: 'Mohammed', 
+          email: 'sara@example.com', 
           phone: '+966509876543',
           gender: 'female',
           dateOfBirth: '1985-08-22',
@@ -179,9 +179,9 @@ export default function BookingDetailsPage() {
     try {
       // For testing, use mock data
       // In production, replace with actual API call:
-      // const response = await fetch(`${API_URL}/akbar/admin/bookings/${bookingId}`);
+      // const response = await fetch(`${API_URL}/ndc/admin/bookings/${bookingId}`);
       // const data = await response.json();
-
+      
       setTimeout(() => {
         const mockBooking = mockBookingsData[bookingId] || generateMockBooking(bookingId);
         setBooking(mockBooking);
@@ -236,7 +236,7 @@ export default function BookingDetailsPage() {
 
   const handleIssueTicket = async () => {
     setActionLoading(true);
-    // Mock API call - replace with actual akbar OrderRetrieve/Ticketing
+    // Mock API call - replace with actual NDC OrderRetrieve/Ticketing
     setTimeout(() => {
       setBooking(prev => ({
         ...prev,
@@ -257,9 +257,9 @@ export default function BookingDetailsPage() {
 
   const handleCancelBooking = async () => {
     if (!confirm('Are you sure you want to cancel this booking? This action may trigger a refund.')) return;
-
+    
     setActionLoading(true);
-    // Mock API call - replace with actual akbar OrderCancel
+    // Mock API call - replace with actual NDC OrderCancel
     setTimeout(() => {
       setBooking(prev => ({
         ...prev,
@@ -279,7 +279,7 @@ export default function BookingDetailsPage() {
     }, 1500);
   };
 
-  const handleReseakbaronfirmation = async () => {
+  const handleResendConfirmation = async () => {
     alert('Confirmation email resent to ' + booking.passengers[0].email);
   };
 
@@ -336,7 +336,7 @@ export default function BookingDetailsPage() {
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>😕</div>
           <h2 style={{ color: '#1e293b', marginBottom: '8px' }}>Booking Not Found</h2>
           <p style={{ color: '#64748b', marginBottom: '24px' }}>The booking you're looking for doesn't exist.</p>
-          <Link href={`/${lang}/admin/akbar-bookings`} style={{
+          <Link href={`/${lang}/admin/ndc-bookings`} style={{
             padding: '12px 24px',
             background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
             color: 'white',
@@ -462,21 +462,21 @@ export default function BookingDetailsPage() {
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <Link
-          href={`/${lang}/admin/akbar-bookings`}
-          style={{
-            color: '#64748b',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            display: 'inline-flex',
-            alignItems: 'center',
+        <Link 
+          href={`/${lang}/admin/ndc-bookings`}
+          style={{ 
+            color: '#64748b', 
+            textDecoration: 'none', 
+            fontSize: '0.9rem', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
             gap: '6px',
             marginBottom: '12px'
           }}
         >
           ← Back to Bookings
         </Link>
-
+        
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#1e293b', margin: '0 0 8px 0' }}>
@@ -486,10 +486,10 @@ export default function BookingDetailsPage() {
               Created on {formatDate(booking.createdAt)}
             </p>
           </div>
-
-          <span
+          
+          <span 
             className="status-badge-lg"
-            style={{
+            style={{ 
               background: `${getStatusColor(booking.status)}18`,
               color: getStatusColor(booking.status),
               border: `2px solid ${getStatusColor(booking.status)}40`
@@ -505,14 +505,14 @@ export default function BookingDetailsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
+          
           {/* Flight Details */}
           <div className="detail-card">
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
               🛫 Flight Details
             </h2>
-
-            <div style={{
+            
+            <div style={{ 
               background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
               borderRadius: '12px',
               padding: '20px',
@@ -527,7 +527,7 @@ export default function BookingDetailsPage() {
                     {booking.flight.outbound.flightNumber} • {booking.flight.outbound.aircraft}
                   </div>
                 </div>
-                <div style={{
+                <div style={{ 
                   background: 'white',
                   padding: '6px 12px',
                   borderRadius: '8px',
@@ -551,14 +551,14 @@ export default function BookingDetailsPage() {
                     {booking.flight.outbound.departureTime}
                   </div>
                 </div>
-
+                
                 <div style={{ flex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '4px' }}>
                     {booking.flight.outbound.duration}
                   </div>
-                  <div style={{
-                    width: '100%',
-                    height: '2px',
+                  <div style={{ 
+                    width: '100%', 
+                    height: '2px', 
                     background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
                     position: 'relative'
                   }}>
@@ -578,7 +578,7 @@ export default function BookingDetailsPage() {
                     {booking.flight.outbound.date}
                   </div>
                 </div>
-
+                
                 <div style={{ flex: 1, textAlign: 'center' }}>
                   <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>
                     {booking.flight.outbound.destination.code}
@@ -599,11 +599,11 @@ export default function BookingDetailsPage() {
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
               👤 Passenger Information
             </h2>
-
+            
             {booking.passengers.map((pax, index) => (
-              <div key={index} style={{
-                background: '#f8fafc',
-                borderRadius: '12px',
+              <div key={index} style={{ 
+                background: '#f8fafc', 
+                borderRadius: '12px', 
                 padding: '16px',
                 marginBottom: index < booking.passengers.length - 1 ? '12px' : 0
               }}>
@@ -611,10 +611,10 @@ export default function BookingDetailsPage() {
                   <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '1rem' }}>
                     {pax.firstName} {pax.lastName}
                   </div>
-                  <span style={{
-                    background: '#e0f2fe',
-                    color: '#0284c7',
-                    padding: '4px 10px',
+                  <span style={{ 
+                    background: '#e0f2fe', 
+                    color: '#0284c7', 
+                    padding: '4px 10px', 
                     borderRadius: '6px',
                     fontSize: '0.75rem',
                     fontWeight: 600
@@ -622,7 +622,7 @@ export default function BookingDetailsPage() {
                     {pax.type === 'ADT' ? 'Adult' : pax.type === 'CHD' ? 'Child' : 'Infant'}
                   </span>
                 </div>
-
+                
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.9rem' }}>
                   <div>
                     <span style={{ color: '#64748b' }}>Email:</span>
@@ -655,12 +655,12 @@ export default function BookingDetailsPage() {
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 📦 Bundle: {booking.bundle.name}
               </h2>
-
+              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {booking.bundle.services?.map((service, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    alignItems: 'center',
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
                     gap: '10px',
                     padding: '10px',
                     background: service.included ? '#f0fdf4' : '#f8fafc',
@@ -686,13 +686,13 @@ export default function BookingDetailsPage() {
 
         {/* Right Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
+          
           {/* Actions */}
           <div className="detail-card">
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0' }}>
               ⚡ Quick Actions
             </h2>
-
+            
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {booking.status === 'CONFIRMED' && booking.payment.status === 'PAID' && (
                 <button
@@ -704,7 +704,7 @@ export default function BookingDetailsPage() {
                   {actionLoading ? <span className="spinner-sm" /> : '🎫'} Issue Ticket
                 </button>
               )}
-
+              
               {booking.ticketing?.status === 'ISSUED' && (
                 <button
                   className="action-btn"
@@ -713,15 +713,15 @@ export default function BookingDetailsPage() {
                   📄 Download E-Ticket
                 </button>
               )}
-
+              
               <button
                 className="action-btn"
-                onClick={handleReseakbaronfirmation}
+                onClick={handleResendConfirmation}
                 style={{ background: '#f1f5f9', color: '#475569', width: '100%', justifyContent: 'center' }}
               >
                 📧 Resend Confirmation
               </button>
-
+              
               {(booking.status === 'CONFIRMED' || booking.status === 'PENDING') && (
                 <button
                   className="action-btn"
@@ -740,10 +740,10 @@ export default function BookingDetailsPage() {
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
               💳 Payment
             </h2>
-
-            <span
+            
+            <span 
               className="status-badge-lg"
-              style={{
+              style={{ 
                 background: `${getStatusColor(booking.payment.status)}18`,
                 color: getStatusColor(booking.payment.status),
                 border: `1px solid ${getStatusColor(booking.payment.status)}40`,
@@ -753,7 +753,7 @@ export default function BookingDetailsPage() {
             >
               {booking.payment.status}
             </span>
-
+            
             <div className="info-row">
               <span className="info-label">Method</span>
               <span className="info-value">{booking.payment.method}</span>
@@ -779,7 +779,7 @@ export default function BookingDetailsPage() {
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0' }}>
               💰 Pricing
             </h2>
-
+            
             <div className="info-row">
               <span className="info-label">Base Fare</span>
               <span className="info-value">{booking.pricing.baseFare} {booking.pricing.currency}</span>
@@ -800,7 +800,7 @@ export default function BookingDetailsPage() {
                 {booking.pricing.totalPrice} {booking.pricing.currency}
               </span>
             </div>
-
+            
             {booking.payment.refundedAmount > 0 && (
               <div className="info-row" style={{ background: '#fef3c7', margin: '12px -24px -24px', padding: '16px 24px', borderRadius: '0 0 16px 16px' }}>
                 <span className="info-label" style={{ color: '#92400e' }}>Refunded</span>
@@ -817,11 +817,11 @@ export default function BookingDetailsPage() {
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0' }}>
                 🎫 Ticketing
               </h2>
-
+              
               <div className="info-row">
                 <span className="info-label">Status</span>
-                <span
-                  style={{
+                <span 
+                  style={{ 
                     background: `${getStatusColor(booking.ticketing.status)}18`,
                     color: getStatusColor(booking.ticketing.status),
                     padding: '4px 10px',
@@ -856,13 +856,13 @@ export default function BookingDetailsPage() {
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0' }}>
                 📅 Timeline
               </h2>
-
+              
               <div>
                 {booking.timeline.map((item, index) => (
                   <div key={index} className="timeline-item">
-                    <div
+                    <div 
                       className="timeline-dot"
-                      style={{
+                      style={{ 
                         background: item.status === 'completed' ? '#dcfce7' : '#f1f5f9',
                         color: item.status === 'completed' ? '#16a34a' : '#9ca3af'
                       }}

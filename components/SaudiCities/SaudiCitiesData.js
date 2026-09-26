@@ -63,14 +63,14 @@ const SaudiCitiesData = [
   },
   {
     id: 4,
-    name: { en: "Abha", ar: "أبها" },
+    name: { en: "AlBahah", ar: "الباحة" },
     temperature: "19°C",
     season: { en: "Mountain Escape", ar: "ملاذ جبلي" },
     description: {
       en: "GREEN MOUNTAINS & COOL CLIMATE",
       ar: "جبال خضراء وطقس معتدل"
     },
-    image: "/cities/abha.png",
+    image: "/cities/bahah.png",
     mapPosition: { top: "62%", left: "46%" },
     highlights: [
       { en: "Al-Soudah Park", ar: "منتزه السودة" },

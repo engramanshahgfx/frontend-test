@@ -18,243 +18,243 @@ import {
 } from "react-icons/fa";
 
 export default function RefundContent({ lang }) {
-  const content = {
-    ar: {
-      heroTitle: "سياسة الاسترداد المالي",
-      heroSubtitle: "شركة التلال والرمال لتنظيم الرحلات السياحية",
-      intro: "توضح هذه الصفحة سياسة الاسترداد المالي الخاصة بشركة التلال والرمال لتنظيم الرحلات السياحية وفقاً لأنظمة وزارة السياحة في المملكة العربية السعودية.",
-      warning: "يُعد إتمام الحجز أو استخدام الموقع موافقة كاملة على سياسة الاسترداد المالي الموضحة أدناه.",
-      sections: [
-        {
-          id: 1,
-          title: "شروط الاسترداد",
-          icon: <FaMoneyBillWave size={28} />,
-          points: [
-            "يُجرى الاسترداد بواسطة وسيلة الدفع الأصلية عند الإمكان.",
-            "قد تُطبق رسوم إدارية أو شروط استرداد تختلف بحسب مزود الخدمة ونوع الحجز.",
-            "الرسوم غير القابلة للاسترداد تُذكر صراحةً في تفاصيل الحجز أو التذكرة.",
-            "تحتفظ الشركة بحق خصم التكاليف الفعلية التي تكبدتها وفقاً لسياسات الموردين.",
-          ],
-        },
-        {
-          id: 2,
-          title: "مدة معالجة الاسترداد",
-          icon: <FaClock size={28} />,
-          points: [
-            "تتم مراجعة طلبات الاسترداد خلال 3 أيام عمل.",
-            "يتم تنفيذ الاسترداد المعتمد خلال 14 يوم عمل.",
-            "قد تستغرق البنوك من 7 إلى 30 يوم عمل إضافية.",
-            "سيتم إشعار العميل بحالة الطلب عبر البريد الإلكتروني.",
-          ],
-        },
-        {
-          id: 3,
-          title: "حالات الاسترداد الكامل",
-          icon: <FaCheckCircle size={28} />,
-          points: [
-            "إلغاء الخدمة من قبل الشركة لأسباب تشغيلية.",
-            "عدم توفر الخدمة المحجوزة في الموعد المحدد.",
-            "أخطاء نظام الحجز المزدوج من قبل الشركة.",
-            "إلغاء الحجز خلال 24 ساعة من تأكيد الحجز (للبعض).",
-          ],
-        },
-        {
-          id: 4,
-          title: "حالات الاسترداد الجزئي",
-          icon: <FaUndoAlt size={28} />,
-          points: [
-            "قد يتوفر استرداد جزئي وفق شروط مزود الخدمة ونوع الحجز.",
-            "نوصي بالرجوع إلى شروط الحجز أو التذكرة لمعرفة نسب الاسترداد الدقيقة.",
-            "في حال وجود فروقات أو رسوم، سيتم إعلام العميل أثناء إجراءات الاسترداد.",
-          ],
-        },
-        {
-          id: 5,
-          title: "الحالات غير القابلة للاسترداد",
-          icon: <FaBan size={28} />,
-          points: [
-            "عدم الحضور للخدمة في الموعد المحدد (No Show).",
-            "الخدمات والعروض الخاصة المصنفة غير قابلة للاسترداد.",
-            "إدخال بيانات أو مستندات غير صحيحة من قبل العميل.",
-            "مخالفة شروط وأحكام مزودي الخدمات.",
-            "الطلبات الملغاة بسبب سوء الأحوال الجوية (حسب السياسة).",
-          ],
-        },
-        {
-          id: 6,
-          title: "طرق الاسترداد",
-          icon: <FaCreditCard size={28} />,
-          points: [
-            "الاسترداد عبر البطاقة الائتمانية: عادة 7-14 يوم عمل حسب البنك.",
-            "الاسترداد عبر التحويل البنكي: عادة 5-10 أيام عمل.",
-            "الاسترداد عبر المحفظة الرقمية: عادة 3-7 أيام عمل.",
-            "رصيد في حساب العميل بالموقع: قد يكون فوريًا في بعض الحالات.",
-          ],
-        },
-        {
-          id: 7,
-          title: "إجراءات طلب الاسترداد",
-          icon: <FaFileContract size={28} />,
-          points: [
-            "تقديم طلب خطي عبر البريد الإلكتروني أو خدمة العملاء.",
-            "إرفاق رقم الحجز وبيانات الدفع.",
-            "انتظار تأكيد الاسترداد من قسم الحسابات.",
-            "الاسترداد خلال المدة المحددة حسب طريقة الدفع.",
-          ],
-        },
-        {
-          id: 8,
-          title: "القوة القاهرة",
-          icon: <FaShieldAlt size={28} />,
-          points: [
-            "في حالات القوة القاهرة يتم تطبيق سياسات الموردين.",
-            "قد يتم استرداد المبلغ كرصيد للعميل بدلاً من استرداد نقدي.",
-            "تشمل القوة القاهرة: الكوارث الطبيعية، الأوبئة، القرارات الحكومية.",
-            "الشركة غير ملزمة بتعويض إضافي خارج نطاق السياسة.",
-          ],
-        },
-        {
-          id: 9,
-          title: "التواصل",
-          icon: <FaEnvelopeOpenText size={28} />,
-          points: [
-            "البريد الإلكتروني: info@tilalr.com",
-            "رقم خدمة العملاء: 966547305060",
-            "الواتساب الرسمي: 966547305060",
-            "ساعات العمل: الأحد إلى الخميس 9ص - 6م",
-          ],
-        },
-        {
-          id: 10,
-          title: "الإقرار والموافقة",
-          icon: <FaFileSignature size={28} />,
-          points: [
-            "باستخدام الموقع أو إتمام أي حجز يقر العميل بموافقته على هذه السياسة.",
-            "تعتبر هذه السياسة جزءاً من شروط وأحكام استخدام الموقع.",
-            "تحتفظ الشركة بحق تعديل هذه السياسة في أي وقت.",
-          ],
-        },
-      ],
-    },
-    en: {
-      heroTitle: "Financial Refund Policy",
-      heroSubtitle: "Tilal Al Rimal Tourism Company",
-      intro: "This page explains the financial refund policy of Tilal Al Rimal Tourism Company in accordance with the regulations of the Ministry of Tourism of the Kingdom of Saudi Arabia.",
-      warning: "Completing a booking or using the website constitutes full acceptance of this Refund Policy.",
-      sections: [
-        {
-          id: 1,
-          title: "Refund Terms",
-          icon: <FaMoneyBillWave size={28} />,
-          points: [
-            "Refunds are issued using the original payment method.",
-            "5% administrative fee applies on cancelled bookings.",
-            "Additional service fees are non-refundable after use.",
-            "The Company may deduct actual costs incurred.",
-          ],
-        },
-        {
-          id: 2,
-          title: "Refund Processing Time",
-          icon: <FaClock size={28} />,
-          points: [
-            "Refund requests are reviewed within 3 business days.",
-            "Approved refunds are processed within 14 business days.",
-            "Banks may take an additional 7-30 business days.",
-            "Customers will be notified via email about request status.",
-          ],
-        },
-        {
-          id: 3,
-          title: "Full Refund Cases",
-          icon: <FaCheckCircle size={28} />,
-          points: [
-            "Service cancellation by the Company for operational reasons.",
-            "Booked service unavailable at scheduled time.",
-            "Double booking errors caused by the Company.",
-            "Cancellation within 24 hours of booking confirmation (for some services).",
-          ],
-        },
-        {
-          id: 4,
-          title: "Partial Refund Cases",
-          icon: <FaUndoAlt size={28} />,
-          points: [
-            "Cancellation 7 days before service: 75% refund",
-            "Cancellation 3 days before service: 50% refund",
-            "Cancellation 24 hours before service: 25% refund",
-            "Cancellation after service date: No refund",
-          ],
-        },
-        {
-          id: 5,
-          title: "Non-Refundable Cases",
-          icon: <FaBan size={28} />,
-          points: [
-            "No-show for scheduled service.",
-            "Special promotions and services marked non-refundable.",
-            "Incorrect information or documents provided by customer.",
-            "Violation of supplier terms and conditions.",
-            "Cancellations due to weather conditions (subject to policy).",
-          ],
-        },
-        {
-          id: 6,
-          title: "Refund Methods",
-          icon: <FaCreditCard size={28} />,
-          points: [
-            "Credit card refund: 7-14 business days.",
-            "Bank transfer refund: 5-10 business days.",
-            "Digital wallet refund: 3-7 business days.",
-            "Store credit on website: Instant.",
-          ],
-        },
-        {
-          id: 7,
-          title: "Refund Request Procedure",
-          icon: <FaFileContract size={28} />,
-          points: [
-            "Submit written request via email or customer service.",
-            "Attach booking number and payment details.",
-            "Wait for refund confirmation from accounts department.",
-            "Refund processed within specified time based on payment method.",
-          ],
-        },
-        {
-          id: 8,
-          title: "Force Majeure",
-          icon: <FaShieldAlt size={28} />,
-          points: [
-            "Supplier policies apply during force majeure events.",
-            "Amount may be refunded as store credit instead of cash.",
-            "Force majeure includes: natural disasters, pandemics, government decisions.",
-            "Company has no additional compensation obligations.",
-          ],
-        },
-        {
-          id: 9,
-          title: "Contact Information",
-          icon: <FaEnvelopeOpenText size={28} />,
-          points: [
-            "Email: info@tilalr.com",
-            "Customer Service: 966547305060",
-            "Official WhatsApp: 966547305060",
-            "Working Hours: Sunday-Thursday 9AM-6PM",
-          ],
-        },
-        {
-          id: 10,
-          title: "Acceptance",
-          icon: <FaFileSignature size={28} />,
-          points: [
-            "By using the website or completing a booking, customers accept this policy.",
-            "This policy forms part of the website Terms & Conditions.",
-            "The Company reserves the right to update this policy at any time.",
-          ],
-        },
-      ],
-    },
-  };
+ const content = {
+  ar: {
+    heroTitle: "سياسة الاسترداد المالي",
+    heroSubtitle: "شركة التلال والرمال لتنظيم الرحلات السياحية",
+    intro: "توضح هذه الصفحة سياسة الاسترداد المالي الخاصة بشركة التلال والرمال لتنظيم الرحلات السياحية وفقاً لأنظمة وزارة السياحة في المملكة العربية السعودية.",
+    warning: "يُعد إتمام الحجز أو استخدام الموقع موافقة كاملة على سياسة الاسترداد المالي الموضحة أدناه.",
+    sections: [
+      {
+        id: 1,
+        title: "شروط الاسترداد",
+        icon: <FaMoneyBillWave size={28} />,
+        points: [
+          "يُجرى الاسترداد بواسطة وسيلة الدفع الأصلية عند الإمكان.",
+          "قد تُطبق رسوم إدارية أو شروط استرداد تختلف بحسب مزود الخدمة ونوع الحجز.",
+          "الرسوم غير القابلة للاسترداد تُذكر صراحةً في تفاصيل الحجز أو التذكرة.",
+          "تحتفظ الشركة بحق خصم التكاليف الفعلية التي تكبدتها وفقاً لسياسات الموردين.",
+        ],
+      },
+      {
+        id: 2,
+        title: "مدة معالجة الاسترداد",
+        icon: <FaClock size={28} />,
+        points: [
+          "تتم مراجعة طلبات الاسترداد خلال 3 أيام عمل.",
+          "يتم تنفيذ الاسترداد المعتمد خلال 14 يوم عمل.",
+          "قد تستغرق البنوك من 7 إلى 30 يوم عمل إضافية.",
+          "سيتم إشعار العميل بحالة الطلب عبر البريد الإلكتروني.",
+        ],
+      },
+      {
+        id: 3,
+        title: "حالات الاسترداد الكامل",
+        icon: <FaCheckCircle size={28} />,
+        points: [
+          "إلغاء الخدمة من قبل الشركة لأسباب تشغيلية.",
+          "عدم توفر الخدمة المحجوزة في الموعد المحدد.",
+          "أخطاء نظام الحجز المزدوج من قبل الشركة.",
+          "إلغاء الحجز خلال 24 ساعة من تأكيد الحجز (للبعض).",
+        ],
+      },
+      {
+        id: 4,
+        title: "حالات الاسترداد الجزئي",
+        icon: <FaUndoAlt size={28} />,
+        points: [
+          "قد يتوفر استرداد جزئي وفق شروط مزود الخدمة ونوع الحجز.",
+          "نوصي بالرجوع إلى شروط الحجز أو التذكرة لمعرفة نسب الاسترداد الدقيقة.",
+          "في حال وجود فروقات أو رسوم، سيتم إعلام العميل أثناء إجراءات الاسترداد.",
+        ],
+      },
+      {
+        id: 5,
+        title: "الحالات غير القابلة للاسترداد",
+        icon: <FaBan size={28} />,
+        points: [
+          "عدم الحضور للخدمة في الموعد المحدد (No Show).",
+          "الخدمات والعروض الخاصة المصنفة غير قابلة للاسترداد.",
+          "إدخال بيانات أو مستندات غير صحيحة من قبل العميل.",
+          "مخالفة شروط وأحكام مزودي الخدمات.",
+          "الطلبات الملغاة بسبب سوء الأحوال الجوية (حسب السياسة).",
+        ],
+      },
+      {
+        id: 6,
+        title: "طرق الاسترداد",
+        icon: <FaCreditCard size={28} />,
+        points: [
+          "الاسترداد عبر البطاقة الائتمانية: عادة 7-14 يوم عمل حسب البنك.",
+          "الاسترداد عبر التحويل البنكي: عادة 5-10 أيام عمل.",
+          "الاسترداد عبر المحفظة الرقمية: عادة 3-7 أيام عمل.",
+          "رصيد في حساب العميل بالموقع: قد يكون فوريًا في بعض الحالات.",
+        ],
+      },
+      {
+        id: 7,
+        title: "إجراءات طلب الاسترداد",
+        icon: <FaFileContract size={28} />,
+        points: [
+          "تقديم طلب خطي عبر البريد الإلكتروني أو خدمة العملاء.",
+          "إرفاق رقم الحجز وبيانات الدفع.",
+          "انتظار تأكيد الاسترداد من قسم الحسابات.",
+          "الاسترداد خلال المدة المحددة حسب طريقة الدفع.",
+        ],
+      },
+      {
+        id: 8,
+        title: "القوة القاهرة",
+        icon: <FaShieldAlt size={28} />,
+        points: [
+          "في حالات القوة القاهرة يتم تطبيق سياسات الموردين.",
+          "قد يتم استرداد المبلغ كرصيد للعميل بدلاً من استرداد نقدي.",
+          "تشمل القوة القاهرة: الكوارث الطبيعية، الأوبئة، القرارات الحكومية.",
+          "الشركة غير ملزمة بتعويض إضافي خارج نطاق السياسة.",
+        ],
+      },
+      {
+        id: 9,
+        title: "التواصل",
+        icon: <FaEnvelopeOpenText size={28} />,
+        points: [
+          "البريد الإلكتروني: info@tilalr.com",
+          "رقم خدمة العملاء: 966547305060",
+          "الواتساب الرسمي: 966547305060",
+          "ساعات العمل: الأحد إلى الخميس 9ص - 6م",
+        ],
+      },
+      {
+        id: 10,
+        title: "الإقرار والموافقة",
+        icon: <FaFileSignature size={28} />,
+        points: [
+          "باستخدام الموقع أو إتمام أي حجز يقر العميل بموافقته على هذه السياسة.",
+          "تعتبر هذه السياسة جزءاً من شروط وأحكام استخدام الموقع.",
+          "تحتفظ الشركة بحق تعديل هذه السياسة في أي وقت.",
+        ],
+      },
+    ],
+  },
+  en: {
+    heroTitle: "Financial Refund Policy",
+    heroSubtitle: "Tilal Al Rimal Tourism Company",
+    intro: "This page explains the financial refund policy of Tilal Al Rimal Tourism Company in accordance with the regulations of the Ministry of Tourism of the Kingdom of Saudi Arabia.",
+    warning: "Completing a booking or using the website constitutes full acceptance of this Refund Policy.",
+    sections: [
+      {
+        id: 1,
+        title: "Refund Terms",
+        icon: <FaMoneyBillWave size={28} />,
+        points: [
+          "Refunds are issued using the original payment method.",
+          "5% administrative fee applies on cancelled bookings.",
+          "Additional service fees are non-refundable after use.",
+          "The Company may deduct actual costs incurred.",
+        ],
+      },
+      {
+        id: 2,
+        title: "Refund Processing Time",
+        icon: <FaClock size={28} />,
+        points: [
+          "Refund requests are reviewed within 3 business days.",
+          "Approved refunds are processed within 14 business days.",
+          "Banks may take an additional 7-30 business days.",
+          "Customers will be notified via email about request status.",
+        ],
+      },
+      {
+        id: 3,
+        title: "Full Refund Cases",
+        icon: <FaCheckCircle size={28} />,
+        points: [
+          "Service cancellation by the Company for operational reasons.",
+          "Booked service unavailable at scheduled time.",
+          "Double booking errors caused by the Company.",
+          "Cancellation within 24 hours of booking confirmation (for some services).",
+        ],
+      },
+      {
+        id: 4,
+        title: "Partial Refund Cases",
+        icon: <FaUndoAlt size={28} />,
+        points: [
+          "Cancellation 7 days before service: 75% refund",
+          "Cancellation 3 days before service: 50% refund",
+          "Cancellation 24 hours before service: 25% refund",
+          "Cancellation after service date: No refund",
+        ],
+      },
+      {
+        id: 5,
+        title: "Non-Refundable Cases",
+        icon: <FaBan size={28} />,
+        points: [
+          "No-show for scheduled service.",
+          "Special promotions and services marked non-refundable.",
+          "Incorrect information or documents provided by customer.",
+          "Violation of supplier terms and conditions.",
+          "Cancellations due to weather conditions (subject to policy).",
+        ],
+      },
+      {
+        id: 6,
+        title: "Refund Methods",
+        icon: <FaCreditCard size={28} />,
+        points: [
+          "Credit card refund: 7-14 business days.",
+          "Bank transfer refund: 5-10 business days.",
+          "Digital wallet refund: 3-7 business days.",
+          "Store credit on website: Instant.",
+        ],
+      },
+      {
+        id: 7,
+        title: "Refund Request Procedure",
+        icon: <FaFileContract size={28} />,
+        points: [
+          "Submit written request via email or customer service.",
+          "Attach booking number and payment details.",
+          "Wait for refund confirmation from accounts department.",
+          "Refund processed within specified time based on payment method.",
+        ],
+      },
+      {
+        id: 8,
+        title: "Force Majeure",
+        icon: <FaShieldAlt size={28} />,
+        points: [
+          "Supplier policies apply during force majeure events.",
+          "Amount may be refunded as store credit instead of cash.",
+          "Force majeure includes: natural disasters, pandemics, government decisions.",
+          "Company has no additional compensation obligations.",
+        ],
+      },
+      {
+        id: 9,
+        title: "Contact Information",
+        icon: <FaEnvelopeOpenText size={28} />,
+        points: [
+          "Email: info@tilalr.com",
+          "Customer Service: 966547305060",
+          "Official WhatsApp: 966547305060",
+          "Working Hours: Sunday-Thursday 9AM-6PM",
+        ],
+      },
+      {
+        id: 10,
+        title: "Acceptance",
+        icon: <FaFileSignature size={28} />,
+        points: [
+          "By using the website or completing a booking, customers accept this policy.",
+          "This policy forms part of the website Terms & Conditions.",
+          "The Company reserves the right to update this policy at any time.",
+        ],
+      },
+    ],
+  },
+};
 
   const t = content[lang] || content.ar;
   const isRTL = lang === "ar";

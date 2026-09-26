@@ -79,7 +79,7 @@ export default function Articles({ params }) {
         padding: "16px",
         borderRadius: "18px",
         border: "1px solid rgba(227, 227, 227, 1)",
-        marginTop: "50px",
+        marginTop:"50px",
       }}
     >
       <div className="d-flex justify-content-between align-items-start mb-5">
@@ -115,8 +115,9 @@ export default function Articles({ params }) {
                       </div>
                       <div className="d-flex">
                         <div
-                          className={`btn btn-primary ${lang === "en" ? "me-2" : "ms-2"
-                            }`}
+                          className={`btn btn-primary ${
+                            lang === "en" ? "me-2" : "ms-2"
+                          }`}
                           onClick={() =>
                             router.push(
                               `/${lang}/article/${article.title["en"].replace(
@@ -130,8 +131,9 @@ export default function Articles({ params }) {
                           <FaEye />
                         </div>
                         <div
-                          className={`btn btn-warning text-white ${lang === "en" ? "me-2" : "ms-2"
-                            }`}
+                          className={`btn btn-warning text-white ${
+                            lang === "en" ? "me-2" : "ms-2"
+                          }`}
                           onClick={() =>
                             router.push(
                               `/${lang}/admin/edit-article/${article.id}`

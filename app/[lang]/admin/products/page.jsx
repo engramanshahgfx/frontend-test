@@ -119,8 +119,9 @@ export default function Products({ params }) {
                       </p>
                       <div className="d-flex">
                         <div
-                          className={`btn btn-primary ${lang === "en" ? "me-2" : "ms-2"
-                            }`}
+                          className={`btn btn-primary ${
+                            lang === "en" ? "me-2" : "ms-2"
+                          }`}
                           onClick={() =>
                             router.push(
                               `/${lang}/product-details/${product.title[
@@ -133,8 +134,9 @@ export default function Products({ params }) {
                           <FaEye />
                         </div>
                         <div
-                          className={`btn btn-warning text-white ${lang === "en" ? "me-2" : "ms-2"
-                            }`}
+                          className={`btn btn-warning text-white ${
+                            lang === "en" ? "me-2" : "ms-2"
+                          }`}
                           onClick={() =>
                             router.push(
                               `/${lang}/admin/edit-product/${product.id}`

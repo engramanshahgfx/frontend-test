@@ -79,15 +79,15 @@ export default function SaudiCitiesShowcase({ lang }) {
     },
     {
       id: 4,
-      name: { en: "Abha", ar: "أبها" },
+      name: { en: "albahah", ar: "الباحة" },
       temperature: "19°C",
       season: { en: "Mountain Escape", ar: "ملاذ جبلي" },
       description: {
         en: "GREEN MOUNTAINS & COOL CLIMATE",
         ar: "جبال خضراء وطقس معتدل"
       },
-      image: "/abha.png",
-      video: "/videos/makka.mp4",
+      image: "/bahah.png",
+      video: "/videos/albahah.mp4",
       mapPosition: { top: "62%", left: "46%" },
       highlights: [
         { en: "Al-Soudah Park", ar: "منتزه السودة" },
@@ -281,13 +281,13 @@ export default function SaudiCitiesShowcase({ lang }) {
                   <span className="temp-value">{currentCity.temperature}</span>
                 </div>
               </div>
-              
+
               <div className="city-title-section">
                 <span className="city-description">{currentCity.description[lang]}</span>
                 <h2 className="city-name">{currentCity.name[lang]}</h2>
               </div>
             </div>
-            
+
             <div className="highlights-section">
               <div className="highlights-header">
                 <IconComponent className="section-icon" />
@@ -305,12 +305,12 @@ export default function SaudiCitiesShowcase({ lang }) {
 
             <div className="city-info-section">
               <p className="city-info">
-                {lang === "ar" 
+                {lang === "ar"
                   ? "استعد لاكتشاف مدينة استثنائية تجمع بين الأصالة والحداثة. استمتع بتجارب فريدة تتنوع بين المغامرات الصحراوية والجولات الثقافية والاسترخاء في أحضان الطبيعة."
                   : "Prepare to discover an extraordinary city that blends authenticity with modernity. Enjoy unique experiences ranging from desert adventures and cultural tours to relaxation amidst nature."
                 }
               </p>
-              
+
               <div className="stats-grid">
                 <div className="stat-item">
                   <span className="stat-number">50+</span>
@@ -349,14 +349,14 @@ export default function SaudiCitiesShowcase({ lang }) {
                   <h3>{t('hero.map.title')}</h3>
                   <span className="map-subtitle">{t('hero.map.subtitle')}</span>
                 </div>
-                
+
                 <div className="map-visual">
-                  <img 
-                    src="/saudi-map.png" 
-                    alt="Saudi Arabia Map" 
+                  <img
+                    src="/saudi-map.png"
+                    alt="Saudi Arabia Map"
                     className="map-image"
                   />
-                  
+
                   {/* Interactive City Markers */}
                   {saudiCities.map((city, index) => (
                     <button
@@ -383,8 +383,8 @@ export default function SaudiCitiesShowcase({ lang }) {
             {/* Featured City Visual */}
             <div className="featured-city">
               <div className="city-visual-card">
-                <img 
-                  src={currentCity.image} 
+                <img
+                  src={currentCity.image}
                   alt={currentCity.name[lang]}
                   className="city-visual-image"
                 />
@@ -421,7 +421,7 @@ export default function SaudiCitiesShowcase({ lang }) {
               </div>
             </div>
           </div>
-          
+
           <div className="cities-carousel" ref={scrollContainerRef}>
             {saudiCities.map((city, index) => {
               const CityIcon = city.icon;

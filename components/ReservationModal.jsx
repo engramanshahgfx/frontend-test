@@ -364,7 +364,7 @@ export default function ReservationModal() {
           {/* Header Bar */}
           <div
             style={{
-              background: "#E85D1F",
+                background: "#E85D1F",
               color: "#F9E5D2",
               padding: "20px 24px",
               display: "flex",
@@ -1119,4 +1119,3 @@ export default function ReservationModal() {
     </AnimatePresence>
   );
 }
-

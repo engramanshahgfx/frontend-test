@@ -6,11 +6,11 @@ export default function ArticlePageClient({ article, lang }) {
   const starsCanvasRef = useRef(null);
 
   useEffect(() => {
-    const starsCanvas = starsCanvasRef.current;
-    if (!starsCanvas) return; // ✅ prevent null errors
+     const starsCanvas = starsCanvasRef.current;
+  if (!starsCanvas) return; // ✅ prevent null errors
 
-    const starsCtx = starsCanvas.getContext("2d");
-    if (!starsCtx) return;
+  const starsCtx = starsCanvas.getContext("2d");
+  if (!starsCtx) return; 
 
     function resizeCanvas() {
       starsCanvas.width = window.innerWidth;
@@ -96,7 +96,7 @@ export default function ArticlePageClient({ article, lang }) {
                 alt={article.title}
                 className="img-fluid w-100"
                 style={{
-
+               
                   width: "100%",
                   height: "100%",
                   minHeight: "280px", // keeps it visible on small screens
@@ -126,9 +126,9 @@ export default function ArticlePageClient({ article, lang }) {
               <p className="text-light mb-3" style={{ opacity: 0.85 }}>
                 {article.timestamp
                   ? new Date(article.timestamp).toLocaleDateString(
-                    lang === "ar" ? "ar-EG" : "en-US",
-                    { month: "long", day: "numeric", year: "numeric" }
-                  )
+                      lang === "ar" ? "ar-EG" : "en-US",
+                      { month: "long", day: "numeric", year: "numeric" }
+                    )
                   : ""}
               </p>
               <div

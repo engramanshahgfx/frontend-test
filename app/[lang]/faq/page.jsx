@@ -2,18 +2,18 @@ export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const { lang } = resolvedParams;
 
-  const metas = {
-    en: {
-      title: "Frequently Asked Questions | Next Future",
-      description:
-        "Find answers to the most common questions about our IT, web, and digital services, and discover how we can help your business grow.",
-    },
-    ar: {
-      title: "الأسئلة المتكررة | نكست فيوتشر",
-      description:
-        "اعثر على إجابات لأكثر الأسئلة شيوعًا حول خدمات نكست فيوتشر لتقنية المعلومات والحلول الرقمية، وتعرف على كيفية مساعدتنا لنمو عملك.",
-    },
-  };
+const metas = {
+  en: {
+    title: "Frequently Asked Questions | Next Future",
+    description:
+      "Find answers to the most common questions about our IT, web, and digital services, and discover how we can help your business grow.",
+  },
+  ar: {
+    title: "الأسئلة المتكررة | نكست فيوتشر",
+    description:
+      "اعثر على إجابات لأكثر الأسئلة شيوعًا حول خدمات نكست فيوتشر لتقنية المعلومات والحلول الرقمية، وتعرف على كيفية مساعدتنا لنمو عملك.",
+  },
+};
 
 
   const meta = metas[lang] || metas.en;

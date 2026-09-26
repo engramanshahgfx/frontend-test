@@ -1,112 +1,117 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUI } from "@/providers/UIProvider";
 import {
+  Headphones,
   X,
+  Send,
+  Phone,
+  Compass,
+  Sparkles,
+  ExternalLink,
   Maximize2,
   Minimize2,
   RefreshCw,
-  Copy,
-  Volume2,
-  ThumbsUp,
-  ThumbsDown,
-  ChevronRight,
-  ChevronDown,
-  Paperclip,
-  Zap,
-  ArrowUp,
-  Headphones,
-  Check,
+  Star,
+  Calendar,
+  Users,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Plane,
+  Wifi,
+  FileText,
+  Building2,
+  MapPin,
+  Clock,
   Briefcase,
-  ExternalLink,
+  UserCheck,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import TravelReservationModal from "@/components/TravelReservationModal";
 
 export default function ChatAssistant({ lang = "en" }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const { openReservationModal } = useUI();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
-  const [isThinking, setIsThinking] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingText, setStreamingText] = useState("");
-  const [copiedId, setCopiedId] = useState(null);
-  const [speakingId, setSpeakingId] = useState(null);
-  const [likedStatus, setLikedStatus] = useState({});
-  const [selectedAgentModel, setSelectedAgentModel] = useState("Agent");
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [showQuickPrompts, setShowQuickPrompts] = useState(false);
-  const [attachedFileName, setAttachedFileName] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [showTravelReservationModal, setShowTravelReservationModal] = useState(false);
   const [reservationPackageData, setReservationPackageData] = useState(null);
-
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   const isRTL = lang === "ar";
 
-  const getFormattedTime = () => {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
-  // Hostinger Agent Initial Welcome Message
+  // Initial welcome message with professional concierge persona
   const initialMessages = [
     {
       id: 1,
-      sender: "agent",
+      sender: "bot",
       text: isRTL
-        ? "أهلاً بك! أي من الخدمات أو البرامج السياحية تود استكشافها اليوم؟ سأقوم بالتحقق من العروض المتاحة وإكمال إجراءات الحجز والتأشيرات بسهولة."
-        : "Hi! Which of our travel destinations or services would you like to explore? Once you specify it, I'll verify the available offers and proceed with the booking requirements securely.",
+        ? "مرحباً بك في شركة التلال والرمال لتنظيم الرحلات السياحية! 👋\n\nأنا مستشارك السياحي الخاص، وأسعد بمساعدتك في اختيار وتنفيذ أروع الرحلات والتجارب في ربوع المملكة وخارجها (العلا، الليالي المصرية، يوم التأسيس، الطيران الخاص، التأشيرات، والمواصلات).\n\nكيف يمكنني خدمتك اليوم؟"
+        : "Welcome to Tilal Rimal Tourism Organization! 👋\n\nI am your Personal Travel Advisor. I'm here to assist you in discovering and booking unforgettable journeys across Saudi Arabia and internationally (AlUla desert camps, Egyptian nights, Foundation Day, Private Jets, Visas, & Transportation).\n\nHow may I assist you today?",
       actions: [
-        { type: "reservation", label: isRTL ? "أود تقديم طلب حجز رحلة" : "I would like to book a trip" },
-        { type: "jet", label: isRTL ? "أرغب باستئجار طائرة خاصة" : "I want to request a private jet charter" },
-        { type: "visa", label: isRTL ? "مساعدة في متطلبات تأشيرة الشنغن" : "Help me with Schengen visa requirements" },
+        { type: "reservation", label: isRTL ? "📋 طلب حجز رحلة" : "📋 Reserve a Trip" },
+        { type: "whatsapp", label: isRTL ? "💬 تواصل عبر الواتساب" : "💬 Chat on WhatsApp" },
       ],
-      timestamp: getFormattedTime(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ];
 
   const [messages, setMessages] = useState(initialMessages);
 
-  // Suggested Topics in Hostinger Quick Action Capsule Style
+  // Suggested Topics based on complete website content
   const quickTopics = [
     {
       id: "winter_hills",
-      label: isRTL ? "رحلة الشتاء والرمال بالعلا" : "Winter Hills & Sands AlUla",
+      label: isRTL ? "🏜️ رحلة الشتاء والرمال بالعلا" : "🏜️ Winter Hills & Sands AlUla",
       query: isRTL ? "حدثني عن رحلة الشتاء والرمال بالعلا" : "Tell me about Winter Hills and Sands trip in AlUla",
     },
     {
       id: "egyptian_night",
-      label: isRTL ? "الليلة المصرية بالعلا" : "Egyptian Night AlUla",
+      label: isRTL ? "🪕 الليلة المصرية بالعلا" : "🪕 Egyptian Night AlUla",
       query: isRTL ? "تفاصيل الليلة المصرية في العلا" : "Details about Egyptian Night in AlUla",
     },
     {
       id: "foundation_day",
-      label: isRTL ? "فعاليات يوم التأسيس" : "Foundation Day Trip",
+      label: isRTL ? "🇸🇦 فعاليات يوم التأسيس" : "🇸🇦 Foundation Day Trip",
       query: isRTL ? "برنامج وتفاصيل يوم التأسيس" : "Foundation Day trip highlights",
     },
     {
       id: "transport",
-      label: isRTL ? "دليل القطارات والمواصلات" : "Transport & Trains Guide",
+      label: isRTL ? "🚆 دليل القطارات والمواصلات" : "🚆 Transport & Trains Guide",
       query: isRTL ? "كيف أتأجر سيارة أو أحجز القطار والمترو بالسعودية؟" : "How to use trains, flights, and car rentals in Saudi Arabia?",
     },
     {
       id: "private_jet",
-      label: isRTL ? "استئجار طائرة خاصة" : "Private Jet Charter",
+      label: isRTL ? "✈️ استئجار طائرة خاصة" : "✈️ Private Jet Charter",
       query: isRTL ? "كيف يمكنني طلب حجز طائرة خاصة؟" : "How can I book a private jet charter?",
     },
     {
       id: "internet",
-      label: isRTL ? "باقات الإنترنت العالمية" : "Global eSIM & Data",
+      label: isRTL ? "📶 باقات الإنترنت العالمية" : "📶 Global eSIM & Data",
       query: isRTL ? "أسعار وباقات الإنترنت في الخارج" : "What are the international internet data packages?",
     },
     {
       id: "visa",
-      label: isRTL ? "تأشيرة الشنغن والسياحة" : "Schengen & Tourist Visa",
+      label: isRTL ? "📑 تأشيرة الشنغن والسياحة" : "📑 Schengen & Tourist Visa",
       query: isRTL ? "ما هي شروط ومتطلبات استخراج تأشيرة الشنغن؟" : "What are the requirements for a Schengen visa?",
+    },
+    {
+      id: "about_saudi",
+      label: isRTL ? "🇸🇦 عن المملكة ورؤية 2030" : "🇸🇦 About Saudi Arabia & Vision 2030",
+      query: isRTL ? "معلومات عن الثقافة ورؤية المملكة 2030" : "Tell me about Saudi culture and Vision 2030",
+    },
+    {
+      id: "reviews",
+      label: isRTL ? "⭐ آراء وتقييمات العملاء" : "⭐ Client Reviews",
+      query: isRTL ? "ما هي تقييمات العملاء السابقين؟" : "What do clients say about Tilal Rimal?",
     },
   ];
 
@@ -118,34 +123,34 @@ export default function ChatAssistant({ lang = "en" }) {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isThinking, isStreaming, streamingText]);
+  }, [messages, isOpen, isTyping]);
 
-  // Clean Professional Hostinger Agent Replies
-  const generateAgentReply = (userText) => {
+  // Comprehensive AI Knowledge Base matching all user site data
+  const generateBotReply = (userText) => {
     const text = userText.toLowerCase();
 
     // 1. Winter Hills & Sands
     if (text.includes("winter") || text.includes("شتاء") || text.includes("رمال") || text.includes("hills")) {
       return {
         text: isRTL
-          ? "رحلة الشتاء والرمال (جدة - العلا)\n\nاستمتع بتجربة صحراوية فاخرة في أحضان الطبيعة.\n\nأبرز الأنشطة:\n- جلسات سمر دافئة وأمسيات غنائية\n- تقديم مشروبات ساخنة ووجبات مشويات عائلية وتحديات الرماية\n- المدة: ليلة واحدة\n- السعة: 20 إلى 50 شخصاً\n\nيمكنك اختيار تقديم طلب الحجز المباشر أو التواصل مع منسق الرحلات عبر الواتساب."
-          : "Winter Hills & Sands Trip (Jeddah - AlUla)\n\nEnjoy an unforgettable luxury desert experience under the stars.\n\nKey Highlights:\n- Evening gatherings and live vocal performances\n- Hot beverages, BBQ dining, and archery challenges\n- Duration: 1 Night\n- Capacity: 20 to 50 persons\n\nYou can proceed with a direct reservation request or contact our trip coordinator via WhatsApp.",
+          ? "🏜️ **رحلة الشتاء والرمال (جدة - العلا)**:\n\nاستمتع بإنشاء ذكريات لا تُنسى في أحضان الطبيعة والرمال!\n\n✨ **أبرز الأنشطة**:\n• جلسات سمر دافئة وأمسيات غنائية.\n• تقديم مشروبات ساخنة ووجبات BBQ وتحديات الرماية بالقوس.\n• **المدة**: ليلة واحدة (يناير 2025).\n• **السعة**: 20 - 50 شخصاً.\n\nيمكنك الآن إكمال حجزك المباشر أو التواصل فوراً مع موظف الحجوزات عبر الواتساب:"
+          : "🏜️ **Winter Hills & Sands (Jeddah - AlUla)**:\n\nEnjoy unforgettable desert moments under the stars!\n\n✨ **Highlights**:\n• Warm bonfire gathering sessions & live music.\n• Hot beverages, BBQ dining, & archery challenges.\n• **Duration**: 1 Night (Jan 2025).\n• **Capacity**: 20 - 50 Persons.\n\nYou can submit a reservation request or contact our team directly:",
         actions: [
-          { type: "reservation", label: isRTL ? "تقديم طلب حجز لرحلة الشتاء والرمال" : "Proceed with booking Winter Hills trip", tripTitle: "Winter Hills and Sands" },
-          { type: "whatsapp", label: isRTL ? "التواصل المباشر عبر الواتساب" : "Chat with trip coordinator on WhatsApp", textMsg: "استفسار عن رحلة الشتاء والرمال بالعلا" },
+          { type: "reservation", label: isRTL ? "📋 احجز رحلة الشتاء والرمال" : "📋 Reserve Winter Hills Trip", tripTitle: "Winter Hills and Sands" },
+          { type: "whatsapp", label: isRTL ? "💬 حجز مباشر عبر الواتساب" : "💬 Direct WhatsApp Booking", textMsg: "استفسار عن رحلة الشتاء والرمال بالعلا" },
         ],
       };
     }
 
     // 2. Egyptian Night
-    if (text.includes("egyptian") || text.includes("مصري") || text.includes("الليلة المصرية")) {
+    if (text.includes("egyptian") || text.includes("مصري") || text.includes("الليلة المصرية") || text.includes("oud")) {
       return {
         text: isRTL
-          ? "الليلة المصرية في الشتاء والرمال (جدة - العلا)\n\nأمسيات طربية أصيلة في قلب الطبيعة الصحراوية.\n\nأبرز الفعاليات:\n- جلسة عود حية مع الفنان العمدة\n- بوفيه عشاء مصري فاخر ومأكولات شرقية\n- المدة: ليلة واحدة\n- السعة: 25 إلى 60 شخصاً"
-          : "Egyptian Night at Winter Hills & Sands (Jeddah - AlUla)\n\nAuthentic musical evenings in the desert.\n\nHighlights:\n- Live Oud performance with traditional artist Al-Omda\n- Luxury Egyptian dinner buffet\n- Duration: 1 Night\n- Capacity: 25 to 60 persons",
+          ? "🪕 **الليلة المصرية في الشتاء والرمال (جدة - العلا)**:\n\nعش أجواء طربية وأمسيات ساحرة في قلب الطبيعة الصحراوية!\n\n🎶 **أبرز الفعاليات**:\n• جلسة عود مع الفنان الأصيل 'العمدة'.\n• بوفيه عشاء مصري فاخر ومأكولات شيوخ.\n• معزوفات وألحان كلاسيكية مع فرقة 'أمثال'.\n• **المدة**: ليلة واحدة (فبراير 2025).\n• **السعة**: 25 - 60 شخصاً."
+          : "🪕 **Egyptian Night at Winter Hills & Sands (Jeddah - AlUla)**:\n\nImmerse yourself in authentic Egyptian culture and melodies under the open sky!\n\n🎶 **Highlights**:\n• Oud music session with artist 'Al-Omda'.\n• Authentic Egyptian dinner buffet.\n• Classic melodies with 'Amathal' band.\n• **Duration**: 1 Night (Feb 2025).\n• **Capacity**: 25 - 60 Persons.",
         actions: [
-          { type: "reservation", label: isRTL ? "تقديم طلب حجز الليلة المصرية" : "Proceed with booking Egyptian Night", tripTitle: "Egyptian Night at Winter Hills" },
-          { type: "whatsapp", label: isRTL ? "التواصل عبر الواتساب" : "Chat on WhatsApp", textMsg: "استفسار عن حجز الليلة المصرية بالعلا" },
+          { type: "reservation", label: isRTL ? "📋 حجز الليلة المصرية" : "📋 Reserve Egyptian Night", tripTitle: "Egyptian Night at Winter Hills" },
+          { type: "whatsapp", label: isRTL ? "💬 استفسر عبر الواتساب" : "💬 Inquire via WhatsApp", textMsg: "استفسار عن حجز الليلة المصرية بالعلا" },
         ],
       };
     }
@@ -154,24 +159,24 @@ export default function ChatAssistant({ lang = "en" }) {
     if (text.includes("foundation") || text.includes("تأسيس") || text.includes("يوم التأسيس")) {
       return {
         text: isRTL
-          ? "رحلة يوم التأسيس في الشتاء والرمال\n\nاحتفل بمعنى التأسيس في أجواء تراثية وتغطية استثنائية.\n\nالفعاليات:\n- مسيرة يوم التأسيس والعروض الفولكلورية\n- معزوفات عود أصيلة، ضيافة عربية، وركوب الخيل والإبل\n- المدة: ليلة واحدة"
-          : "Foundation Day at Winter Hills & Sands\n\nCelebrate Saudi Foundation Day with rich heritage and grand festivities.\n\nHighlights:\n- Foundation Day procession and traditional folklore performances\n- Live Oud music, traditional hospitality, horse and camel riding\n- Duration: 1 Night",
+          ? "🇸🇦 **رحلة يوم التأسيس في الشتاء والرمال**:\n\nاحتفل بمعنى التأسيس في أجواء تراثية وتغطية استثنائية!\n\n👑 **الفعاليات والتراث**:\n• مسيرة يوم التأسيس والعروض الفولكلورية والفرق الشعبية.\n• معزوفات عود مع الفنان 'العمدة' وعروض شعبية نسائية.\n• ضيافة أصيلة، وركوب الخيل والإبل.\n• **المدة**: ليلة واحدة (فبراير 2025).\n• **السعة**: 30 - 100 شخص."
+          : "🇸🇦 **Foundation Day at Winter Hills & Sands**:\n\nCelebrate Saudi Foundation Day with rich heritage and grand festivities!\n\n👑 **Highlights**:\n• Official Foundation Day procession & folklore performances.\n• Live Oud music, traditional hospitality, horse & camel riding.\n• **Duration**: 1 Night (Feb 2025).\n• **Capacity**: 30 - 100 Persons.",
         actions: [
-          { type: "reservation", label: isRTL ? "حجز فعاليات يوم التأسيس" : "Proceed with booking Foundation Day trip", tripTitle: "Foundation Day Trip" },
-          { type: "whatsapp", label: isRTL ? "التواصل عبر الواتساب" : "Chat on WhatsApp", textMsg: "طلب حجز رحلة يوم التأسيس بالعلا" },
+          { type: "reservation", label: isRTL ? "📋 حجز فعاليات يوم التأسيس" : "📋 Reserve Foundation Day", tripTitle: "Foundation Day Trip" },
+          { type: "whatsapp", label: isRTL ? "💬 التواصل مع المنسق" : "💬 Contact Trip Coordinator", textMsg: "طلب حجز رحلة يوم التأسيس بالعلا" },
         ],
       };
     }
 
     // 4. Transportation & Trains Guide
-    if (text.includes("transport") || text.includes("train") || text.includes("قطار") || text.includes("مترو") || text.includes("طيران") || text.includes("سيارة")) {
+    if (text.includes("transport") || text.includes("train") || text.includes("قطار") || text.includes("مترو") || text.includes("طيران") || text.includes("سيارة") || text.includes("قيادة")) {
       return {
         text: isRTL
-          ? "دليل المواصلات والتنقل في السعودية\n\nتتوفر في المملكة منظومة نقل متطورة تضمن الراحة والسهولة:\n\n1. الرحلات الجوية: مطارات محلية ودولية عبر الخطوط السعودية وطيران ناس وأديل.\n2. القطارات: قطار سار للشبكة الشرقية والشمالية، وقطار الحرمين السريع للربط بين مكة وجدة والمدينة المنورة.\n3. مترو الرياض: 6 خطوط رئيسية تخدم 85 محطة حديثة.\n4. تأجير السيارات: طرق سريعة ولوحات إرشادية باللغتين العربية والإنجليزية."
-          : "Transportation and Travel Guide for Saudi Arabia\n\nSaudi Arabia offers modern transport infrastructure:\n\n1. Flights: Domestic and international airports via Saudia, Flynas, and Flyadeal.\n2. Trains: SAR Railway (North & East lines) and Haramain High-Speed Train (Makkah, Madinah, Jeddah).\n3. Riyadh Metro: 6 main lines serving 85 modern stations.\n4. Car Rental: Highways with bilingual signage.",
+          ? "🚆 **دليل المواصلات والتنقل في السعودية**:\n\nتتوفر في المملكة منظومة نقل متطورة تضمن لك السهولة والراحة:\n\n✈️ **الرحلات الجوية**: 18 مطاراً محلياً و10 مطارات دولية عبر الخطوط السعودية، طيران ناس، وطيران أديل.\n🚆 **القطارات**: \n• **قطار سار**: مسار الشمال (الرياض ↔ القريات) ومسار الشرق (الرياض ↔ الدمام).\n• **قطار الحرمين السريع**: يربط بين مكة والمدينة وجدة ومدينة الملك عبدالله الاقتصادية بأعلى سرعة.\n• **مترو الرياض**: 6 خطوط رئيسية و 85 محطة حديثة.\n🚗 **تأجير السيارات**: طرق سريعة حديثة ولوحات إرشادية بالعربية والإنجليزية مع تطبيقات عالمية ومحلية."
+          : "🚆 **Transportation & Getting Around Guide**:\n\nSaudi Arabia offers modern seamless transport infrastructure:\n\n✈️ **Flights**: 18 domestic & 10 international airports via Saudia, Flynas, & Flyadeal.\n🚆 **Trains**:\n• **SAR Railway**: North Line (Riyadh ↔ Al Qurayyat) & East Line (Riyadh ↔ Dammam).\n• **Haramain High-Speed Train**: Fast rail connecting Makkah, Madinah, Jeddah, & KAEC.\n• **Riyadh Metro**: 6 main lines with 85 state-of-the-art stations.\n🚗 **Car Rental**: Modern highways with bilingual signage (Arabic & English).",
         actions: [
-          { type: "navigate", href: "/transportation", label: isRTL ? "استكشاف دليل المواصلات الكامل" : "Explore full transport guide" },
-          { type: "whatsapp", label: isRTL ? "ترتيب التنقل والمواصلات" : "Arrange transportation via WhatsApp", textMsg: "ترتيب مواصلات وتنقل داخل السعودية" },
+          { type: "navigate", href: "/transportation", label: isRTL ? "🔗 فتح دليل المواصلات الكامل" : "🔗 Open Full Transport Guide" },
+          { type: "whatsapp", label: isRTL ? "💬 مساعدة في ترتيب التنقل" : "💬 Help with Transport Booking", textMsg: "ترتيب مواصلات وتنقل داخل السعودية" },
         ],
       };
     }
@@ -180,37 +185,63 @@ export default function ChatAssistant({ lang = "en" }) {
     if (text.includes("jet") || text.includes("طائرة خاصة") || text.includes("استئجار طائرة") || text.includes("خاصة")) {
       return {
         text: isRTL
-          ? "خدمة استئجار الطيران الخاص الفاخر\n\nخدمات السفر الفاخر والراحة المطلقة:\n\n- مقصورات فاخرة مع خدمة شخصية على مدار 24 ساعة\n- وصول لأكثر من 5000 مطار خاص حول العالم\n- توفير عرض السعر المباشر خلال ساعتين فقط"
-          : "Luxury Private Jet Charter Services\n\nExperience ultimate luxury and privacy in the sky:\n\n- VIP cabins with 24/7 personalized service\n- Access to over 5,000 private airports worldwide\n- Quotation response within 2 hours",
+          ? "✈️ **خدمة استئجار الطيران الخاص الفاخر**:\n\nاختبر قمة السفر الفاخر والراحة مع خدماتنا الحصرية:\n\n⭐ **لماذا تختار التلال والرمال للطيران الخاص؟**\n• مقصورات فاخرة مع خدمة شخصية على مدار 24/7.\n• وصول لأكثر من 5000 مطار خاص حول العالم.\n• مشغلون معتمدون من FAA / EASA مع أعلى معايير السلامة.\n• الرد وتوفير عرض السعر خلال ساعتين فقط!"
+          : "✈️ **Luxury Private Jet Charter**:\n\nExperience ultimate luxury and privacy in the sky:\n\n⭐ **Why Choose Us?**\n• VIP luxury cabins with 24/7 personalized concierge service.\n• Access to over 5,000 private airports worldwide.\n• FAA/EASA certified operators with top safety ratings.\n• Price quotation response within 2 hours!",
         actions: [
-          { type: "navigate", href: "/international/private-jet", label: isRTL ? "تعبئة نموذج طلب طائرة خاصة" : "Fill private jet request form" },
-          { type: "whatsapp", label: isRTL ? "طلب عرض سعر عبر الواتساب" : "Get instant jet quote via WhatsApp", textMsg: "طلب عرض سعر طيران خاص" },
+          { type: "navigate", href: "/international/private-jet", label: isRTL ? "📄 نموذج طلب طائرة خاصة" : "📄 Private Jet Request Form" },
+          { type: "whatsapp", label: isRTL ? " طلب عرض سعر مباشر" : " Get Instant Jet Quote", textMsg: "طلب عرض سعر طيران خاص" },
         ],
       };
     }
 
-    // 6. Global Internet eSIM
-    if (text.includes("internet") || text.includes("إنترنت") || text.includes("انترنت") || text.includes("باقة") || text.includes("esim")) {
+    // 6. Global Internet Data Packages
+    if (text.includes("internet") || text.includes("إنترنت") || text.includes("انترنت") || text.includes("باقة") || text.includes("شريحة") || text.includes("esim")) {
       return {
         text: isRTL
-          ? "باقات الإنترنت العالمية (تفعيل فوري)\n\nالاتصال السريع في أكثر من 200 دولة:\n\n- 3 جيجابايت: 25 دولار (15 يوماً - 4G/LTE)\n- 5 جيجابايت: 40 دولار (30 يوماً - 5G)\n- 10 جيجابايت: 70 دولار (30 يوماً - 5G)\n- 20 جيجابايت: 130 دولار (60 يوماً - 5G)"
-          : "Global Internet Data Packages (Instant Activation)\n\nStay connected in over 200 countries:\n\n- 3 GB: $25 (15 Days - 4G/LTE)\n- 5 GB: $40 (30 Days - 5G Ready)\n- 10 GB: $70 (30 Days - 5G Ready)\n- 20 GB: $130 (60 Days - 5G Ultra)",
+          ? "📶 **باقات الإنترنت العالمية (تفعيل فوري)**:\n\nابقَ متصلاً بثبات وسرعة عالية في أكثر من 200 دولة بخصومات تصل لـ 70% من رسوم التجوال:\n\n• **1 GB**: $10 (7 أيام - 4G/LTE)\n• **3 GB**: $25 (15 يوماً - 4G/LTE - الأكثر طلباً ⭐)\n• **5 GB**: $40 (30 يوماً - 5G Ready)\n• **10 GB**: $70 (30 يوماً - 5G Ready)\n• **20 GB**: $130 (60 يوماً - 5G Ultra)\n• **50 GB**: $300 (90 يوماً - 5G Ultra)"
+          : "📶 **Global Internet Data Packages (Instant Activation)**:\n\nStay seamlessly connected in 200+ countries with up to 70% savings on roaming fees:\n\n• **1 GB**: $10 (7 days - 4G/LTE)\n• **3 GB**: $25 (15 days - 4G/LTE - Best Seller ⭐)\n• **5 GB**: $40 (30 days - 5G Ready)\n• **10 GB**: $70 (30 days - 5G Ready)\n• **20 GB**: $130 (60 days - 5G Ultra)\n• **50 GB**: $300 (90 days - 5G Ultra)",
         actions: [
-          { type: "navigate", href: "/international/internet-packages", label: isRTL ? "استكشاف وتفعيل الباقات" : "Explore & order eSIM data packages" },
-          { type: "whatsapp", label: isRTL ? "التواصل عبر الواتساب" : "Order eSIM package via WhatsApp", textMsg: "طلب تفعيل باقة إنترنت عالمية" },
+          { type: "navigate", href: "/international/internet-packages", label: isRTL ? "🌐 تصفح وتفعيل الباقات" : "🌐 View & Order Packages" },
+          { type: "whatsapp", label: isRTL ? "💬 تفعيل سريع عبر الواتساب" : "💬 Quick WhatsApp Order", textMsg: "طلب تفعيل باقة إنترنت عالمية" },
         ],
       };
     }
 
-    // 7. Visa Services
+    // 7. Visa Services (Schengen & Tourist)
     if (text.includes("visa") || text.includes("تأشير") || text.includes("شنغن") || text.includes("schengen")) {
       return {
         text: isRTL
-          ? "خدمة استخراج وتجهيز تأشيرة الشنغن والسياحة\n\nتجهيز الملفات للسعوديين والمقيمين بالمملكة:\n\nالمتطلبات الأساسية:\n1. جواز سفر صالح لمدة 6 أشهر على الأقل\n2. صورتان شخصيتان خلفية بيضاء (3.5 × 4.5 سم)\n3. تأمين طبي يغطي دول الشنغن بحد أدنى 30,000 يورو\n4. حجز طيران وفندق مؤكد مع كشف حساب بنكي لآخر 6 أشهر"
-          : "Schengen and Tourist Visa Services\n\nComplete document preparation for Saudis and residents:\n\nRequirements:\n1. Passport valid for at least 6 months\n2. Two white background photos (3.5 x 4.5 cm)\n3. Travel insurance covering Schengen area (minimum 30,000 Euros)\n4. Confirmed flight and hotel reservation with 6-month bank statement",
+          ? "📑 **خدمة استخراج وتجهيز تأشيرة الشنغن والسياحة**:\n\nنجهز ملفك كاملاً للسعوديين والمقيمين بالمملكة:\n\n✅ **المتطلبات الأساسية**:\n1. جواز سفر صالح لمدة 6 أشهر على الأقل (مع نسختين فارغتين).\n2. صور شخصية خلفية بيضاء مقاس 3.5×4.5 سم.\n3. تأمين طبي يغطي دول الشنغن بحد أدنى 30,000 يورو.\n4. حجز طيران وفندق مؤكد، وكشف حساب بنكي لآخر 6 أشهر بالإنجليزية.\n5. للمقيمين: إقامة سارية + تأشيرة خروج وعودة + خطاب تعريف بالراتب مصدق."
+          : "📑 **Schengen & Tourist Visa Services**:\n\nComplete file preparation for Saudis and residents:\n\n✅ **Requirements**:\n1. Passport valid for 6+ months from return date.\n2. (2) White background photos (3.5 x 4.5 cm).\n3. Travel Insurance covering Schengen area (min. €30,000).\n4. Confirmed flight/hotel reservation & 6-month English bank statement.\n5. For Residents: Valid Iqama + Exit/Re-entry Visa + Chamber certified salary letter.",
         actions: [
-          { type: "navigate", href: "/visa", label: isRTL ? "رفع مستندات التأشيرة" : "Upload visa application documents" },
-          { type: "whatsapp", label: isRTL ? "استشارة تأشيرة عبر الواتساب" : "Free visa consultation on WhatsApp", textMsg: "استفسار عن حجز موعد وتأشيرة الشنغن" },
+          { type: "navigate", href: "/visa", label: isRTL ? "📄 رفع مستندات التأشيرة" : "📄 Upload Visa Documents" },
+          { type: "whatsapp", label: isRTL ? "💬 استشارة تأشيرة مجانية" : "💬 Free Visa Consultation", textMsg: "استفسار عن حجز موعد وتأشيرة الشنغن" },
+        ],
+      };
+    }
+
+    // 8. About Saudi Arabia & Vision 2030
+    if (text.includes("about") || text.includes("saudi") || text.includes("رؤية") || text.includes("2030") || text.includes("ثقافة") || text.includes("لغة")) {
+      return {
+        text: isRTL
+          ? "🇸🇦 **عن المملكة العربية السعودية ورؤية 2030**:\n\n• **الموقع**: 14 منطقة إدارية، وسكان يزيدون عن 35 مليون نسمة.\n• **التأسيس**: تأسست عام 1932م.\n• **اللغة**: العربية هي اللغة الرسمية وتُستخدم الإنجليزية على نطاق واسع في المعاملات والسياحة واللوحات الإرشادية.\n• **رؤية 2030**: التي أطلقها سمو ولي العهد الأمير محمد بن سلمان لتنويع الاقتصاد وترسيخ 3 محاور رئيسية: **مجتمع حيوي، اقتصاد مزدهر، ووطن طموح**."
+          : "🇸🇦 **About Saudi Arabia & Vision 2030**:\n\n• **Overview**: 14 administrative regions with over 35 Million residents.\n• **Foundation**: Founded in 1932.\n• **Language**: Arabic is the official language, with English widely spoken in business, tourism, and road signs.\n• **Vision 2030**: Launched by HRH Crown Prince Mohammed bin Salman to build a **Vibrant Society, Thriving Economy, & Ambitious Nation**.",
+        actions: [
+          { type: "navigate", href: "/about-saudi", label: isRTL ? "📖 اقرأ المزيد عن السعودية" : "📖 Read About Saudi Arabia" },
+          { type: "reservation", label: isRTL ? "📋 حجز جولة داخلية" : "📋 Book a Local Saudi Tour" },
+        ],
+      };
+    }
+
+    // 9. Customer Reviews & Ratings
+    if (text.includes("review") || text.includes("تقييم") || text.includes("عملاء") || text.includes("آراء") || text.includes("testimonial")) {
+      return {
+        text: isRTL
+          ? "⭐ **تقييمات وآراء عملاء شركة التلال والرمال**:\n\n• *\"شكر خاص للاهتمام بأصغر التفاصيل في المغامرة وفريق العمل المتعاون. كانت تجربة متميزة لا تُنسى\"* – عميل راضٍ.\n• *\"أفضل تجربة سياحية حظيت بها في حياتي. التنظيم كان ممتازاً والمرشدون محترفون للغاية\"* – سارة أحمد.\n• *\"الاهتمام بالتفاصيل والخدمة الاستثنائية جعلت الرحلة غير عادية\"* – محمد الخالد."
+          : "⭐ **Client Reviews & Testimonials**:\n\n• *'Special thanks for attention to the smallest details in the adventure and the cooperative team. Unforgettable experience!'* – Satisfied Customer\n• *'The best tourism experience I've ever had. Organization was excellent and guides were professional.'* – Sarah Ahmed\n• *'Exceptional service and care for details made our trip magical.'* – Mohammed Al Khalid",
+        actions: [
+          { type: "BookingModal", label: isRTL ? "📋 احجز تجربتك الآن" : "📋 Book Your Experience Now" },
+          { type: "whatsapp", label: isRTL ? "💬 تواصل معنا على الواتساب" : "💬 Talk to Us on WhatsApp", textMsg: "استفسار عن حجز رحلة جديدة" },
         ],
       };
     }
@@ -218,101 +249,81 @@ export default function ChatAssistant({ lang = "en" }) {
     // Default Fallback Response
     return {
       text: isRTL
-        ? "أهلاً بك في شركة التلال والرمال لتنظيم الرحلات السياحية.\n\nيسعدنا ترتيب وتنظيم كافة تطلعاتك السياحية والحجوزات بأعلى مستويات الجودة والاحترافية.\n\nاختر من الخيارات المتاحة أو تحدث مباشرة مع المنسق عبر الواتساب:"
-        : "Welcome to Tilal Rimal Tourism Organization.\n\nWe are happy to arrange and assist with all your travel requirements and bookings.\n\nPlease select an option below or chat directly with our coordinator via WhatsApp:",
+        ? "أهلاً بك مجدداً في **شركة التلال والرمال لتنظيم الرحلات السياحية** 🌴\n\nنحن نقدم رحلات سياحية متكاملة (رحلات العلا، الفعاليات الموسيقية، الطيران الخاص، باقات إنترنت 5G، والتأشيرات) بأسعار تنافسية وجودة عالية تتماشى مع رؤية السعودية 2030.\n\nيمكنك اختيار طلب حجز مباشر أو التحدث معنا على الواتساب الآن:"
+        : "Welcome to **Tilal Rimal Tourism Organization** 🌴\n\nWe provide premier tourism packages (AlUla trips, musical events, private jets, 5G internet eSIMs, and Schengen visas) aligned with Saudi Vision 2030.\n\nYou can start a direct reservation request or chat with us on WhatsApp:",
       actions: [
-        { type: "reservation", label: isRTL ? "تقديم طلب حجز رحلة" : "Submit reservation request" },
-        { type: "whatsapp", label: isRTL ? "التواصل عبر الواتساب" : "Chat with coordinator on WhatsApp", textMsg: "مرحباً، أود الاستفسار عن خدماتكم السياحية" },
+        { type: "reservation", label: isRTL ? "📋 طلب حجز / استفسار" : "📋 Submit Reservation Request" },
+        { type: "whatsapp", label: isRTL ? "💬 تواصل عبر الواتساب" : "💬 Chat on WhatsApp", textMsg: "مرحباً، أود الاستفسار عن رحلاتكم السياحية" },
       ],
     };
   };
 
-  // Hostinger Word-by-Word Streaming Response Trigger
-  const triggerAgentResponse = (userText) => {
-    setIsThinking(true);
-
-    setTimeout(() => {
-      setIsThinking(false);
-      const replyObj = generateAgentReply(userText);
-      const words = replyObj.text.split(" ");
-      let currentIdx = 0;
-      let currentText = "";
-      setIsStreaming(true);
-
-      const interval = setInterval(() => {
-        if (currentIdx < words.length) {
-          currentText += (currentIdx === 0 ? "" : " ") + words[currentIdx];
-          setStreamingText(currentText);
-          currentIdx++;
-        } else {
-          clearInterval(interval);
-          setIsStreaming(false);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now(),
-              sender: "agent",
-              text: replyObj.text,
-              actions: replyObj.actions,
-              timestamp: getFormattedTime(),
-            },
-          ]);
-          setStreamingText("");
-        }
-      }, 28);
-    }, 550);
-  };
-
   const handleSendMessage = (e) => {
     e?.preventDefault();
-    if ((!inputMessage.trim() && !attachedFileName) || isThinking || isStreaming) return;
+    if (!inputMessage.trim()) return;
 
-    let userText = inputMessage.trim();
-    if (attachedFileName) {
-      userText = userText ? `${userText}\n\n[Attached: ${attachedFileName}]` : `[Attached: ${attachedFileName}]`;
-      setAttachedFileName("");
-    }
-
+    const userText = inputMessage.trim();
     const newUserMsg = {
       id: Date.now(),
       sender: "user",
       text: userText,
-      timestamp: getFormattedTime(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, newUserMsg]);
     setInputMessage("");
-    triggerAgentResponse(userText);
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const replyObj = generateBotReply(userText);
+      const newBotMsg = {
+        id: Date.now() + 1,
+        sender: "bot",
+        text: replyObj.text,
+        actions: replyObj.actions,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, newBotMsg]);
+      setIsTyping(false);
+    }, 700);
   };
 
   const handleQuickTopicClick = (topic) => {
-    if (isThinking || isStreaming) return;
     const userText = topic.query;
     const newUserMsg = {
       id: Date.now(),
       sender: "user",
       text: userText,
-      timestamp: getFormattedTime(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, newUserMsg]);
-    triggerAgentResponse(userText);
+    setInputMessage("");
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const replyObj = generateBotReply(userText);
+      const newBotMsg = {
+        id: Date.now() + 1,
+        sender: "bot",
+        text: replyObj.text,
+        actions: replyObj.actions,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, newBotMsg]);
+      setIsTyping(false);
+    }, 600);
   };
 
   const handleActionButtonClick = (action) => {
-    if (action.type === "reservation") {
-      setReservationPackageData({
+    if (action.type === "reservation" || action.type === "BookingModal" || action.type === "TravelReservationModal") {
+      const pkgData = {
         title: action.tripTitle || "Tilal Rimal Package",
         name: action.tripTitle || "Tilal Rimal Package",
         id: "chat_pkg_1",
-      });
+      };
+      setReservationPackageData(pkgData);
       setShowTravelReservationModal(true);
-    } else if (action.type === "jet") {
-      router.push(`/${lang}/international/private-jet`);
-      setIsOpen(false);
-    } else if (action.type === "visa") {
-      router.push(`/${lang}/visa`);
-      setIsOpen(false);
     } else if (action.type === "whatsapp") {
       const encodedMsg = encodeURIComponent(action.textMsg || "مرحباً، أود الاستفسار والحجز مع شركة التلال والرمال");
       window.open(`https://wa.me/966547305060?text=${encodedMsg}`, "_blank");
@@ -322,794 +333,477 @@ export default function ChatAssistant({ lang = "en" }) {
     }
   };
 
-  // Fully Working Copy Handler (Clipboard API + Fallback)
-  const handleCopyMessage = (id, text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        setCopiedId(id);
-        setTimeout(() => setCopiedId(null), 2000);
-      }).catch(() => fallbackCopy(id, text));
-    } else {
-      fallbackCopy(id, text);
-    }
-  };
-
-  const fallbackCopy = (id, text) => {
-    try {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch (e) {
-      console.error("Copy failed", e);
-    }
-  };
-
-  // Bulletproof Continuous Text-to-Speech Handler for Arabic & English
-  const handleSpeakMessage = (id, text) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
-    // If currently speaking this message, stop it cleanly
-    if (speakingId === id) {
-      window.speechSynthesis.cancel();
-      setSpeakingId(null);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    // Clean text into smooth spoken prose (remove markdown bullet dashes & extra spaces)
-    let cleanText = text
-      .replace(/<[^>]*>?/gm, "")
-      .replace(/[-•*]/g, "")
-      .replace(/(\r\n|\n|\r)+/g, ". ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!cleanText) return;
-
-    // Split text into natural sentence chunks to eliminate Chrome/Edge speech synthesis stuttering
-    const sentenceRegex = /[^.!?؛,]+[.!?؛,]?/g;
-    const chunks = cleanText.match(sentenceRegex) || [cleanText];
-
-    setSpeakingId(id);
-
-    // Keep global reference array to prevent Chrome V8 garbage collection bug mid-speech
-    window._speechUtterances = [];
-
-    let currentChunkIndex = 0;
-
-    const speakNextChunk = () => {
-      if (currentChunkIndex >= chunks.length) {
-        setSpeakingId(null);
-        window._speechUtterances = [];
-        return;
-      }
-
-      const chunkText = chunks[currentChunkIndex].trim();
-      if (!chunkText) {
-        currentChunkIndex++;
-        speakNextChunk();
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(chunkText);
-      utterance.lang = isRTL ? "ar-SA" : "en-US";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-
-      // Select natural Arabic voice if available in browser
-      if (isRTL) {
-        const voices = window.speechSynthesis.getVoices();
-        const arVoice = voices.find(
-          (v) => v.lang.startsWith("ar") || v.name.includes("Arabic") || v.name.includes("Maged") || v.name.includes("Tarik") || v.name.includes("Naayf") || v.name.includes("Laila")
-        );
-        if (arVoice) {
-          utterance.voice = arVoice;
-        }
-      }
-
-      utterance.onend = () => {
-        currentChunkIndex++;
-        speakNextChunk();
-      };
-
-      utterance.onerror = (e) => {
-        console.error("Speech chunk error:", e);
-        currentChunkIndex++;
-        speakNextChunk();
-      };
-
-      window._speechUtterances.push(utterance);
-      window.speechSynthesis.speak(utterance);
-    };
-
-    speakNextChunk();
-  };
-
-  // Fully Working Thumbs Up / Down Feedback Handler
-  const handleLikeMessage = (id, type) => {
-    setLikedStatus((prev) => {
-      const current = prev[id];
-      if (current === type) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      return { ...prev, [id]: type };
-    });
-  };
-
-  // File Attachment Handler
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAttachedFileName(file.name);
-    }
-  };
-
   return (
     <>
-      {/* Hidden File Input for Attachments */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
-
-      {/* Hostinger Agent Trigger Button */}
+      {/* Floating Concierge Badge Trigger Button */}
       <div
-        onClick={() => setIsOpen(true)}
-        role="button"
-        tabIndex={0}
         style={{
           position: "fixed",
-          bottom: "25px",
-          left: isRTL ? "auto" : "95px",
-          right: isRTL ? "95px" : "auto",
-          zIndex: 999999,
-          cursor: "pointer",
-          backgroundColor: "#1C0052",
-          border: "1.5px solid #E85D1F",
-          borderRadius: "50px",
-          padding: "10px 18px",
-          boxShadow: "0 10px 30px rgba(28, 0, 82, 0.35)",
-          display: isOpen ? "none" : "flex",
-          alignItems: "center",
-          gap: "10px",
-          color: "#ffffff",
-          fontWeight: 600,
-          fontSize: "0.88rem",
-          direction: isRTL ? "rtl" : "ltr",
-          transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.04)";
-          e.currentTarget.style.boxShadow = "0 14px 35px rgba(28, 0, 82, 0.45)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "0 10px 30px rgba(28, 0, 82, 0.35)";
+          bottom: "24px",
+          [isRTL ? "left" : "right"]: "90px",
+          zIndex: 99990,
+          display: isOpen ? "none" : "block",
         }}
       >
-        <div
+        <motion.button
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => setIsOpen(true)}
           style={{
-            width: "30px",
-            height: "30px",
-            borderRadius: "50%",
-            backgroundColor: "rgba(232, 93, 31, 0.2)",
-            border: "1px solid #E85D1F",
+            background: "#1C0052",
+            color: "#ffffff",
+            border: "2px solid #E85D1F",
+            borderRadius: "50px",
+            padding: "10px 18px",
+            boxShadow: "0 12px 35px rgba(28, 0, 82, 0.35), 0 0 0 4px rgba(232, 93, 31, 0.2)",
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            color: "#FFC60B",
-            flexShrink: 0,
-          }}
-        >
-          <Headphones size={17} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: "1.2" }}>
-          <span style={{ color: "#ffffff", fontSize: "0.85rem", fontWeight: 700 }}>
-            {isRTL ? "الوكيل" : "Agent"}
-          </span>
-          <span style={{ color: "#FFC60B", fontSize: "0.72rem", fontWeight: 500 }}>
-            {isRTL ? "خدمة العملاء والحجوزات" : "Travel & Support"}
-          </span>
-        </div>
-      </div>
-
-      {/* Hostinger Exact Replica AI Agent Window */}
-      {isOpen && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: isExpanded ? "16px" : "20px",
-            [isRTL ? "left" : "right"]: isExpanded ? "16px" : "20px",
-            width: isExpanded ? "calc(100vw - 32px)" : "430px",
-            maxWidth: "760px",
-            height: isExpanded ? "calc(100vh - 32px)" : "650px",
-            maxHeight: "90vh",
-            backgroundColor: "#ffffff",
-            borderRadius: "20px",
-            boxShadow: "0 25px 70px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08)",
-            zIndex: 999999,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            gap: "10px",
+            fontWeight: 700,
+            fontSize: "0.92rem",
             direction: isRTL ? "rtl" : "ltr",
-            fontFamily: "Inter, system-ui, -apple-system, sans-serif",
           }}
         >
-          {/* Hostinger Header Bar */}
           <div
             style={{
-              backgroundColor: "#ffffff",
-              padding: "16px 20px",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "rgba(232, 93, 31, 0.2)",
+              border: "1px solid #E85D1F",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #f0f0f0",
+              justifyContent: "center",
+              color: "#FFC60B",
+              flexShrink: 0,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  backgroundColor: "#1C0052",
-                  color: "#FFC60B",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Headphones size={18} />
-              </div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: "0.96rem", fontWeight: 700, color: "#111827" }}>
-                  {isRTL ? "وكيل التلال والرمال" : "Tilal Rimal Agent"}
-                </h4>
-                <span style={{ fontSize: "0.75rem", color: "#10b981", fontWeight: 500 }}>
-                  {isRTL ? "متواجد حالياً" : "Online"}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <a
-                href="https://wa.me/966547305060"
-                target="_blank"
-                rel="noreferrer"
-                title="WhatsApp Support"
-                style={{
-                  color: "#25D366",
-                  backgroundColor: "#f9fafb",
-                  borderRadius: "50%",
-                  width: "34px",
-                  height: "34px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <FaWhatsapp size={18} />
-              </a>
-
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                style={{
-                  background: "#f9fafb",
-                  border: "none",
-                  color: "#6b7280",
-                  borderRadius: "50%",
-                  width: "34px",
-                  height: "34px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-              >
-                {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-              </button>
-
-              <button
-                onClick={() => setIsOpen(false)}
-                style={{
-                  background: "#f9fafb",
-                  border: "none",
-                  color: "#6b7280",
-                  borderRadius: "50%",
-                  width: "34px",
-                  height: "34px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
+            <Headphones size={18} />
           </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: "1.2" }}>
+            <span style={{ color: "#ffffff", fontSize: "0.88rem", fontWeight: 700 }}>
+              {isRTL ? "مستشار التلال والرمال" : "Tilal Rimal Concierge"}
+            </span>
+            <span style={{ color: "#FFC60B", fontSize: "0.72rem", fontWeight: 500 }}>
+              {isRTL ? "خدمة العملاء والحجوزات" : "Travel & Booking Support"}
+            </span>
+          </div>
+          <Sparkles size={16} color="#FFC60B" style={{ marginLeft: "4px" }} />
+        </motion.button>
+      </div>
 
-          {/* Messages Body */}
-          <div
+      {/* Floating Concierge Chat Window */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.92 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             style={{
-              flex: 1,
-              padding: "20px",
-              overflowY: "auto",
+              position: "fixed",
+              bottom: isExpanded ? "20px" : "24px",
+              [isRTL ? "left" : "right"]: isExpanded ? "20px" : "24px",
+              width: isExpanded ? "calc(100vw - 40px)" : "410px",
+              maxWidth: "720px",
+              height: isExpanded ? "calc(100vh - 40px)" : "630px",
+              maxHeight: "88vh",
               backgroundColor: "#ffffff",
+              borderRadius: "22px",
+              boxShadow: "0 25px 65px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(232, 93, 31, 0.35)",
+              zIndex: 99999,
               display: "flex",
               flexDirection: "column",
-              gap: "24px",
+              overflow: "hidden",
+              direction: isRTL ? "rtl" : "ltr",
             }}
           >
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: msg.sender === "user" ? "flex-end" : "flex-start",
-                }}
+            {/* Professional Header Bar */}
+            <div
+              style={{
+                background: "#1C0052",
+                color: "#ffffff",
+                padding: "16px 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "3.5px solid #E85D1F",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "42px",
+                    height: "42px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(223, 165, 40, 0.15)",
+                    border: "1.5px solid #DFA528",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#F3D082",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                  }}
+                >
+                  <Headphones size={22} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#ffffff" }}>
+                    {isRTL ? "المستشار السياحي - التلال والرمال" : "Tilal Rimal Travel Advisor"}
+                  </h4>
+                  <span style={{ fontSize: "0.75rem", color: "#F3D082", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <span style={{ width: "7px", height: "7px", backgroundColor: "#10b981", borderRadius: "50%" }} />
+                    {isRTL ? "متاح الان للحجز والاستفسار" : "Available 24/7 for Reservations"}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* WhatsApp Direct Header Icon */}
+                <a
+                  href="https://wa.me/966547305060"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="WhatsApp Support"
+                  style={{
+                    color: "#25D366",
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderRadius: "50%",
+                    width: "35px",
+                    height: "35px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textDecoration: "none",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <FaWhatsapp size={19} />
+                </a>
+
+                {/* Expand / Minimize Toggle */}
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    border: "none",
+                    color: "#ffffff",
+                    borderRadius: "50%",
+                    width: "35px",
+                    height: "35px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    border: "none",
+                    color: "#ffffff",
+                    borderRadius: "50%",
+                    width: "35px",
+                    height: "35px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Sub-Header Notice */}
+            <div
+              style={{
+                backgroundColor: "#FAF6F0",
+                padding: "8px 16px",
+                borderBottom: "1px solid #EFE4D2",
+                fontSize: "0.78rem",
+                color: "#6b7280",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <span style={{ fontWeight: 600, color: "#1C0052" }}>
+                {isRTL ? "خدمات التنظيم والحجز المباشر لجميع رحلات المملكة" : "Official Concierge Service for All Saudi Tours & Packages"}
+              </span>
+              <button
+                onClick={() => setMessages(initialMessages)}
+                title="Reset Chat"
+                style={{ background: "none", border: "none", color: "#DFA528", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
               >
-                {/* User Message: Lavender Bubble */}
-                {msg.sender === "user" ? (
+                <RefreshCw size={12} />
+                <span style={{ fontSize: "0.72rem", fontWeight: 600 }}>{isRTL ? "إعادة التعيين" : "Reset"}</span>
+              </button>
+            </div>
+
+            {/* Chat Messages Body */}
+            <div
+              style={{
+                flex: 1,
+                padding: "16px 18px",
+                overflowY: "auto",
+                backgroundColor: "#f9fafb",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: msg.sender === "user" ? "flex-end" : "flex-start",
+                  }}
+                >
                   <div
                     style={{
-                      backgroundColor: "#f0ebff",
-                      color: "#111827",
-                      padding: "10px 18px",
-                      borderRadius: "20px",
-                      fontSize: "0.92rem",
-                      fontWeight: 500,
-                      maxWidth: "85%",
+                      display: "flex",
+                      gap: "8px",
+                      maxWidth: "90%",
+                      flexDirection: msg.sender === "user" ? "row-reverse" : "row",
                     }}
                   >
-                    {msg.text}
-                  </div>
-                ) : (
-                  /* Agent Message: Plain Text on White Background */
-                  <div style={{ width: "100%", maxWidth: "98%" }}>
-                    <div
-                      style={{
-                        color: "#1f2937",
-                        fontSize: "0.94rem",
-                        lineHeight: "1.65",
-                        whiteSpace: "pre-line",
-                        fontWeight: 400,
-                      }}
-                    >
-                      {msg.text}
-                    </div>
+                    {msg.sender === "bot" && (
+                      <div
+                        style={{
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "50%",
+                          backgroundColor: "#1C0052",
+                          color: "#F3D082",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.75rem",
+                          flexShrink: 0,
+                          marginTop: "2px",
+                          border: "1px solid #DFA528",
+                        }}
+                      >
+                        <UserCheck size={16} />
+                      </div>
+                    )}
 
-                    {/* Interactive Action Bar (Copy, Sound, Thumbs Up, Thumbs Down, Timestamp) */}
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "center",
-                        gap: "14px",
-                        marginTop: "12px",
-                        color: "#9ca3af",
+                        flexDirection: "column",
+                        gap: "10px",
                       }}
                     >
-                      {/* COPY BUTTON */}
-                      <button
-                        onClick={() => handleCopyMessage(msg.id, msg.text)}
-                        title="Copy text"
+                      <div
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: copiedId === msg.id ? "#10b981" : "#9ca3af",
-                          cursor: "pointer",
-                          padding: "2px",
-                          display: "flex",
-                          alignItems: "center",
-                          transition: "color 0.15s ease",
+                          backgroundColor: msg.sender === "user" ? "#1C0052" : "#ffffff",
+                          color: msg.sender === "user" ? "#ffffff" : "#1f2937",
+                          padding: "13px 16px",
+                          borderRadius: msg.sender === "user" ? "16px 16px 2px 16px" : "16px 16px 16px 2px",
+                          boxShadow: msg.sender === "user" ? "0 4px 14px rgba(28, 0, 82, 0.2)" : "0 3px 12px rgba(0,0,0,0.06)",
+                          border: msg.sender === "user" ? "none" : "1px solid #e5e7eb",
+                          fontSize: "0.9rem",
+                          lineHeight: "1.6",
+                          whiteSpace: "pre-line",
                         }}
                       >
-                        {copiedId === msg.id ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
-                      </button>
+                        {msg.text}
+                      </div>
 
-                      {/* VOICE/LISTEN BUTTON */}
-                      <button
-                        onClick={() => handleSpeakMessage(msg.id, msg.text)}
-                        title={speakingId === msg.id ? "Stop listening" : "Listen message"}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: speakingId === msg.id ? "#1C0052" : "#9ca3af",
-                          cursor: "pointer",
-                          padding: "2px",
-                          display: "flex",
-                          alignItems: "center",
-                          transition: "color 0.15s ease",
-                        }}
-                      >
-                        <Volume2 size={16} color={speakingId === msg.id ? "#1C0052" : "#9ca3af"} />
-                      </button>
-
-                      {/* THUMBS UP BUTTON */}
-                      <button
-                        onClick={() => handleLikeMessage(msg.id, "like")}
-                        title="Good response"
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: likedStatus[msg.id] === "like" ? "#1C0052" : "#9ca3af",
-                          cursor: "pointer",
-                          padding: "2px",
-                          display: "flex",
-                          alignItems: "center",
-                          transition: "color 0.15s ease",
-                        }}
-                      >
-                        <ThumbsUp
-                          size={16}
-                          color={likedStatus[msg.id] === "like" ? "#1C0052" : "#9ca3af"}
-                          fill={likedStatus[msg.id] === "like" ? "#1C0052" : "none"}
-                        />
-                      </button>
-
-                      {/* THUMBS DOWN BUTTON */}
-                      <button
-                        onClick={() => handleLikeMessage(msg.id, "dislike")}
-                        title="Poor response"
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: likedStatus[msg.id] === "dislike" ? "#ef4444" : "#9ca3af",
-                          cursor: "pointer",
-                          padding: "2px",
-                          display: "flex",
-                          alignItems: "center",
-                          transition: "color 0.15s ease",
-                        }}
-                      >
-                        <ThumbsDown
-                          size={16}
-                          color={likedStatus[msg.id] === "dislike" ? "#ef4444" : "#9ca3af"}
-                          fill={likedStatus[msg.id] === "dislike" ? "#ef4444" : "none"}
-                        />
-                      </button>
-
-                      {/* TIMESTAMP */}
-                      <span style={{ fontSize: "0.75rem", color: "#9ca3af", marginLeft: "4px" }}>
-                        {msg.timestamp}
-                      </span>
-                    </div>
-
-                    {/* Hostinger Quick Actions Section */}
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div style={{ marginTop: "18px" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            marginBottom: "10px",
-                          }}
-                        >
-                          <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#4b5563" }}>
-                            {isRTL ? "خيارات سريعة" : "Quick actions"}
-                          </span>
-                          <div style={{ flex: 1, height: "1px", backgroundColor: "#f0f0f0" }} />
-                        </div>
-
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {/* Interactive Reservation & WhatsApp Action Cards */}
+                      {msg.actions && msg.actions.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "2px" }}>
                           {msg.actions.map((act, actIdx) => (
                             <button
                               key={actIdx}
                               onClick={() => handleActionButtonClick(act)}
                               style={{
-                                backgroundColor: "#f6f3ff",
-                                color: "#1f2937",
+                                backgroundColor: act.type === "whatsapp" ? "#25D366" : act.type === "reservation" ? "#DFA528" : "#1C0052",
+                                color: "#ffffff",
                                 border: "none",
-                                borderRadius: "24px",
-                                padding: "11px 18px",
-                                fontSize: "0.88rem",
-                                fontWeight: 500,
+                                borderRadius: "12px",
+                                padding: "8px 14px",
+                                fontSize: "0.82rem",
+                                fontWeight: 700,
                                 cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "space-between",
-                                textAlign: isRTL ? "right" : "left",
-                                transition: "all 0.15s ease",
+                                gap: "6px",
+                                boxShadow: "0 3px 10px rgba(0,0,0,0.12)",
+                                transition: "all 0.2s ease-in-out",
                               }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#ede5ff";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "#f6f3ff";
-                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                             >
+                              {act.type === "whatsapp" ? (
+                                <FaWhatsapp size={15} />
+                              ) : act.type === "reservation" ? (
+                                <Briefcase size={15} />
+                              ) : (
+                                <ExternalLink size={15} />
+                              )}
                               <span>{act.label}</span>
-                              <ChevronRight size={18} color="#6b7280" style={{ transform: isRTL ? "rotate(180deg)" : "none" }} />
                             </button>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
 
-            {/* Hostinger Thinking State */}
-            {isThinking && (
-              <div style={{ color: "#6b7280", fontSize: "0.9rem", padding: "4px 0" }}>
-                {isRTL ? "جاري البحث عن المعلومات..." : "Looking up information..."}
-              </div>
-            )}
-
-            {/* Hostinger Word-by-Word Streaming State */}
-            {isStreaming && (
-              <div style={{ width: "100%", maxWidth: "98%" }}>
-                <div
-                  style={{
-                    color: "#1f2937",
-                    fontSize: "0.94rem",
-                    lineHeight: "1.65",
-                    whiteSpace: "pre-line",
-                  }}
-                >
-                  {streamingText}
-                  <span style={{ display: "inline-block", width: "6px", height: "14px", backgroundColor: "#1C0052", marginLeft: "2px", verticalAlign: "middle" }} />
+                  <span style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "4px", padding: "0 6px" }}>
+                    {msg.timestamp}
+                  </span>
                 </div>
-              </div>
-            )}
+              ))}
 
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Topics Floating Menu Overlay (when Zap ⚡ is toggled) */}
-          {showQuickPrompts && (
-            <div
-              style={{
-                backgroundColor: "#FAF6F0",
-                padding: "12px 16px",
-                borderTop: "1px solid #e5e7eb",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                maxHeight: "180px",
-                overflowY: "auto",
-              }}
-            >
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1C0052" }}>
-                {isRTL ? "موضوعات سريعة للاستفسار:" : "Suggested quick topics:"}
-              </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {quickTopics.map((topic) => (
-                  <button
-                    key={topic.id}
-                    onClick={() => {
-                      setShowQuickPrompts(false);
-                      handleQuickTopicClick(topic);
+              {/* Typing Indicator */}
+              {isTyping && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      width: "30px",
+                      height: "30px",
+                      borderRadius: "50%",
+                      backgroundColor: "#1C0052",
+                      color: "#F3D082",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #DFA528",
                     }}
+                  >
+                    <UserCheck size={16} />
+                  </div>
+                  <div
                     style={{
                       backgroundColor: "#ffffff",
                       border: "1px solid #e5e7eb",
-                      borderRadius: "16px",
-                      padding: "6px 12px",
-                      fontSize: "0.78rem",
-                      fontWeight: 600,
-                      color: "#1C0052",
-                      cursor: "pointer",
+                      padding: "10px 16px",
+                      borderRadius: "16px 16px 16px 2px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
                     }}
                   >
-                    {topic.label}
-                  </button>
-                ))}
-              </div>
+                    <Loader2 size={16} color="#DFA528" className="animate-spin" />
+                    <span style={{ fontSize: "0.82rem", color: "#6b7280", fontWeight: 600 }}>
+                      {isRTL ? "جاري تحضير الرد والتفاصيل..." : "Preparing response & booking options..."}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
-          )}
 
-          {/* Hostinger Style Input Container */}
-          <div style={{ padding: "12px 16px 16px", backgroundColor: "#ffffff" }}>
-            {attachedFileName && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.78rem",
-                  color: "#1C0052",
-                  backgroundColor: "#f0ebff",
-                  padding: "4px 10px",
-                  borderRadius: "12px",
-                  marginBottom: "6px",
-                  width: "fit-content",
-                }}
-              >
-                <span>📎 {attachedFileName}</span>
+            {/* Quick Suggestion Chips */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                padding: "10px 14px 6px",
+                borderTop: "1px solid #f0f0f0",
+                display: "flex",
+                gap: "8px",
+                overflowX: "auto",
+                whiteSpace: "nowrap",
+                scrollbarWidth: "none",
+              }}
+            >
+              {quickTopics.map((topic) => (
                 <button
-                  type="button"
-                  onClick={() => setAttachedFileName("")}
-                  style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", padding: 0 }}
+                  key={topic.id}
+                  onClick={() => handleQuickTopicClick(topic)}
+                  style={{
+                    backgroundColor: "#FAF6F0",
+                    border: "1px solid #EFE4D2",
+                    borderRadius: "20px",
+                    padding: "6px 14px",
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    color: "#1C0052",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#DFA528";
+                    e.currentTarget.style.color = "#ffffff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#FAF6F0";
+                    e.currentTarget.style.color = "#1C0052";
+                  }}
                 >
-                  <X size={12} />
+                  {topic.label}
                 </button>
-              </div>
-            )}
+              ))}
+            </div>
 
+            {/* Message Input Box */}
             <form
               onSubmit={handleSendMessage}
               style={{
-                borderRadius: "22px",
-                border: "1.5px solid #e2e8f0",
+                padding: "12px 16px",
                 backgroundColor: "#ffffff",
-                padding: "12px 16px 10px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
               }}
             >
-              <textarea
-                rows={1}
+              <input
+                type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(e);
-                  }
-                }}
-                placeholder={isRTL ? "واصل المحادثة..." : "Continue the conversation..."}
+                placeholder={isRTL ? "اكتب استفسارك للحجز أو المعلومات..." : "Type your question or booking inquiry..."}
                 style={{
-                  width: "100%",
-                  border: "none",
-                  outline: "none",
-                  backgroundColor: "transparent",
-                  fontSize: "0.92rem",
+                  flex: 1,
+                  padding: "12px 18px",
+                  borderRadius: "25px",
+                  border: "1.5px solid #e5e7eb",
+                  backgroundColor: "#FAF6F0",
+                  fontSize: "0.9rem",
                   color: "#111827",
-                  resize: "none",
-                  fontFamily: "inherit",
+                  outline: "none",
                   direction: isRTL ? "rtl" : "ltr",
                 }}
               />
 
-              {/* Input Toolbar Inside Container */}
-              <div
+              <button
+                type="submit"
+                disabled={!inputMessage.trim()}
                 style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  backgroundColor: inputMessage.trim() ? "#DFA528" : "#e5e7eb",
+                  color: "#ffffff",
+                  border: "none",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  marginTop: "8px",
-                  paddingTop: "4px",
+                  justifyContent: "center",
+                  cursor: inputMessage.trim() ? "pointer" : "not-allowed",
+                  transition: "all 0.2s",
+                  boxShadow: inputMessage.trim() ? "0 4px 14px rgba(223, 165, 40, 0.35)" : "none",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#9ca3af" }}>
-                  {/* ATTACHMENT PAPERCLIP BUTTON */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Attach file"
-                    style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", padding: 0, display: "flex" }}
-                  >
-                    <Paperclip size={18} />
-                  </button>
-
-                  {/* QUICK PROMPTS ZAP BUTTON */}
-                  <button
-                    type="button"
-                    onClick={() => setShowQuickPrompts(!showQuickPrompts)}
-                    title="Quick topics"
-                    style={{ background: "none", border: "none", color: showQuickPrompts ? "#1C0052" : "#9ca3af", cursor: "pointer", padding: 0, display: "flex" }}
-                  >
-                    <Zap size={18} />
-                  </button>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
-                  {/* Dropdown Agent Selector */}
-                  <div
-                    onClick={() => setShowModelDropdown(!showModelDropdown)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      fontSize: "0.82rem",
-                      fontWeight: 600,
-                      color: "#374151",
-                      cursor: "pointer",
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      backgroundColor: "#f9fafb",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.85rem", color: "#1C0052" }}>❖</span>
-                    <span>{selectedAgentModel}</span>
-                    <ChevronDown size={14} color="#6b7280" />
-                  </div>
-
-                  {/* Agent Model Selector Popup */}
-                  {showModelDropdown && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "35px",
-                        right: "40px",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                        padding: "6px",
-                        zIndex: 99999,
-                        minWidth: "150px",
-                      }}
-                    >
-                      <div
-                        onClick={() => { setSelectedAgentModel("Agent"); setShowModelDropdown(false); }}
-                        style={{
-                          padding: "8px 12px",
-                          fontSize: "0.82rem",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          borderRadius: "8px",
-                          backgroundColor: selectedAgentModel === "Agent" ? "#f0ebff" : "transparent",
-                          color: "#1C0052",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span>❖ Agent</span>
-                        {selectedAgentModel === "Agent" && <Check size={14} color="#1C0052" />}
-                      </div>
-
-                      <div
-                        onClick={() => { setSelectedAgentModel("Fast Agent"); setShowModelDropdown(false); }}
-                        style={{
-                          padding: "8px 12px",
-                          fontSize: "0.82rem",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          borderRadius: "8px",
-                          backgroundColor: selectedAgentModel === "Fast Agent" ? "#f0ebff" : "transparent",
-                          color: "#1C0052",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span>⚡ Fast Agent</span>
-                        {selectedAgentModel === "Fast Agent" && <Check size={14} color="#1C0052" />}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Circle Send Arrow */}
-                  <button
-                    type="submit"
-                    disabled={(!inputMessage.trim() && !attachedFileName) || isThinking || isStreaming}
-                    style={{
-                      width: "34px",
-                      height: "34px",
-                      borderRadius: "50%",
-                      backgroundColor: (inputMessage.trim() || attachedFileName) ? "#1C0052" : "#f3f4f6",
-                      color: (inputMessage.trim() || attachedFileName) ? "#ffffff" : "#9ca3af",
-                      border: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: (inputMessage.trim() || attachedFileName) ? "#1C0052" : "not-allowed",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <ArrowUp size={18} />
-                  </button>
-                </div>
-              </div>
+                <Send size={18} style={{ transform: isRTL ? "rotate(180deg)" : "none" }} />
+              </button>
             </form>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Direct Travel Reservation Modal */}
       <TravelReservationModal
@@ -1121,4 +815,3 @@ export default function ChatAssistant({ lang = "en" }) {
     </>
   );
 }
-

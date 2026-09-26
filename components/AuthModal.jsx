@@ -32,14 +32,14 @@ export default function AuthModal({ onAuthenticated }) {
   // Email pre-check state
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
-
+  
   // OTP verification state
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpPhone, setOtpPhone] = useState("");
   const [otpType, setOtpType] = useState("login");
   const [devOtp, setDevOtp] = useState(null); // For development mode hint
-  const [reseakbarooldown, setReseakbarooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const t = useMemo(
     () => {
@@ -148,11 +148,11 @@ export default function AuthModal({ onAuthenticated }) {
 
   // Resend cooldown timer
   useEffect(() => {
-    if (reseakbarooldown > 0) {
-      const timer = setTimeout(() => setReseakbarooldown(reseakbarooldown - 1), 1000);
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [reseakbarooldown]);
+  }, [resendCooldown]);
 
   // Debounced email existence check (trigger on change)
   useEffect(() => {
@@ -215,7 +215,7 @@ export default function AuthModal({ onAuthenticated }) {
           setOtpPhone(res.phone);
           setOtpType("login");
           setDevOtp(res.devOtp);
-          setReseakbarooldown(60);
+          setResendCooldown(60);
         } else {
           // Direct login (admin)
           handleAuthSuccess();
@@ -272,7 +272,7 @@ export default function AuthModal({ onAuthenticated }) {
         password: form.password,
         password_confirmation: form.password_confirmation,
       };
-
+      
       const res = await register(registerData);
       if (res.success) {
         if (res.requiresOtp) {
@@ -281,7 +281,7 @@ export default function AuthModal({ onAuthenticated }) {
           setOtpPhone(res.phone);
           setOtpType("register");
           setDevOtp(res.devOtp);
-          setReseakbarooldown(60);
+          setResendCooldown(60);
         } else {
           handleAuthSuccess();
           onAuthenticated?.();
@@ -344,14 +344,14 @@ export default function AuthModal({ onAuthenticated }) {
   };
 
   const handleResendOtp = async () => {
-    if (reseakbarooldown > 0) return;
-
+    if (resendCooldown > 0) return;
+    
     setLoading(true);
     setError(null);
     try {
       const res = await sendOtp(otpPhone, otpType);
       if (res.success) {
-        setReseakbarooldown(60);
+        setResendCooldown(60);
         setDevOtp(res.devOtp);
       } else {
         // Language-specific error messages
@@ -478,7 +478,7 @@ export default function AuthModal({ onAuthenticated }) {
     fontFamily: '"Tajawal", sans-serif',
     fontSize: "1rem",
     opacity: loading ? 0.7 : 1,
-  };
+  }; 
 
   const switcherStyle = {
     textAlign: "center",
@@ -515,8 +515,8 @@ export default function AuthModal({ onAuthenticated }) {
   const resendStyle = {
     background: "none",
     border: "none",
-    color: reseakbarooldown > 0 ? "#999" : "#0070f3",
-    cursor: reseakbarooldown > 0 ? "not-allowed" : "pointer",
+    color: resendCooldown > 0 ? "#999" : "#0070f3",
+    cursor: resendCooldown > 0 ? "not-allowed" : "pointer",
     fontSize: "0.9rem",
     padding: "0.5rem 0",
   };
@@ -554,39 +554,39 @@ export default function AuthModal({ onAuthenticated }) {
           <form onSubmit={handleVerifyOtp} style={bodyStyle}>
             <h3 style={h3Style}>{t.otpTitle}</h3>
             {error && <div style={errorStyle}>{error}</div>}
-
+            
             <p style={{ color: "#666", fontSize: "0.95rem", margin: "0.5rem 0" }}>
               {t.otpSentTo} <strong>{otpPhone}</strong>
             </p>
-
+            
             <label style={labelStyle}>{t.otpLabel}</label>
-            <input
-              style={otpInputStyle}
-              name="otp"
-              type="text"
-              value={otpCode}
+            <input 
+              style={otpInputStyle} 
+              name="otp" 
+              type="text" 
+              value={otpCode} 
               onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder={t.otpPlaceholder}
               maxLength={6}
               autoComplete="one-time-code"
-              required
+              required 
             />
-
+            
             <button type="submit" style={primaryStyle} disabled={loading || otpCode.length !== 6}>
               {loading ? t.loadingVerify : t.verifyBtn}
             </button>
-
-            <button
-              type="button"
-              style={resendStyle}
+            
+            <button 
+              type="button" 
+              style={resendStyle} 
               onClick={handleResendOtp}
-              disabled={reseakbarooldown > 0 || loading}
+              disabled={resendCooldown > 0 || loading}
             >
-              {reseakbarooldown > 0
-                ? `${t.resendOtp} (${reseakbarooldown}s)`
+              {resendCooldown > 0 
+                ? `${t.resendOtp} (${resendCooldown}s)` 
                 : t.resendOtp}
             </button>
-
+            
             <button type="button" style={backBtnStyle} onClick={handleBackFromOtp}>
               {t.backToLogin}
             </button>

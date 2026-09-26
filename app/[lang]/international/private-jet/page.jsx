@@ -7,7 +7,7 @@ export const revalidate = 0;
 export async function generateMetadata({ params }) {
   const { lang } = await params;
   const validLang = ['ar', 'en', 'zh'].includes(lang) ? lang : 'en';
-
+  
   const metadata = {
     en: {
       title: "Private Jet Charter | Tilal Rimal",
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
       keywords: "私人飞机, 飞机包机, 奢侈旅行, 航空服务",
     }
   };
-
+  
   return {
     ...metadata[validLang],
     alternates: {
@@ -42,11 +42,11 @@ export async function generateMetadata({ params }) {
 export default async function PrivateJetPage({ params }) {
   const { lang } = await params;
   const validLang = ['ar', 'en', 'zh'].includes(lang) ? lang : 'en';
-
+  
   return (
-    <main
+    <main 
       className="min-h-screen"
-      style={{
+      style={{ 
         backgroundColor: "#FAF6F0",
         paddingTop: "150px",
         direction: validLang === 'ar' ? 'rtl' : 'ltr'

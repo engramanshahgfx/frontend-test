@@ -78,38 +78,38 @@ function StarCanvas({ style }) {
 }
 
 export default function Team({ lang }) {
-  const translations = {
-    en: {
-      heading: "Building the Future with Excellence & Precision",
-      description: "At Rock Summit Co. Ltd, we are a dedicated team of construction professionals, engineers, and project managers committed to delivering exceptional contracting services. With years of experience in the construction industry, we've successfully completed numerous projects across residential, commercial, and infrastructure sectors, building lasting structures that stand the test of time.",
-      stats: [
-        { value: "150+", label: "Projects Completed", text: "Successfully delivered construction projects of all scales." },
-        { value: "50+", label: "Expert Team", text: "Skilled professionals including engineers and technicians." },
-        { value: "10+", label: "Years Experience", text: "Years of combined expertise in construction and contracting." },
-        { value: "120+", label: "Satisfied Clients", text: "Clients who trust us with their construction needs." },
-      ],
-    },
-    ar: {
-      heading: "نبني المستقبل بالتميز والدقة",
-      description: "في شركة القمة الصخرية المحدودة، نحن فريق مخصص من المحترفين في مجال البناء والمهندسين ومديري المشاريع الملتزمين بتقديم خدمات مقاولات استثنائية. مع سنوات من الخبرة في صناعة البناء، أكملنا بنجاح العديد من المشاريع في القطاعات السكنية والتجارية والبنية التحتية، وبناء هياكل دائمة تثبت أمام اختبار الزمن.",
-      stats: [
-        { value: "150+", label: "المشاريع المكتملة", text: "مشاريع بناء مكتملة بنجاح بجميع المقاييس." },
-        { value: "50+", label: "فريق الخبراء", text: "محترفون مهرة يشملون المهندسين والفنيين." },
-        { value: "10+", label: "سنوات الخبرة", text: "سنوات من الخبرة المجمعة في البناء والمقاولات." },
-        { value: "120+", label: "عملاء راضون", text: "عملاء يثقون بنا في احتياجاتهم الإنشائية." },
-      ],
-    },
-    zh: {
-      heading: "以卓越和精准打造未来",
-      description: "在Rock Summit有限公司，我们是一支由建筑专业人士、工程师和项目经理组成的专注团队，致力于提供卓越的承包服务。凭借多年的建筑行业经验，我们已成功完成住宅、商业和基础设施领域的众多项目，建造了经得起时间考验的持久建筑。",
-      stats: [
-        { value: "150+", label: "已完成项目", text: "成功交付各种规模的建筑项目。" },
-        { value: "50+", label: "专家团队", text: "包括工程师和技术人员在内的熟练专业人员。" },
-        { value: "10+", label: "经验年限", text: "在建筑和承包领域的综合专业知识。" },
-        { value: "120+", label: "满意客户", text: "信任我们满足其建筑需求的客户。" },
-      ],
-    },
-  };
+ const translations = {
+  en: {
+    heading: "Building the Future with Excellence & Precision",
+    description: "At Rock Summit Co. Ltd, we are a dedicated team of construction professionals, engineers, and project managers committed to delivering exceptional contracting services. With years of experience in the construction industry, we've successfully completed numerous projects across residential, commercial, and infrastructure sectors, building lasting structures that stand the test of time.",
+    stats: [
+      { value: "150+", label: "Projects Completed", text: "Successfully delivered construction projects of all scales." },
+      { value: "50+", label: "Expert Team", text: "Skilled professionals including engineers and technicians." },
+      { value: "10+", label: "Years Experience", text: "Years of combined expertise in construction and contracting." },
+      { value: "120+", label: "Satisfied Clients", text: "Clients who trust us with their construction needs." },
+    ],
+  },
+  ar: {
+    heading: "نبني المستقبل بالتميز والدقة",
+    description: "في شركة القمة الصخرية المحدودة، نحن فريق مخصص من المحترفين في مجال البناء والمهندسين ومديري المشاريع الملتزمين بتقديم خدمات مقاولات استثنائية. مع سنوات من الخبرة في صناعة البناء، أكملنا بنجاح العديد من المشاريع في القطاعات السكنية والتجارية والبنية التحتية، وبناء هياكل دائمة تثبت أمام اختبار الزمن.",
+    stats: [
+      { value: "150+", label: "المشاريع المكتملة", text: "مشاريع بناء مكتملة بنجاح بجميع المقاييس." },
+      { value: "50+", label: "فريق الخبراء", text: "محترفون مهرة يشملون المهندسين والفنيين." },
+      { value: "10+", label: "سنوات الخبرة", text: "سنوات من الخبرة المجمعة في البناء والمقاولات." },
+      { value: "120+", label: "عملاء راضون", text: "عملاء يثقون بنا في احتياجاتهم الإنشائية." },
+    ],
+  },
+  zh: {
+    heading: "以卓越和精准打造未来",
+    description: "在Rock Summit有限公司，我们是一支由建筑专业人士、工程师和项目经理组成的专注团队，致力于提供卓越的承包服务。凭借多年的建筑行业经验，我们已成功完成住宅、商业和基础设施领域的众多项目，建造了经得起时间考验的持久建筑。",
+    stats: [
+      { value: "150+", label: "已完成项目", text: "成功交付各种规模的建筑项目。" },
+      { value: "50+", label: "专家团队", text: "包括工程师和技术人员在内的熟练专业人员。" },
+      { value: "10+", label: "经验年限", text: "在建筑和承包领域的综合专业知识。" },
+      { value: "120+", label: "满意客户", text: "信任我们满足其建筑需求的客户。" },
+    ],
+  },
+};
 
   const t = translations[lang] || translations.en;
 
@@ -137,7 +137,7 @@ export default function Team({ lang }) {
       }}
     >
       {/* Dark Overlay */}
-      <div
+      <div 
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
           backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -175,8 +175,8 @@ export default function Team({ lang }) {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            style={{
-              maxWidth: "800px",
+            style={{ 
+              maxWidth: "800px", 
               margin: "0 auto",
               color: "#e0e0e0",
               lineHeight: "1.6"
@@ -203,8 +203,8 @@ export default function Team({ lang }) {
                   backdropFilter: "blur(10px)",
                   border: "1px solid rgba(206, 172, 36, 0.3)",
                 }}
-                whileHover={{
-                  scale: 1.05,
+                whileHover={{ 
+                  scale: 1.05, 
                   borderColor: "rgba(206, 172, 36, 0.6)",
                   boxShadow: "0 15px 30px rgba(206, 172, 36, 0.3)"
                 }}
@@ -212,9 +212,9 @@ export default function Team({ lang }) {
               >
                 <div
                   className="mb-3 d-flex justify-content-center align-items-center rounded-circle mx-auto"
-                  style={{
-                    width: "70px",
-                    height: "70px",
+                  style={{ 
+                    width: "70px", 
+                    height: "70px", 
                     backgroundColor: "rgba(206, 172, 36, 0.2)",
                     border: "1px solid rgba(206, 172, 36, 0.5)"
                   }}
@@ -269,4 +269,3 @@ export default function Team({ lang }) {
     </section>
   );
 }
-

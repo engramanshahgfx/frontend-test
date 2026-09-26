@@ -10,9 +10,8 @@
 .heroSection {
   position: relative;
   width: 100%;
-  height: 500px;
-  min-height: 350px;
-  max-height: 60vh;
+  height: 1080px;
+  min-height: 400px;
   overflow: hidden;
   background: #000;
 }
@@ -103,6 +102,36 @@
   background: var(--accent-yellow);
   margin-top: 15px;
   border-radius: 2px;
+}
+
+.muteButton {
+  position: absolute;
+  bottom: 40px;
+  right: 5%;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+:global([dir="rtl"]) .muteButton {
+  right: auto;
+  left: 5%;
+}
+
+.muteButton:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
 }
 
 /* Layout Content Wrapper */
@@ -376,7 +405,7 @@
 }
 
 /* Not Found View */
-.notFouakbarontainer {
+.notFoundContainer {
   padding: 80px 20px;
   text-align: center;
   background: #FAF6F0;
@@ -419,7 +448,7 @@
 
 @media (max-width: 768px) {
   .heroSection {
-    height: 350px;
+    height: 450px;
   }
 
   .contentWrapper {
@@ -444,7 +473,7 @@
 
 @media (max-width: 480px) {
   .heroSection {
-    height: 280px;
+    height: 350px;
   }
 
   .backButton {
@@ -526,8 +555,7 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: var(--accent-color);
-  /* Usually orange */
+  background: var(--accent-color); /* Usually orange */
 }
 
 .offersTitleHighlight {
@@ -818,12 +846,10 @@
     margin-top: 40px;
     padding-top: 30px;
   }
-
   .offersGrid {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-
   .btnViewAll {
     width: 100%;
     justify-content: center;

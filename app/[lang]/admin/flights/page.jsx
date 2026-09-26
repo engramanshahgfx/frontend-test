@@ -412,7 +412,7 @@ export default function AdminFlightsPage() {
               Flight Bookings System
             </h1>
             <p style={{ color: '#6b7280', margin: '8px 0 0', fontSize: '14px' }}>
-              Complete akbar flights management dashboard
+              Complete NDC flights management dashboard
             </p>
           </div>
           <button
@@ -724,7 +724,7 @@ export default function AdminFlightsPage() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280', fontSize: '14px' }}>Payment Status:</span>
-                    <span style={{
+                    <span style={{ 
                       color: selectedBooking.payment.status === 'PAID' ? '#10b981' : '#f59e0b',
                       fontWeight: 600
                     }}>

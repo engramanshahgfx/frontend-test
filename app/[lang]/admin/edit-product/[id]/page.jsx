@@ -315,7 +315,7 @@ export default function EditProducts({ params }) {
             value={product.fullDesc?.[activeLang] || ""}
             tabIndex={1}
             onBlur={(newContent) => handleChange("fullDesc", newContent)}
-            onChange={() => { }}
+            onChange={() => {}}
           />
         </div>
 
@@ -328,8 +328,9 @@ export default function EditProducts({ params }) {
           {loading ? (
             <>
               <span
-                className={`spinner-border spinner-border-sm ${lang === "en" ? "me-2" : "ms-2"
-                  }`}
+                className={`spinner-border spinner-border-sm ${
+                  lang === "en" ? "me-2" : "ms-2"
+                }`}
                 role="status"
                 aria-hidden="true"
               ></span>

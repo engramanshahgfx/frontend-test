@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 export default function WhyChooseUs({ lang }) {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
-
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -100,9 +100,9 @@ export default function WhyChooseUs({ lang }) {
                 className="display-5 fw-bold mb-4"
                 style={{
                   background: "linear-gradient(135deg, #ffffff, #EFC8AE)",
-                  WebkitBackgrouakbarlip: "text",
+                  WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  backgrouakbarlip: "text",
+                  backgroundClip: "text",
                   color: "#ffffff", // Fallback color
                   fontFamily: lang === "zh" ? "'Noto Sans SC', sans-serif" : "inherit",
                 }}
@@ -132,7 +132,7 @@ export default function WhyChooseUs({ lang }) {
                     borderRadius: "12px",
                     fontSize: "1.1rem",
                     transition: "all 0.3s ease",
-                  }}
+                  }} 
                   onMouseEnter={(e) => {
                     e.target.style.transform = "translateY(-3px)";
                     e.target.style.boxShadow =
@@ -170,7 +170,7 @@ export default function WhyChooseUs({ lang }) {
                       backdropFilter: "blur(10px)",
                       height: "100%",
                       transition: "all 0.3s ease",
-                    }}
+                    }} 
                     onMouseEnter={(e) => {
                       e.target.style.background = "rgba(223, 165, 40, 0.1)";
                       e.target.style.borderColor = "rgba(223, 165, 40, 0.3)";
@@ -187,21 +187,21 @@ export default function WhyChooseUs({ lang }) {
                       style={{
                         fontFamily: lang === "zh" ? "'Noto Sans SC', sans-serif" : "'Tajawal', sans-serif",
                         background: "#dfa528",
-                        WebkitBackgrouakbarlip: "text",
+                        WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
-                        backgrouakbarlip: "text",
+                        backgroundClip: "text",
                         color: "#dfa528",
                         minHeight: "60px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                      }}
+                      }} 
                     >
                       {stat.number}
                     </div>
                     <div
                       className="small fw-medium"
-                      style={{
+                      style={{ 
                         color: "#cccccc",
                         fontFamily: lang === "zh" ? "'Noto Sans SC', sans-serif" : "inherit",
                       }}

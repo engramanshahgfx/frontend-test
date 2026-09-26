@@ -3,7 +3,7 @@ import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { citiesData } from "@/config/citiesData";
 import styles from "./city.module.css";
-import { ArrowLeft, ArrowRight, Calendar, Compass, MapPin, Star, Clock, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Compass, MapPin, Star, Clock, Users, Volume2, VolumeX } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import BookingModal from "@/components/BookingModal";
 
@@ -14,6 +14,7 @@ export default function CityDetail({ params }) {
 
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   const getImageUrl = (img) => {
     if (!img) return "/placeholder.png";
@@ -95,7 +96,7 @@ export default function CityDetail({ params }) {
 
   if (!city) {
     return (
-      <div className={styles.notFouakbarontainer}>
+      <div className={styles.notFoundContainer}>
         <h1 className={styles.notFoundTitle}>
           {lang === "ar" ? "المدينة غير موجودة" : "City Not Found"}
         </h1>
@@ -109,6 +110,19 @@ export default function CityDetail({ params }) {
   }
 
   const isRTL = lang === "ar";
+
+  // Map URL city name → actual video/image file slug in /public/cities/
+  const citySlugMap = {
+    "albahah": "albahah",
+    "jeddah": "jeddah",
+    "riyadh": "riyadh",
+    "madina": "madina",
+    "taif": "taif",
+    "alula": "alula",
+  };
+  const citySlug = citySlugMap[cityName.toLowerCase()] || cityName.toLowerCase();
+  const citiesWithVideos = ["albahah", "jeddah", "riyadh", "madina", "taif", "alula"];
+  const hasVideo = citiesWithVideos.includes(cityName.toLowerCase());
 
   // Resolve properties dynamically between API schema and fallback static config
   const displayName = city.name || (isRTL ? city.nameAr : city.nameEn);
@@ -133,7 +147,28 @@ export default function CityDetail({ params }) {
     <div className={styles.container} dir={isRTL ? "rtl" : "ltr"}>
       {/* Hero Section */}
       <div className={styles.heroSection}>
-        <img src={getImageUrl(city.image)} alt={displayName} className={styles.heroImage} />
+        {hasVideo ? (
+          <>
+            <video
+              src={`/cities/${citySlug}.mp4`}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              className={styles.heroImage}
+              style={{ objectFit: 'cover', objectPosition: 'center 25%', width: '100%', height: '100%' }}
+            />
+            <button
+              className={styles.muteButton}
+              onClick={() => setIsMuted(!isMuted)}
+              aria-label={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+            </button>
+          </>
+        ) : (
+          <img src={getImageUrl(city.image)} alt={displayName} className={styles.heroImage} />
+        )}
         <div className={styles.heroOverlay}></div>
 
         {/* Floating Back Button */}

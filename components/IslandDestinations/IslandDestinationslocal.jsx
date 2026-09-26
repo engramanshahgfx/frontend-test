@@ -129,7 +129,7 @@ export default function IslandDestinationslocal({ lang }) {
 
     // Fallback: assume it's a filename stored under storage/islands
     return `${backendBase}/storage/islands/${img}?t=${Date.now()}`;
-  };
+  }; 
 
   // Fetch local island destinations from backend
   useEffect(() => {
@@ -140,8 +140,8 @@ export default function IslandDestinationslocal({ lang }) {
       try {
         const apiEndpoint = `${API_URL.replace(/\/$/, '')}/island-destinations?type=local`;
         console.debug('[IslandDestinationsLocal] Fetching from:', apiEndpoint);
-
-        const res = await fetch(apiEndpoint, {
+        
+        const res = await fetch(apiEndpoint, { 
           signal: controller.signal,
           method: 'GET',
           headers: {
@@ -150,25 +150,25 @@ export default function IslandDestinationslocal({ lang }) {
           }
         });
         console.debug('[IslandDestinationsLocal] Response status:', res.status);
-
+        
         const json = await res.json();
         console.debug('[IslandDestinationsLocal] Response data:', json);
-
+        
         if (!res.ok) {
           throw new Error(`API error: ${res.status} - ${json?.message || 'Unknown error'}`);
         }
-
+        
         if (!json?.success) {
           throw new Error(json?.message || 'Failed to fetch destinations');
         }
 
         const data = Array.isArray(json.data) ? json.data : [];
         console.debug('[IslandDestinationsLocal] Loaded destinations count:', data.length);
-
+        
         if (data.length > 0) {
           setDestinations(
             data.map((d) => {
-              console.debug('[IslandDestinationsLocal] Destination loaded:', { id: d.id, slug: d.slug, title: d.title_en });
+              console.debug('[IslandDestinationsLocal] Destination loaded:', {id: d.id, slug: d.slug, title: d.title_en});
               return {
                 ...d,
                 image: d.image || '/placeholder.png',
@@ -366,7 +366,7 @@ export default function IslandDestinationslocal({ lang }) {
       // Normalize items to { id, title, price, slug }
       return list.map((p, idx) => ({
         id: p.id ?? idx,
-        title: p.title ?? p.name ?? p.label ?? `${getText(destination, 'title')} - Option ${idx + 1}`,
+        title: p.title ?? p.name ?? p.label ?? `${getText(destination,'title')} - Option ${idx+1}`,
         price: parseFloat(p.price) || parseFloat(p.amount) || parseFloat(p.price_en) || parseFloat(p.price_ar) || 0,
         slug: p.slug ?? destination.slug ?? destination.id ?? '',
       }));
@@ -582,9 +582,9 @@ export default function IslandDestinationslocal({ lang }) {
                 fontFamily: "'Tajawal', sans-serif",
                 background:
                   "linear-gradient(135deg, #ffffff, #EFC8AE, #dfa528)",
-                WebkitBackgrouakbarlip: "text",
+                WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
-                backgrouakbarlip: "text",
+                backgroundClip: "text",
                 textShadow: "0 4px 8px rgba(0,0,0,0.2)",
                 fontSize: "clamp(1.5rem, 6vw, 2.5rem)",
               }}
@@ -724,7 +724,7 @@ export default function IslandDestinationslocal({ lang }) {
                         outline: "none",
                       }}
                       onClick={() => goToSlide(index)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') goToSlide(index); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') goToSlide(index); }} 
                     >
                       <motion.div
                         className="rounded-4 overflow-hidden position-relative"
@@ -751,8 +751,8 @@ export default function IslandDestinationslocal({ lang }) {
                           }}
                         />
                         <div className="position-absolute bottom-0 start-0 end-0 p-4 text-white d-flex justify-content-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.45))' }}>
-                          <div className="d-flex flex-wrap gap-2 align-items-center justify-content-center">
-                            {/* CTA overlay - only buttons (image remains as background) */}
+                          <div className="d-flex flex-wrap gap-2 align-items-center justify-content-center"> 
+                        {/* CTA overlay - only buttons (image remains as background) */}
                             {isActive && pkgOptions && pkgOptions.length > 1 && (
                               <select
                                 onClick={(e) => e.stopPropagation()}
@@ -875,7 +875,7 @@ export default function IslandDestinationslocal({ lang }) {
                     transition: "all 0.3s ease",
                   }}
                 />
-              ))}
+              ))} 
             </div>
           </div>{" "}
           {/* end slider container */}
@@ -885,4 +885,3 @@ export default function IslandDestinationslocal({ lang }) {
     </>
   );
 }
-

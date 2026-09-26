@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function AdminakbarBookingsPage() {
+export default function AdminNDCBookingsPage() {
   const params = useParams();
   const router = useRouter();
   const lang = params?.lang || 'en';
@@ -96,9 +96,9 @@ export default function AdminakbarBookingsPage() {
     try {
       // For testing, use mock data
       // In production, replace with actual API call:
-      // const response = await fetch(`${API_URL}/akbar/admin/bookings`);
+      // const response = await fetch(`${API_URL}/ndc/admin/bookings`);
       // const data = await response.json();
-
+      
       setTimeout(() => {
         setBookings(mockBookings);
         calculateStats(mockBookings);
@@ -125,7 +125,7 @@ export default function AdminakbarBookingsPage() {
 
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = filter === 'all' || booking.status === filter;
-    const matchesSearch = searchTerm === '' ||
+    const matchesSearch = searchTerm === '' || 
       booking.pnr.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.passenger.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.passenger.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,27 +165,27 @@ export default function AdminakbarBookingsPage() {
   };
 
   const handleViewBooking = (bookingId) => {
-    router.push(`/${lang}/admin/akbar-bookings/${bookingId}`);
+    router.push(`/${lang}/admin/ndc-bookings/${bookingId}`);
   };
 
   const handleCancelBooking = async (bookingId) => {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
-
+    
     // Mock cancellation - replace with actual API call
-    setBookings(prev => prev.map(b =>
+    setBookings(prev => prev.map(b => 
       b.id === bookingId ? { ...b, status: 'CANCELLED', paymentStatus: 'REFUNDED' } : b
     ));
-    calculateStats(bookings.map(b =>
+    calculateStats(bookings.map(b => 
       b.id === bookingId ? { ...b, status: 'CANCELLED', paymentStatus: 'REFUNDED' } : b
     ));
   };
 
   const handleIssueTicket = async (bookingId) => {
     // Mock ticket issuance - replace with actual API call
-    setBookings(prev => prev.map(b =>
+    setBookings(prev => prev.map(b => 
       b.id === bookingId ? { ...b, status: 'TICKETED' } : b
     ));
-    calculateStats(bookings.map(b =>
+    calculateStats(bookings.map(b => 
       b.id === bookingId ? { ...b, status: 'TICKETED' } : b
     ));
   };
@@ -320,10 +320,10 @@ export default function AdminakbarBookingsPage() {
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>
-            ✈️ akbar Flight Bookings
+            ✈️ NDC Flight Bookings
           </h1>
-          <Link
-            href={`/${lang}/akbar-flights`}
+          <Link 
+            href={`/${lang}/ndc-flights`}
             style={{
               padding: '10px 20px',
               background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
@@ -341,7 +341,7 @@ export default function AdminakbarBookingsPage() {
           </Link>
         </div>
         <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>
-          Manage and monitor all akbar flight bookings
+          Manage and monitor all NDC flight bookings
         </p>
       </div>
 
@@ -389,10 +389,10 @@ export default function AdminakbarBookingsPage() {
       </div>
 
       {/* Filters & Search */}
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
-        padding: '20px 24px',
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '16px', 
+        padding: '20px 24px', 
         marginBottom: '24px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
         display: 'flex',
@@ -412,7 +412,7 @@ export default function AdminakbarBookingsPage() {
             </button>
           ))}
         </div>
-
+        
         <div style={{ position: 'relative' }}>
           <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem' }}>🔍</span>
           <input
@@ -426,9 +426,9 @@ export default function AdminakbarBookingsPage() {
       </div>
 
       {/* Bookings Table */}
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '16px', 
         overflow: 'hidden',
         boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
       }}>
@@ -485,9 +485,9 @@ export default function AdminakbarBookingsPage() {
                     </div>
                   </td>
                   <td>
-                    <span
+                    <span 
                       className="status-badge"
-                      style={{
+                      style={{ 
                         background: `${getStatusColor(booking.status)}18`,
                         color: getStatusColor(booking.status),
                         border: `1px solid ${getStatusColor(booking.status)}40`
@@ -498,9 +498,9 @@ export default function AdminakbarBookingsPage() {
                     </span>
                   </td>
                   <td>
-                    <span
+                    <span 
                       className="status-badge"
-                      style={{
+                      style={{ 
                         background: `${getPaymentStatusColor(booking.paymentStatus)}18`,
                         color: getPaymentStatusColor(booking.paymentStatus),
                         border: `1px solid ${getPaymentStatusColor(booking.paymentStatus)}40`
@@ -553,15 +553,15 @@ export default function AdminakbarBookingsPage() {
         )}
       </div>
 
-      {/* akbar Flow Documentation */}
-      <div style={{
+      {/* NDC Flow Documentation */}
+      <div style={{ 
         marginTop: '32px',
         background: ' #334155)',
         borderRadius: '16px',
         padding: '28px',
         color: 'white'
       }}>
-        <h3 style={{ marginBottom: '16px', fontSize: '1.1rem', fontWeight: 700 }}>📚 akbar Booking Flow (Testing Mode)</h3>
+        <h3 style={{ marginBottom: '16px', fontSize: '1.1rem', fontWeight: 700 }}>📚 NDC Booking Flow (Testing Mode)</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
           {[
             { step: 1, title: 'Search Flights', desc: 'AirShopping', status: '✅' },
@@ -572,14 +572,14 @@ export default function AdminakbarBookingsPage() {
             { step: 6, title: 'Payment', desc: 'OrderCreate', status: '✅' },
             { step: 7, title: 'Issue Ticket', desc: 'OrderRetrieve', status: '✅' }
           ].map(item => (
-            <div key={item.step} style={{
+            <div key={item.step} style={{ 
               background: 'rgba(255,255,255,0.08)',
               borderRadius: '12px',
               padding: '16px',
               border: '1px solid rgba(255,255,255,0.1)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{
+                <span style={{ 
                   background: 'rgba(59,130,246,0.3)',
                   padding: '4px 10px',
                   borderRadius: '6px',

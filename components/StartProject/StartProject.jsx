@@ -60,30 +60,30 @@ export default function StartProject({ lang }) {
     },
   };
 
-  const reservationTitles = {
-    domestic: {
-      en: "Domestic Reservation",
-      ar: "حجز محلي",
-      zh: "国内预订"
-    },
-    international: {
-      en: "International Reservation",
-      ar: "حجز دولي",
-      zh: "国际预订"
-    }
-  };
+const reservationTitles = {
+  domestic: {
+    en: "Domestic Reservation",
+    ar: "حجز محلي",
+    zh: "国内预订"
+  },
+  international: {
+    en: "International Reservation",
+    ar: "حجز دولي",
+    zh: "国际预订"
+  }
+};
 
-  const handleReservation = (type = "domestic") => {
-    setActiveReservation(type);
-    openReservationModal({
-      title: reservationTitles[type][lang] || reservationTitles[type].en,
-      slug: "",
-      type,
-      bookingLocation: type === "domestic" ? "local" : "international",
-      preferredBookingType: "activity",
-      isLocalService: type === "domestic",
-    });
-  };
+const handleReservation = (type = "domestic") => {
+  setActiveReservation(type);
+  openReservationModal({
+    title: reservationTitles[type][lang] || reservationTitles[type].en,
+    slug: "",
+    type,
+    bookingLocation: type === "domestic" ? "local" : "international",
+    preferredBookingType: "activity",
+    isLocalService: type === "domestic",
+  });
+};
   return (
     <section
       className="position-relative py-5 text-center text-white"
@@ -152,7 +152,7 @@ export default function StartProject({ lang }) {
 
           <motion.p
             className="lead mx-auto mt-3 mb-5"
-            style={{
+            style={{ 
               maxWidth: "700px",
               color: "#e0e0e0",
               lineHeight: "1.6"
@@ -162,7 +162,7 @@ export default function StartProject({ lang }) {
             transition={{ duration: 1, delay: 0.6 }}
           >
             {(content[lang] || content.en).desc}
-          </motion.p>
+          </motion.p> 
 
           <motion.div
             className="d-flex flex-column flex-sm-row justify-content-center gap-3 w-100"
@@ -340,4 +340,3 @@ export default function StartProject({ lang }) {
     </section>
   );
 }
-

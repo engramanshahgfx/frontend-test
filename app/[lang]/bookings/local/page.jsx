@@ -43,15 +43,15 @@ export default function LocalBookingSuccess({ params }) {
             {isRTL ? '📝 ملاحظة مهمة' : '📝 Important Note'}
           </h4>
           <p style={{ color: '#333', marginBottom: 0 }}>
-            {isRTL
-              ? 'إذا كان لديك حساب معنا، قم بتسجيل الدخول لتتمكن من متابعة طلب الحجز الخاص بك في لوحة التحكم.'
+            {isRTL 
+              ? 'إذا كان لديك حساب معنا، قم بتسجيل الدخول لتتمكن من متابعة طلب الحجز الخاص بك في لوحة التحكم.' 
               : 'If you have an account with us, please login to track your reservation in your dashboard.'}
           </p>
         </div>
 
         <div style={{ marginTop: '30px' }}>
           <Link href={`/${lang}`} style={{ color: '#dfa528', textDecoration: 'none', fontWeight: 'bold', marginRight: '20px' }}>
-            {isRTL ? 'العودة إلى الصفحة الرئيسية →' : '← Back to Home'}
+            {isRTL ? '← العودة إلى الصفحة الرئيسية' : '← Back to Home'}
           </Link>
         </div>
       </div>

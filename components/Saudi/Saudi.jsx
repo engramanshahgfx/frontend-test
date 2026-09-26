@@ -153,10 +153,10 @@ const Saudi = ({ lang = "ar" }) => {
     },
     {
       id: 12,
-      cityKey: "abha",
-      nameEn: "Abha",
-      nameAr: "أبها",
-      img: "/cities/abha.png",
+      cityKey: "albahah",
+      nameEn: "albahah",
+      nameAr: "الباحة",
+      img: "/cities/bahah.png",
       top: 74,
       left: 42,
     },
@@ -426,11 +426,21 @@ const Saudi = ({ lang = "ar" }) => {
               {/* Hover Popup Image */}
               {hoveredCity && hoveredCity.id === city.id && (
                 <div className={styles.hoverPopup}>
-                  <img
-                    src={city.img}
-                    alt={getCityName(city)}
-                    className={styles.popupImage}
-                  />
+                  {["AlBahah", "jeddah", "riyadh", "madina", "taif", "alula"].includes(city.cityKey?.toLowerCase()) ? (
+                    <video
+                      src={`/cities/${city.cityKey.toLowerCase()}.mp4`}
+                      autoPlay
+                      loop
+                      className={styles.popupImage}
+                      style={{ objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <img
+                      src={city.img}
+                      alt={getCityName(city)}
+                      className={styles.popupImage}
+                    />
+                  )}
                   <div className={styles.popupCityName}>
                     {getCityName(city)}
                   </div>

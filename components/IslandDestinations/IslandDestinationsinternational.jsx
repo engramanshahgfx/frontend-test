@@ -133,8 +133,8 @@ export default function IslandDestinationsinternational({ lang }) {
       try {
         const apiEndpoint = `${API_URL.replace(/\/$/, '')}/island-destinations?type=international`;
         console.debug('[IslandDestinationsInternational] Fetching from:', apiEndpoint);
-
-        const res = await fetch(apiEndpoint, {
+        
+        const res = await fetch(apiEndpoint, { 
           signal: controller.signal,
           method: 'GET',
           headers: {
@@ -143,21 +143,21 @@ export default function IslandDestinationsinternational({ lang }) {
           }
         });
         console.debug('[IslandDestinationsInternational] Response status:', res.status);
-
+        
         const json = await res.json();
         console.debug('[IslandDestinationsInternational] Response data:', json);
-
+        
         if (!res.ok) {
           throw new Error(`API error: ${res.status} - ${json?.message || 'Unknown error'}`);
         }
-
+        
         if (!json?.success) {
           throw new Error(json?.message || 'Failed to fetch destinations');
         }
-
+        
         const data = Array.isArray(json.data) ? json.data : [];
         console.debug('[IslandDestinationsInternational] Loaded destinations count:', data.length);
-
+        
         if (data.length > 0) {
           setDestinations(
             data.map((d) => ({
@@ -485,9 +485,9 @@ export default function IslandDestinationsinternational({ lang }) {
                 fontFamily: "'Tajawal', sans-serif",
                 background:
                   " #dfa528",
-                WebkitBackgrouakbarlip: "text",
+                WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
-                backgrouakbarlip: "text",
+                backgroundClip: "text",
                 textShadow: "0 4px 8px rgba(0,0,0,0.2)",
                 fontSize: "1.75rem",
               }}
@@ -616,9 +616,9 @@ export default function IslandDestinationsinternational({ lang }) {
                         width: "clamp(380px, 36vw, 420px)",
                         cursor: "pointer",
                         outline: "none",
-                      }} S
+                      }}S
                       onClick={() => goToSlide(index)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') goToSlide(index); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') goToSlide(index); }} 
                     >
                       <motion.div
                         className="rounded-4 overflow-hidden position-relative"
@@ -645,8 +645,8 @@ export default function IslandDestinationsinternational({ lang }) {
                           }}
                         />
                         <div className="position-absolute bottom-0 start-0 end-0 p-4 text-white d-flex justify-content-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.45))' }}>
-                          <div className="d-flex gap-3 align-items-center">
-
+                          <div className="d-flex gap-3 align-items-center"> 
+                  
 
                             <motion.button
                               onClick={(e) => {
@@ -671,7 +671,7 @@ export default function IslandDestinationsinternational({ lang }) {
                               </span>
                             </motion.button>
 
-
+                     
                           </div>
                         </div>
                       </motion.div>
@@ -712,4 +712,3 @@ export default function IslandDestinationsinternational({ lang }) {
     </>
   );
 }
-

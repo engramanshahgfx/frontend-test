@@ -21,7 +21,7 @@ export default function BookingSuccessPage() {
   type PaymentMethodType = 'creditcard' | 'stcpay' | 'applepay';
   type PaymentMethod = {
     value: PaymentMethodType;
-    label: string;
+    label: string; 
     // icon: JSX.Element;
     available: boolean;
   };

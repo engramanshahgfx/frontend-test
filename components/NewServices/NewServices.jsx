@@ -323,4 +323,3 @@ export default function NewServices({ lang, servicesData, sectionTitle, sectionD
     </>
   );
 }
-

@@ -3,15 +3,15 @@ import { FaWhatsapp } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 
 const WhatsAppButton = ({ lang = "en" }) => {
-  const phoneNumber = "966547305060";
-  const message = lang === "ar"
-    ? "مرحبا، أريد الاستفسار عن خدماتكم"
-    : lang === "zh"
-      ? "你好，我想咨询你们的服务"
+  const phoneNumber = "966547305060"; 
+  const message = lang === "ar" 
+    ? "مرحبا، أريد الاستفسار عن خدماتكم" 
+    : lang === "zh" 
+      ? "你好，我想咨询你们的服务" 
       : "Hello, I would like to inquire about your services";
 
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
+  
   const [bottom, setBottom] = useState(80);
   const [isVisible, setIsVisible] = useState(true);
   const buttonRef = useRef(null);
@@ -52,7 +52,7 @@ const WhatsAppButton = ({ lang = "en" }) => {
   if (!isVisible) return null;
 
   return (
-    <div
+    <div 
       ref={buttonRef}
       className="whatsapp-button"
       onClick={handleClick}
@@ -93,14 +93,14 @@ const WhatsAppButton = ({ lang = "en" }) => {
         e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
       }}
     >
-      <FaWhatsapp
-        style={{
-          color: "white",
+      <FaWhatsapp 
+        style={{ 
+          color: "white", 
           fontSize: "32px",
           pointerEvents: "none",
-        }}
+        }} 
       />
-
+      
       <style jsx>{`
         .whatsapp-button:hover {
           cursor: pointer;
@@ -143,4 +143,3 @@ const WhatsAppButton = ({ lang = "en" }) => {
 };
 
 export default WhatsAppButton;
-

@@ -38,13 +38,13 @@ export default function CompletedBookingsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
-  // Mock completed bookings with full akbar data
+  // Mock completed bookings with full NDC data
   const mockCompletedBookings = [
     {
       id: 'CB001',
       pnr: 'SV553001',
       ticketNumber: 'SV0012345678',
-      akbarBookingToken: 'akbar-SV-2026-001A',
+      ndcBookingToken: 'NDC-SV-2026-001A',
       status: 'TICKETED',
       completedAt: '2026-02-20T11:30:00',
       bookingCreatedAt: '2026-02-20T10:30:00',
@@ -84,7 +84,7 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         passengers: 1,
         cabinClass: 'Economy',
-        bookingReference: 'akbarSVV553001'
+        bookingReference: 'NDCSVV553001'
       },
       payment: {
         status: 'PAID',
@@ -95,8 +95,8 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         cardLast4: '4242'
       },
-      akbar: {
-        orderId: 'akbar-ORD-2026-001',
+      ndc: {
+        orderId: 'NDC-ORD-2026-001',
         orderCode: 'SV001',
         validatingCarrier: 'SV',
         createdAt: '2026-02-20T10:30:00',
@@ -114,7 +114,7 @@ export default function CompletedBookingsPage() {
       id: 'CB002',
       pnr: 'EK101002',
       ticketNumber: 'EK0087654321',
-      akbarBookingToken: 'akbar-EK-2026-002B',
+      ndcBookingToken: 'NDC-EK-2026-002B',
       status: 'TICKETED',
       completedAt: '2026-02-21T15:45:00',
       bookingCreatedAt: '2026-02-21T14:15:00',
@@ -154,7 +154,7 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         passengers: 2,
         cabinClass: 'Business',
-        bookingReference: 'akbarEKEK101002'
+        bookingReference: 'NDCEKEK101002'
       },
       payment: {
         status: 'PAID',
@@ -165,8 +165,8 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         cardLast4: 'Transfer'
       },
-      akbar: {
-        orderId: 'akbar-ORD-2026-002',
+      ndc: {
+        orderId: 'NDC-ORD-2026-002',
         orderCode: 'EK002',
         validatingCarrier: 'EK',
         createdAt: '2026-02-21T14:15:00',
@@ -184,7 +184,7 @@ export default function CompletedBookingsPage() {
       id: 'CB003',
       pnr: 'TK147003',
       ticketNumber: 'TK0054321098',
-      akbarBookingToken: 'akbar-TK-2026-003C',
+      ndcBookingToken: 'NDC-TK-2026-003C',
       status: 'TICKETED',
       completedAt: '2026-02-22T10:15:00',
       bookingCreatedAt: '2026-02-22T09:45:00',
@@ -224,7 +224,7 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         passengers: 1,
         cabinClass: 'Business',
-        bookingReference: 'akbarTKTK147003'
+        bookingReference: 'NDCTKTK147003'
       },
       payment: {
         status: 'PAID',
@@ -235,8 +235,8 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         cardLast4: '5555'
       },
-      akbar: {
-        orderId: 'akbar-ORD-2026-003',
+      ndc: {
+        orderId: 'NDC-ORD-2026-003',
         orderCode: 'TK003',
         validatingCarrier: 'TK',
         createdAt: '2026-02-22T09:45:00',
@@ -254,7 +254,7 @@ export default function CompletedBookingsPage() {
       id: 'CB004',
       pnr: 'QR456004',
       ticketNumber: 'QR0099887766',
-      akbarBookingToken: 'akbar-QR-2026-004D',
+      ndcBookingToken: 'NDC-QR-2026-004D',
       status: 'TICKETED',
       completedAt: '2026-02-23T12:30:00',
       bookingCreatedAt: '2026-02-23T11:00:00',
@@ -294,7 +294,7 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         passengers: 1,
         cabinClass: 'Economy',
-        bookingReference: 'akbarQRQR456004'
+        bookingReference: 'NDCQRQR456004'
       },
       payment: {
         status: 'PAID',
@@ -305,8 +305,8 @@ export default function CompletedBookingsPage() {
         currency: 'SAR',
         cardLast4: '3333'
       },
-      akbar: {
-        orderId: 'akbar-ORD-2026-004',
+      ndc: {
+        orderId: 'NDC-ORD-2026-004',
         orderCode: 'QR004',
         validatingCarrier: 'QR',
         createdAt: '2026-02-23T11:00:00',
@@ -333,7 +333,7 @@ export default function CompletedBookingsPage() {
   const loadCompletedBookings = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/akbar/admin/bookings?status=TICKETED`, {
+      const response = await fetch(`${API_URL}/ndc/admin/bookings?status=TICKETED`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -347,13 +347,13 @@ export default function CompletedBookingsPage() {
 
       const data = await response.json();
       const bookingsArray = Array.isArray(data) ? data : (data.data || data.bookings || []);
-
+      
       // Map API response to component's expected data structure
       const mappedBookings = bookingsArray.map(booking => ({
         id: booking.id || booking.booking_id,
         pnr: booking.pnr || booking.booking_reference,
         ticketNumber: booking.ticket_number || '',
-        akbarBookingToken: booking.akbar_booking_token || booking.booking_token || '',
+        ndcBookingToken: booking.ndc_booking_token || booking.booking_token || '',
         status: booking.status || 'TICKETED',
         completedAt: booking.completed_at || booking.ticketed_at || new Date().toISOString(),
         bookingCreatedAt: booking.created_at || booking.booking_created_at || new Date().toISOString(),
@@ -404,13 +404,13 @@ export default function CompletedBookingsPage() {
           currency: booking.payment?.currency || booking.currency || 'SAR',
           cardLast4: booking.payment?.card_last4 || booking.card_last4 || 'N/A'
         },
-        akbar: {
-          orderId: booking.akbar?.order_id || booking.order_id || '',
-          orderCode: booking.akbar?.order_code || booking.order_code || '',
-          validatingCarrier: booking.akbar?.validating_carrier || booking.airline_code || '',
-          createdAt: booking.akbar?.created_at || booking.created_at || new Date().toISOString(),
-          expiresAt: booking.akbar?.expires_at || booking.expires_at || '',
-          ticketIssuedAt: booking.akbar?.ticket_issued_at || booking.ticketed_at || new Date().toISOString()
+        ndc: {
+          orderId: booking.ndc?.order_id || booking.order_id || '',
+          orderCode: booking.ndc?.order_code || booking.order_code || '',
+          validatingCarrier: booking.ndc?.validating_carrier || booking.airline_code || '',
+          createdAt: booking.ndc?.created_at || booking.created_at || new Date().toISOString(),
+          expiresAt: booking.ndc?.expires_at || booking.expires_at || '',
+          ticketIssuedAt: booking.ndc?.ticket_issued_at || booking.ticketed_at || new Date().toISOString()
         },
         services: {
           seatSelection: booking.services?.seat_selection ?? true,
@@ -529,10 +529,10 @@ export default function CompletedBookingsPage() {
               gap: '10px'
             }}>
               <FaCheckCircle style={{ color: '#10b981' }} />
-              Completed akbar Flight Bookings
+              Completed NDC Flight Bookings
             </h1>
             <p style={{ color: '#6b7280', margin: '8px 0 0', fontSize: '14px' }}>
-              Confirmed and ticketed bookings with full akbar data
+              Confirmed and ticketed bookings with full NDC data
             </p>
           </div>
           <button
@@ -733,24 +733,24 @@ export default function CompletedBookingsPage() {
                       </div>
                     </div>
 
-                    {/* akbar Data */}
+                    {/* NDC Data */}
                     <div>
                       <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#374151', margin: 0, marginBottom: '12px', textTransform: 'uppercase' }}>
-                        <FaLock size={12} style={{ marginRight: '6px' }} />akbar Information
+                        <FaLock size={12} style={{ marginRight: '6px' }} />NDC Information
                       </h4>
                       <div style={{ display: 'grid', gap: '6px', fontSize: '13px' }}>
                         <div style={{ color: '#1f2937', fontWeight: 600 }}>
-                          {booking.akbar.orderCode}
+                          {booking.ndc.orderCode}
                         </div>
                         <div style={{ color: '#6b7280', fontSize: '12px' }}>
                           <FaBarcode size={11} style={{ marginRight: '4px' }} />
-                          Booking Token: {booking.akbarBookingToken}
+                          Booking Token: {booking.ndcBookingToken}
                         </div>
                         <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                          Carrier: {booking.akbar.validatingCarrier}
+                          Carrier: {booking.ndc.validatingCarrier}
                         </div>
                         <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                          Valid until: {new Date(booking.akbar.expiresAt).toLocaleDateString()}
+                          Valid until: {new Date(booking.ndc.expiresAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
@@ -1003,18 +1003,18 @@ export default function CompletedBookingsPage() {
                 </div>
               </div>
 
-              {/* akbar */}
+              {/* NDC */}
               <div>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, marginBottom: '12px' }}>akbar Booking Reference</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, marginBottom: '12px' }}>NDC Booking Reference</h3>
                 <div style={{ display: 'grid', gap: '8px', fontSize: '13px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280' }}>Order ID:</span>
-                    <span style={{ color: '#1f2937', fontWeight: 600 }}>{selectedBooking.akbar.orderId}</span>
+                    <span style={{ color: '#1f2937', fontWeight: 600 }}>{selectedBooking.ndc.orderId}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280' }}>Token:</span>
                     <span style={{ color: '#1f2937', fontFamily: 'monospace', fontSize: '11px' }}>
-                      {selectedBooking.akbarBookingToken}
+                      {selectedBooking.ndcBookingToken}
                     </span>
                   </div>
                 </div>

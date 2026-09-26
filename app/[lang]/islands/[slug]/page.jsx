@@ -19,7 +19,7 @@ export default function IslandDetailPage() {
   const [error, setError] = useState(null);
 
   // Static labels
-  const labels = {
+const labels = {
     en: {
       backButton: "Back",
       bookNow: "Book Now",
@@ -87,7 +87,7 @@ export default function IslandDetailPage() {
 
     // Fallback to storage/islands
     return `${backendBase}/storage/islands/${img}`;
-  };
+  }; 
 
   // Parse list
   const parseList = (value) => {
@@ -272,9 +272,9 @@ export default function IslandDetailPage() {
                 style={{
                   fontSize: "2.2rem",
                   background: "linear-gradient(135deg, #ffffff, #EFC8AE, #dfa528)",
-                  WebkitBackgrouakbarlip: "text",
+                  WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  backgrouakbarlip: "text",
+                  backgroundClip: "text",
                   lineHeight: "1.3",
                 }}
               >

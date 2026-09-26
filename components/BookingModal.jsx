@@ -620,18 +620,14 @@ export default function BookingModal({ isOpen, onClose, packageData, lang, booki
   const getPriceBreakdown = () => {
     const guests = Number(formData.guests) || 1;
     const packagePrice = Number(packageData?.price ?? 0);
-    const origPrice = Number(packageData?.original_price ?? packageData?.originalPrice ?? 0);
 
     let description = "";
-    let matchedOriginalPrice = null;
-
     if (packageData?.person_prices && Array.isArray(packageData.person_prices) && packageData.person_prices.length > 0) {
       const offer = packageData.person_prices.find(p => Number(p.persons) === guests);
       if (offer && offer.price !== undefined && offer.price !== null) {
         description = isRTL
           ? `عرض مخصص لـ ${guests} ${guests === 1 ? "فرد" : "أفراد"}: ${offer.price} ر.س`
           : `Offer tier for ${guests} ${guests > 1 ? "Persons" : "Person"}: ${offer.price} SAR`;
-        matchedOriginalPrice = offer.original_price || offer.originalPrice || (origPrice > offer.price ? origPrice : null);
       }
     }
 
@@ -639,15 +635,11 @@ export default function BookingModal({ isOpen, onClose, packageData, lang, booki
       description = isRTL
         ? `${guests} × ${packagePrice} ر.س`
         : `${guests} × ${packagePrice} SAR (${guests > 1 ? `${guests} Persons` : "1 Person"})`;
-      if (origPrice > packagePrice) {
-        matchedOriginalPrice = origPrice * guests;
-      }
     }
 
     return {
       basePrice: packagePrice,
       total: totalAmount,
-      origTotal: matchedOriginalPrice,
       description: description,
     };
   };
@@ -1338,32 +1330,17 @@ export default function BookingModal({ isOpen, onClose, packageData, lang, booki
                           <span style={{ fontWeight: "600", color: "#2c2c2c" }}>
                             {t.totalAmount}
                           </span>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                            {getPriceBreakdown().origTotal && Number(getPriceBreakdown().origTotal) > Number(totalAmount) && (
-                              <span
-                                style={{
-                                  fontSize: "13px",
-                                  color: "#94a3b8",
-                                  textDecoration: "line-through",
-                                  fontWeight: "500",
-                                  marginBottom: "2px",
-                                }}
-                              >
-                                {getPriceBreakdown().origTotal} SAR
-                              </span>
-                            )}
-                            <span
-                              style={{
-                                fontSize: "18px",
-                                fontWeight: "700",
-                                color: "#1C0052",
-                                textDecoration: appliedCoupon ? "line-through" : "none",
-                                opacity: appliedCoupon ? 0.6 : 1,
-                              }}
-                            >
-                              {totalAmount} SAR
-                            </span>
-                          </div>
+                          <span
+                            style={{
+                              fontSize: "18px",
+                              fontWeight: "700",
+                              color: "#1C0052",
+                              textDecoration: appliedCoupon ? "line-through" : "none",
+                              opacity: appliedCoupon ? 0.6 : 1,
+                            }}
+                          >
+                            {totalAmount} SAR
+                          </span>
                         </div>
 
                         {appliedCoupon && (

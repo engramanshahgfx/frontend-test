@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function generateMetadata({ params }) {
   const { lang } = await params;
   const validLang = ['ar', 'en', 'zh'].includes(lang) ? lang : 'en';
-
+  
   const metadata = {
     en: {
       title: "Internet Packages | Tilal Rimal",
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }) {
       keywords: "互联网套餐, 国际数据, 移动数据, 漫游",
     }
   };
-
+  
   return {
     ...metadata[validLang],
     alternates: {
@@ -43,11 +43,11 @@ export async function generateMetadata({ params }) {
 export default async function InternetPackagesPage({ params }) {
   const { lang } = await params;
   const validLang = ['ar', 'en', 'zh'].includes(lang) ? lang : 'en';
-
+  
   return (
-    <main
+    <main 
       className="min-h-screen"
-      style={{
+      style={{ 
         backgroundColor: "#FAF6F0",
         paddingTop: "150px",
         direction: validLang === 'ar' ? 'rtl' : 'ltr'

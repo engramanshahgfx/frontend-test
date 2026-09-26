@@ -130,53 +130,6 @@ export default function TourismDestinationsPage() {
     return null;
   };
 
-  const getCardPricing = (item) => {
-    if (!item) return { price: null, original_price: null };
-
-    let prices = item.person_prices;
-    if (typeof prices === "string") {
-      try {
-        prices = JSON.parse(prices);
-      } catch (e) {
-        prices = null;
-      }
-    }
-
-    let activePrice = item.price;
-    let activeOrig = item.original_price || item.base_price || item.originalPrice;
-
-    if (Array.isArray(prices) && prices.length > 0) {
-      const defaultTier = prices.find((p) =>
-        Boolean(p.is_default === true || p.is_default === 'true' || p.is_default === 1 || p.is_default === '1')
-      );
-
-      if (defaultTier) {
-        if (defaultTier.price !== undefined && defaultTier.price !== null && defaultTier.price !== '') {
-          activePrice = defaultTier.price;
-        }
-        if (defaultTier.original_price !== undefined && defaultTier.original_price !== null && defaultTier.original_price !== '') {
-          activeOrig = defaultTier.original_price;
-        }
-      } else if (prices[0]) {
-        if (prices[0].price !== undefined && prices[0].price !== null && prices[0].price !== '') {
-          activePrice = prices[0].price;
-        }
-        if (prices[0].original_price !== undefined && prices[0].original_price !== null && prices[0].original_price !== '') {
-          activeOrig = prices[0].original_price;
-        }
-      }
-    }
-
-    const numOrig = Number(activeOrig);
-    const numPrice = Number(activePrice);
-    const hasOrig = !isNaN(numOrig) && numOrig > 0 && (!isNaN(numPrice) ? numOrig > numPrice : true);
-
-    return {
-      price: activePrice,
-      original_price: hasOrig ? activeOrig : null,
-    };
-  };
-
   if (loading) {
     return (
       <div className="page-container">
@@ -198,7 +151,7 @@ export default function TourismDestinationsPage() {
         <div className="container">
           <div className="text-center" style={{ padding: "100px 0" }}>
             <p style={{ color: "#ff6b6b" }}>{error}</p>
-            <button
+            <button 
               onClick={() => router.push(`/${lang}`)}
               style={{
                 marginTop: "20px",
@@ -231,7 +184,7 @@ export default function TourismDestinationsPage() {
         {destinations.length === 0 ? (
           <div className="text-center" style={{ padding: "60px 0" }}>
             <p>{t.noDestinations}</p>
-            <button
+            <button 
               onClick={() => router.push(`/${lang}`)}
               style={{
                 marginTop: "20px",
@@ -287,25 +240,17 @@ export default function TourismDestinationsPage() {
                     )}
                   </div>
                   <div className="destination-footer">
-                    <div className="destination-price">
+                    <span className="destination-price">
                       {(() => {
-                        const pricing = getCardPricing(destination);
-                        return (
-                          <>
-                            {pricing.original_price && (
-                              <span className="price-original" style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.85rem', display: 'block' }}>
-                                {pricing.original_price} SAR
-                              </span>
-                            )}
-                            {pricing.price ? (
-                              <span className="price-amount" style={{ fontSize: '1.2rem', fontWeight: '700', color: '#E85D1F' }}>
-                                {pricing.price} SAR
-                              </span>
-                            ) : null}
-                          </>
-                        );
+                        let displayPrice = destination.price;
+                        if (destination.person_prices && Array.isArray(destination.person_prices) && destination.person_prices.length > 0) {
+                          const prices = destination.person_prices.map(p => Number(p.price)).filter(p => !isNaN(p) && p > 0);
+                          if (prices.length > 0) displayPrice = Math.min(...prices);
+                        }
+                        if (!displayPrice) return '';
+                        return `${t.from} ${displayPrice} `;
                       })()}
-                    </div>
+                    </span>
                     <button className="btn-view" onClick={(e) => {
                       e.stopPropagation();
                       handleDestinationClick(destination);

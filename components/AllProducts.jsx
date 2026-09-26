@@ -13,8 +13,8 @@ export default function AllProjects({ lang, projects }) {
   const [search, setSearch] = useState("");
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchResult, setSearchResult] = useState([]);
-
-  const content = {
+  
+const content = {
     en: {
       viewLabel: "View Details",
       searchPlaceholder: "Search projects...",
@@ -58,11 +58,11 @@ export default function AllProjects({ lang, projects }) {
       client: "客户",
     },
   };
-  const {
-    viewLabel,
-    searchPlaceholder,
-    filterLabel,
-    notFound,
+  const { 
+    viewLabel, 
+    searchPlaceholder, 
+    filterLabel, 
+    notFound, 
     noProjects,
     status,
     completed,
@@ -79,10 +79,10 @@ export default function AllProjects({ lang, projects }) {
     searchResult.length > 0 && filteredProjects.length > 0
       ? searchResult
       : filteredProjects.length > 0
-        ? filteredProjects
-        : searchResult.length > 0
-          ? searchResult
-          : projects;
+      ? filteredProjects
+      : searchResult.length > 0
+      ? searchResult
+      : projects;
 
   const {
     totalPages,
@@ -122,7 +122,7 @@ export default function AllProjects({ lang, projects }) {
       inProgress: { color: "warning", text: inProgress },
       upcoming: { color: "info", text: upcoming }
     };
-
+    
     const config = statusConfig[status] || statusConfig.completed;
     return (
       <span className={`badge bg-${config.color}`}>
@@ -154,8 +154,9 @@ export default function AllProjects({ lang, projects }) {
         <>
           <div className="d-flex justify-content-center mb-5">
             <div
-              className={`d-flex justify-content-center align-items-center d-md-none ${lang === "en" ? "me-2" : "ms-2"
-                }`}
+              className={`d-flex justify-content-center align-items-center d-md-none ${
+                lang === "en" ? "me-2" : "ms-2"
+              }`}
               style={{
                 border: "1px solid lightgrey",
                 borderRadius: "8px",
@@ -204,8 +205,9 @@ export default function AllProjects({ lang, projects }) {
           <div className="row">
             <div className="col-md-4 col-lg-3">
               <div
-                className={`offcanvas-md offcanvas-${lang === "en" ? "start" : "end"
-                  }`}
+                className={`offcanvas-md offcanvas-${
+                  lang === "en" ? "start" : "end"
+                }`}
                 tabIndex="-1"
                 id="offcanvasResponsive"
                 aria-labelledby="offcanvasResponsiveLabel"
@@ -337,7 +339,7 @@ export default function AllProjects({ lang, projects }) {
                           <p className="text-secondary clamp-3 mb-3">
                             {project.shortDesc}
                           </p>
-
+                          
                           <Link
                             href={`/${lang}/project-details/${project.slug.replace(/\s+/g, "_")}`}
                             className="primaryButton mt-auto text-center text-decoration-none"
@@ -369,4 +371,3 @@ export default function AllProjects({ lang, projects }) {
     </div>
   );
 }
-

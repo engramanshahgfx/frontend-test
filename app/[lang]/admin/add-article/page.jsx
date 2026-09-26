@@ -161,7 +161,7 @@ export default function AddArticle({ params }) {
         padding: "16px",
         borderRadius: "18px",
         border: "1px solid rgba(227, 227, 227, 1)",
-        marginTop: "50px",
+        marginTop:"50px",
       }}
     >
       <h4 className="mb-4">{ui.addArticle}</h4>
@@ -232,7 +232,7 @@ export default function AddArticle({ params }) {
             value={article.description[activeLang]}
             tabIndex={1}
             onBlur={(newContent) => handleChange("description", newContent)}
-            onChange={() => { }}
+            onChange={() => {}}
           />
         </div>
         <button
@@ -244,8 +244,9 @@ export default function AddArticle({ params }) {
           {loading ? (
             <>
               <span
-                className={`spinner-border spinner-border-sm ${lang === "en" ? "me-2" : "ms-2"
-                  }`}
+                className={`spinner-border spinner-border-sm ${
+                  lang === "en" ? "me-2" : "ms-2"
+                }`}
                 role="status"
                 aria-hidden="true"
               ></span>

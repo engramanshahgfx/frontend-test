@@ -56,7 +56,7 @@ export async function POST(request) {
             <h2 style="color: #dfa528; text-align: center; margin-bottom: 30px;">طلب حجز جديد 🌴</h2>
             
             <div style="border-right: 4px solid #dfa528; padding-right: 15px; margin-bottom: 20px;">
-              <h3 style="color: #333; margin: 0 0 15px 0;"> معلومات الحجز الأساسية</h3>
+              <h3 style="color: #333; margin: 0 0 15px 0;">📍 معلومات الحجز الأساسية</h3>
               <p><strong>الوجهة:</strong> ${destination}</p>
               <p><strong>عدد الأشخاص:</strong> ${numberOfGuests}</p>
               <p><strong>تاريخ الوصول:</strong> ${checkInDate}</p>
@@ -64,8 +64,9 @@ export async function POST(request) {
               <p><strong>رقم الجوال:</strong> ${phoneNumber}</p>
             </div>
 
-            ${entertainment || folkloreShow
-        ? `
+            ${
+              entertainment || folkloreShow
+                ? `
             <div style="border-right: 4px solid #dfa528; padding-right: 15px; margin-bottom: 20px;">
               <h3 style="color: #333; margin: 0 0 15px 0;">🎶 الترفيه والأنشطة</h3>
               ${entertainment ? `<p><strong>الترفيه المفضل:</strong> ${entertainment}</p>` : ""}
@@ -73,19 +74,20 @@ export async function POST(request) {
               ${activitiesList ? `<p><strong>الأنشطة المختارة:</strong> ${activitiesList}</p>` : ""}
             </div>
             `
-        : ""
-      }
+                : ""
+            }
 
-            ${foodList || specialRequests
-        ? `
+            ${
+              foodList || specialRequests
+                ? `
             <div style="border-right: 4px solid #dfa528; padding-right: 15px; margin-bottom: 20px;">
               <h3 style="color: #333; margin: 0 0 15px 0;">🍽️ تفضيلات الطعام والطلبات الخاصة</h3>
               ${foodList ? `<p><strong>تفضيلات الطعام:</strong> ${foodList}</p>` : ""}
               ${specialRequests ? `<p><strong>الطلبات الخاصة:</strong> ${specialRequests}</p>` : ""}
             </div>
             `
-        : ""
-      }
+                : ""
+            }
 
             <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;">
               <p style="margin: 0; color: #666; font-size: 14px;">
@@ -101,7 +103,7 @@ export async function POST(request) {
             <h2 style="color: #dfa528; text-align: center; margin-bottom: 30px;">New Booking Request 🌴</h2>
             
             <div style="border-left: 4px solid #dfa528; padding-left: 15px; margin-bottom: 20px;">
-              <h3 style="color: #333; margin: 0 0 15px 0;"> Basic Booking Information</h3>
+              <h3 style="color: #333; margin: 0 0 15px 0;">📍 Basic Booking Information</h3>
               <p><strong>Destination:</strong> ${destination}</p>
               <p><strong>Number of Guests:</strong> ${numberOfGuests}</p>
               <p><strong>Check-in Date:</strong> ${checkInDate}</p>
@@ -109,8 +111,9 @@ export async function POST(request) {
               <p><strong>Phone Number:</strong> ${phoneNumber}</p>
             </div>
 
-            ${entertainment || folkloreShow
-        ? `
+            ${
+              entertainment || folkloreShow
+                ? `
             <div style="border-left: 4px solid #dfa528; padding-left: 15px; margin-bottom: 20px;">
               <h3 style="color: #333; margin: 0 0 15px 0;">🎶 Entertainment & Activities</h3>
               ${entertainment ? `<p><strong>Preferred Entertainment:</strong> ${entertainment}</p>` : ""}
@@ -118,19 +121,20 @@ export async function POST(request) {
               ${activitiesList ? `<p><strong>Selected Activities:</strong> ${activitiesList}</p>` : ""}
             </div>
             `
-        : ""
-      }
+                : ""
+            }
 
-            ${foodList || specialRequests
-        ? `
+            ${
+              foodList || specialRequests
+                ? `
             <div style="border-left: 4px solid #dfa528; padding-left: 15px; margin-bottom: 20px;">
               <h3 style="color: #333; margin: 0 0 15px 0;">🍽️ Food Preferences & Special Requests</h3>
               ${foodList ? `<p><strong>Food Preferences:</strong> ${foodList}</p>` : ""}
               ${specialRequests ? `<p><strong>Special Requests:</strong> ${specialRequests}</p>` : ""}
             </div>
             `
-        : ""
-      }
+                : ""
+            }
 
             <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;">
               <p style="margin: 0; color: #666; font-size: 14px;">

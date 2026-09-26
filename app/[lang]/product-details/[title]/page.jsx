@@ -69,7 +69,7 @@ export default async function ProductDetailsPage({ params }) {
   const product = querySnapshot.docs[0]?.data();
 
   if (!product) {
-    notFound();
+    notFound(); 
   }
 
   const content = {

@@ -59,7 +59,7 @@ export default function IslandDestinationslocal({ lang }) {
     if (field === 'name' && obj.name_en) {
       return lang === "ar" ? obj.name_ar : obj.name_en;
     }
-
+    
     const fieldKey = lang === "ar" ? `${field}_ar` : `${field}_en`;
     return obj[fieldKey] || obj[field] || "";
   };
@@ -333,8 +333,8 @@ export default function IslandDestinationslocal({ lang }) {
       <div style={{ textAlign: 'center', padding: '60px 20px', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #8A7779 0%, #6e6768ff 50%, #5a4f50 100%)' }}>
         <div>
           <p style={{ color: '#ff6b6b', fontSize: '1.1rem' }}>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
+          <button 
+            onClick={() => window.location.reload()} 
             style={{ marginTop: '20px', padding: '10px 20px', background: '#dfa528', color: '#333', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
           >
             Retry
@@ -414,10 +414,10 @@ export default function IslandDestinationslocal({ lang }) {
   };
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        size={14}
-        fill={i < Math.floor(rating) ? "#dfa528" : "none"}
+      <Star 
+        key={i} 
+        size={14} 
+        fill={i < Math.floor(rating) ? "#dfa528" : "none"} 
         color="#dfa528"
       />
     ));
@@ -428,7 +428,7 @@ export default function IslandDestinationslocal({ lang }) {
     const slides = [];
     const total = displayDestinations.length;
     if (total === 0) return slides;
-
+    
     // Always show 5 slides: previous 2, current, next 2
     for (let i = -2; i <= 2; i++) {
       const slideIndex = (currentSlide + i + total) % total;
@@ -438,7 +438,7 @@ export default function IslandDestinationslocal({ lang }) {
         destination: displayDestinations[slideIndex]
       });
     }
-
+    
     return slides;
   };
 
@@ -512,7 +512,7 @@ export default function IslandDestinationslocal({ lang }) {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Background Pattern */}
-        <div
+        <div 
           className="position-absolute w-100 h-100"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E")`,
@@ -531,9 +531,9 @@ export default function IslandDestinationslocal({ lang }) {
               style={{
                 fontFamily: "'Tajawal', sans-serif",
                 background: "linear-gradient(135deg, #ffffff, #EFC8AE, #dfa528)",
-                WebkitBackgrouakbarlip: "text",
+                WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
-                backgrouakbarlip: "text",
+                backgroundClip: "text",
                 textShadow: "0 4px 8px rgba(0,0,0,0.2)",
                 fontSize: "1.75rem",
               }}
@@ -626,11 +626,11 @@ export default function IslandDestinationslocal({ lang }) {
                       initial={style}
                       animate={style}
                       exit={style}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 300, 
                         damping: 30,
-                        duration: 0.5
+                        duration: 0.5 
                       }}
                       className="position-absolute"
                       style={{
@@ -647,7 +647,7 @@ export default function IslandDestinationslocal({ lang }) {
                           background: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url(${getImageUrl(destination.image)})`,
                           backgroundSize: "cover",
                           backgroundPosition: "center",
-                          boxShadow: isActive
+                          boxShadow: isActive 
                             ? "0 35px 60px rgba(0,0,0,0.6), 0 0 0 2px rgba(223, 165, 40, 0.3)"
                             : "0 20px 40px rgba(0,0,0,0.4)",
                           transition: "all 0.4s ease",
@@ -728,7 +728,7 @@ export default function IslandDestinationslocal({ lang }) {
 
                               {/* Price & CTA */}
                               <div className="d-flex justify-content-between align-items-center">
-
+                             
                                 <div className="d-flex gap-3">
                                   <motion.button
                                     onClick={(e) => {
@@ -814,4 +814,3 @@ export default function IslandDestinationslocal({ lang }) {
     </>
   );
 }
-

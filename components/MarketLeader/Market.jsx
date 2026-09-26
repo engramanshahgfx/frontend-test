@@ -74,20 +74,20 @@ export default function Market({ lang }) {
   return (
     <section
       className="py-5 position-relative"
-      style={{
+      style={{ 
         backgroundImage: "url('/bg-1.webp')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        direction: lang === "ar" ? "rtl" : "ltr",
+        direction: lang === "ar" ? "rtl" : "ltr", 
         overflow: "hidden",
         position: "relative",
         minHeight: "100vh",
       }}
     >
       {/* Dark Overlay for better readability */}
-      <div
+      <div 
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
           backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -104,7 +104,7 @@ export default function Market({ lang }) {
 
       <div className="container position-relative" style={{ zIndex: 2 }}>
         {/* Header */}
-        <motion.div
+        <motion.div 
           className="text-center mb-5"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -115,9 +115,9 @@ export default function Market({ lang }) {
           </h2>
           <div
             className="mx-auto mb-4"
-            style={{
-              width: "100px",
-              height: "4px",
+            style={{ 
+              width: "100px", 
+              height: "4px", 
               background: "linear-gradient(90deg, #ceac24 0%, #d4b445 100%)",
               borderRadius: '2px'
             }}
@@ -129,7 +129,7 @@ export default function Market({ lang }) {
 
         {/* Stats Section - Hidden since stats are empty */}
         {t.stats && t.stats.some(stat => stat.value || stat.label) && (
-          <motion.div
+          <motion.div 
             className="row mb-5"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -139,7 +139,7 @@ export default function Market({ lang }) {
               <div key={index} className="col-6 col-md-3 text-center mb-4">
                 <div className="d-flex flex-column align-items-center">
                   <div className="mb-3 p-3 rounded-circle d-flex align-items-center justify-content-center"
-                    style={{
+                    style={{ 
                       backgroundColor: 'rgba(206, 172, 36, 0.2)',
                       border: '2px solid rgba(206, 172, 36, 0.3)',
                       width: '80px',
@@ -168,8 +168,8 @@ export default function Market({ lang }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               style={{
-                background: activeTab === tab.id
-                  ? 'linear-gradient(135deg, #ceac24 0%, #d4b445 100%)'
+                background: activeTab === tab.id 
+                  ? 'linear-gradient(135deg, #ceac24 0%, #d4b445 100%)' 
                   : 'rgba(255, 255, 255, 0.1)',
                 border: activeTab === tab.id ? '2px solid #ceac24' : '2px solid rgba(206, 172, 36, 0.3)',
                 color: activeTab === tab.id ? '#000000' : '#ceac24',
@@ -215,7 +215,7 @@ export default function Market({ lang }) {
                     >
                       <div className="d-flex align-items-start mb-4">
                         <div className="me-4 p-3 rounded-circle d-flex align-items-center justify-content-center"
-                          style={{
+                          style={{ 
                             backgroundColor: 'rgba(206, 172, 36, 0.2)',
                             border: '2px solid rgba(206, 172, 36, 0.5)',
                             width: '70px',
@@ -242,14 +242,14 @@ export default function Market({ lang }) {
         </div>
 
         {/* CTA Button */}
-        <motion.div
+        <motion.div 
           className="text-center mt-5"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <motion.a
-            href={lang === "ar" ? "/ar/contact-us" : "/en/contact-us"}
+          <motion.a 
+            href={lang === "ar" ? "/ar/contact-us" : "/en/contact-us"} 
             className="btn btn-lg px-5 py-3 fw-bold"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -300,4 +300,3 @@ export default function Market({ lang }) {
     </section>
   );
 }
-
