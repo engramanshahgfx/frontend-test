@@ -445,6 +445,7 @@ export default function DashboardPage() {
           background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
           min-height: 100vh;
           padding-top: 80px; /* space for fixed navbar */
+          padding-bottom: 120px; /* clear the footer wave's 100px overlap */
         }
 
         @media (max-width: 768px) {
