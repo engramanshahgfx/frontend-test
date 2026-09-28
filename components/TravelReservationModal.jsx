@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -784,7 +785,7 @@ export default function TravelReservationModal({
 
                       <div>
                         <label style={labelStyle}>{t.nationality}</label>
-                        <input
+                        <CountryField
                           type="text"
                           name="nationality"
                           value={formData.nationality}
@@ -869,7 +870,7 @@ export default function TravelReservationModal({
                         <label style={labelStyle}>
                           {t.companyCountry} <span style={{ color: "#dc2626" }}>*</span>
                         </label>
-                        <input
+                        <CountryField
                           type="text"
                           name="company_country"
                           value={formData.company_country}

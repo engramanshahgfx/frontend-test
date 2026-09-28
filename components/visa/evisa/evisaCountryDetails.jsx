@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState } from 'react';
 import { API_URL } from '@/lib/api';
 import Link from "next/link";
@@ -378,7 +379,7 @@ export default function EvisaCountryDetails({
               </div>
               <div className={styles.field}>
                 <label>{locale === 'ar' ? 'الجنسية' : (locale === 'zh' ? '国籍' : 'Nationality')} *</label>
-                <input 
+                <CountryField 
                   type="text" 
                   value={nationality}
                   onChange={(e) => setNationality(e.target.value)}

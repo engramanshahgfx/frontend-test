@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState } from "react";
 import styles from "./SchengenShowcasePage.module.css";
 
@@ -373,7 +374,7 @@ export default function SchengenShowcasePage({ lang = "ar" }) {
                   </label>
                   <label>
                     <span>{t.fields.nationality}</span>
-                    <input required type="text" name={`travelers[${index}][nationality]`} />
+                    <CountryField required type="text" name={`travelers[${index}][nationality]`} />
                   </label>
                   <label>
                     <span>{t.fields.passportNo}</span>

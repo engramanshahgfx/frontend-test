@@ -1,5 +1,6 @@
 'use client';
 
+import CountryField from '@/components/CountryField';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -1274,7 +1275,7 @@ export default function BookingPage() {
               </div>
               <div className="field">
                 <label className="field-label">{t('forms.nationality')} <span className="req">*</span></label>
-                <input className="field-input" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} />
+                <CountryField className="field-input" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} />
               </div>
             </div>
 
@@ -1291,7 +1292,7 @@ export default function BookingPage() {
               </div>
               <div className="field">
                 <label className="field-label">{t('flightBooking.passengersStep.issuingCountry')}</label>
-                <input className="field-input" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} />
+                <CountryField className="field-input" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} />
               </div>
             </div>
 

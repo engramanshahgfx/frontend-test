@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Sidebar, StepBar } from '@/components/akbar-booking';
+import { fetchCountryOptions, resolveCountryCode } from '@/lib/countries';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -814,6 +815,21 @@ export default function BookingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const lang = params?.lang || 'en';
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [countryLoadState, setCountryLoadState] = useState('loading');
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    setCountryLoadState('loading');
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    fetchCountryOptions(lang, controller.signal).then(options => {
+      if (active) { setCountryOptions(options); setCountryLoadState('ready'); }
+    }).catch(() => {
+      if (active) setCountryLoadState('manual');
+    }).finally(() => clearTimeout(timeout));
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
+  }, [lang]);
+  const countryPlaceholder = lang === 'ar' ? 'اختر الدولة' : lang === 'zh' ? '选择国家或地区' : 'Select country';
   const isRTL = lang === 'ar';
   const { t } = useTranslation();
 
@@ -1383,7 +1399,7 @@ export default function BookingPage() {
           price: calculateTotal(),
           total_amount: calculateTotal()
         },
-        passengers: passengers.map(p => ({ passenger_type: p.type, title: p.title, first_name: p.firstName, middle_name: p.middleName, last_name: p.lastName, date_of_birth: p.dateOfBirth, birth_date: p.dateOfBirth, dateOfBirth: p.dateOfBirth, gender: p.gender, nationality: p.nationality, document_type: p.documentType, document_number: p.documentNumber, passport_number: p.documentNumber, document_expiry: p.documentExpiry, passport_expiry: p.documentExpiry, document_issuing_country: p.documentIssuingCountry, email: p.email, phone: p.phone })),
+        passengers: passengers.map(p => ({ passenger_type: p.type, title: p.title, first_name: p.firstName, middle_name: p.middleName, last_name: p.lastName, date_of_birth: p.dateOfBirth, birth_date: p.dateOfBirth, dateOfBirth: p.dateOfBirth, gender: p.gender, nationality: resolveCountryCode(p.nationality), document_type: p.documentType, document_number: p.documentNumber, passport_number: p.documentNumber, document_expiry: p.documentExpiry, passport_expiry: p.documentExpiry, document_issuing_country: resolveCountryCode(p.documentIssuingCountry), email: p.email, phone: p.phone })),
       });
       const pd = data?.data || data;
       setBookingStatus(pd.booking_status || 'PASSENGERS_ADDED');
@@ -1547,6 +1563,10 @@ export default function BookingPage() {
       if (!p.email) missing.push('Email');
       if (!p.documentNumber) missing.push('Passport Number');
       if (!p.documentExpiry) missing.push('Passport Expiry Date');
+      if (!p.nationality) missing.push('Nationality');
+      if (!p.documentIssuingCountry) missing.push('Passport Issuing Country');
+      if (p.nationality && !resolveCountryCode(p.nationality)) missing.push('Valid nationality (country name or two-letter code, e.g. PK)');
+      if (p.documentIssuingCountry && !resolveCountryCode(p.documentIssuingCountry)) missing.push('Valid passport issuing country (country name or two-letter code, e.g. PK)');
       if (missing.length > 0) {
         setError(`Passenger ${i + 1}: Please fill in ${missing.join(', ')}`);
         return false;
@@ -1584,11 +1604,11 @@ export default function BookingPage() {
         lastName: '',
         dateOfBirth: '',
         gender: 'M',
-        nationality: 'Saudi Arabia',
+        nationality: 'SA',
         documentType: 'passport',
         documentNumber: '',
         documentExpiry: '',
-        documentIssuingCountry: 'Saudi Arabia',
+        documentIssuingCountry: 'SA',
         email: prev[0]?.email || '',
         phone: prev[0]?.phone || ''
       }
@@ -1880,7 +1900,10 @@ export default function BookingPage() {
                   </div>
                   <div className="field">
                     <label className="field-label">{t('forms.nationality')} <span className="req">*</span></label>
-                    <input className="field-input" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} />
+                    {countryLoadState === 'manual' ? <input aria-label={t('forms.nationality')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} /> : <select disabled={countryLoadState === 'loading'} aria-label={t('forms.nationality')} className="field-input" required value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)}>
+                      <option value="">{countryPlaceholder}</option>
+                      {countryOptions.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+                    </select>}
                   </div>
                 </div>
 
@@ -1897,7 +1920,10 @@ export default function BookingPage() {
                   </div>
                   <div className="field">
                     <label className="field-label">{t('flightBooking.passengersStep.issuingCountry')}</label>
-                    <input className="field-input" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} />
+                    {countryLoadState === 'manual' ? <input aria-label={t('flightBooking.passengersStep.issuingCountry')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} /> : <select disabled={countryLoadState === 'loading'} aria-label={t('flightBooking.passengersStep.issuingCountry')} className="field-input" required value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)}>
+                      <option value="">{countryPlaceholder}</option>
+                      {countryOptions.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+                    </select>}
                   </div>
                 </div>
 

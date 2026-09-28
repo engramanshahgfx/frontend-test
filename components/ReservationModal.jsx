@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_URL, getToken } from "../lib/api";
@@ -543,7 +544,7 @@ export default function ReservationModal() {
                         <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", marginBottom: "6px", display: "block" }}>
                           {isRTL ? "الجنسية" : "Nationality"}
                         </label>
-                        <input
+                        <CountryField
                           type="text"
                           name="nationality"
                           value={formData.nationality}
@@ -721,7 +722,7 @@ export default function ReservationModal() {
                         <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", marginBottom: "6px", display: "block" }}>
                           {isRTL ? "دولة الشركة *" : "Company Country *"}
                         </label>
-                        <input
+                        <CountryField
                           type="text"
                           name="country"
                           value={formData.country}

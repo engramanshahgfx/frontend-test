@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState } from "react";
 import { API_URL } from "@/lib/api";
 import styles from "./SchengenVisaPage.module.css";
@@ -207,7 +208,7 @@ export default function SchengenApplicationForm({ lang = "ar" }) {
 
           <div className={styles.field}>
             <label>{t.nationality}</label>
-            <input
+            <CountryField
               type="text"
               name="nationality"
               value={formData.nationality}

@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import React, { useState } from "react";
 import { API_URL } from "@/lib/api";
 import {
@@ -652,7 +653,7 @@ export default function Visa({ lang }) {
 
                   <div className="form-group">
                     <label><FaGlobeAmericas /> {t.nationality} *</label>
-                    <input
+                    <CountryField
                       type="text"
                       name="nationality"
                       value={formData.nationality}

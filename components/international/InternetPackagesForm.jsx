@@ -1,5 +1,6 @@
 "use client";
 
+import CountryField from '@/components/CountryField';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -368,7 +369,7 @@ export default function InternetPackagesForm({ lang = "en" }) {
                       <Globe size={14} color="#E85D1F" /> {t.country}
                     </label>
                     <div style={{ position: "relative" }}>
-                      <input
+                      <CountryField
                         type="text"
                         name="country"
                         value={formData.country}
