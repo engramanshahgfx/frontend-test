@@ -24,7 +24,7 @@ const translations = {
     en: {
       title: "Forgot Password",
       step1Title: "Enter Email or Saudi Mobile",
-      step1Subtitle: "We will send a verification code to your registered email or mobile",
+      step1Subtitle: "Enter your account email or mobile, or the contact used for your paid guest booking. We will send a verification code.",
       step2Title: "Verify OTP",
       step2Subtitle: "Enter the OTP sent to your phone",
       step3Title: "Set New Password",
@@ -42,7 +42,7 @@ const translations = {
     ar: {
       title: "نسيت كلمة المرور",
       step1Title: "أدخل البريد الإلكتروني أو الجوال السعودي",
-      step1Subtitle: "سنرسل رمز التحقق إلى بريدك أو رقم جوالك المسجل",
+      step1Subtitle: "أدخل بريد حسابك أو رقم جوالك، أو بيانات التواصل المستخدمة في حجزك المدفوع كضيف. سنرسل رمز التحقق.",
       step2Title: "تحقق من الرمز",
       step2Subtitle: "أدخل الرمز المرسل إلى جوالك",
       step3Title: "تعيين كلمة مرور جديدة",
@@ -60,7 +60,7 @@ const translations = {
     zh: {
       title: "忘记密码",
       step1Title: "输入电子邮箱或沙特手机号",
-      step1Subtitle: "验证码将发送到您注册的邮箱或手机号",
+      step1Subtitle: "请输入账户邮箱或手机号，或已付款游客预订中使用的联系方式。我们将发送验证码。",
       step2Title: "验证验证码",
       step2Subtitle: "输入发送到您手机的验证码",
       step3Title: "设置新密码",

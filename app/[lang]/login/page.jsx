@@ -153,7 +153,7 @@ export default function LoginPage({ params }) {
     setLoading(true);
     
     try {
-      const result = await verifyOtp(userData.phone, otpCode, 'login');
+      const result = await verifyOtp(userData.identifier, otpCode, 'login');
       
       if (result.success) {
         toast.success(lang === 'ar' ? 'تم تسجيل الدخول بنجاح!' : 'Login successful!');
@@ -175,7 +175,7 @@ export default function LoginPage({ params }) {
     
     setLoading(true);
     try {
-      const result = await sendOtp(userData.phone, 'login');
+      const result = await sendOtp(userData.identifier, 'login');
       if (result.success) {
         setResendCooldown(60);
         setDevOtp(result.devOtp);
@@ -253,7 +253,7 @@ export default function LoginPage({ params }) {
                 {t.otpSubtitle}
               </div>
               <div className="text-center mb-4" style={{ fontSize: "14px", color: "#0d6efd" }}>
-                {t.codeSentTo}: <strong>{userData.phone}</strong>
+                {t.codeSentTo}: <strong>{userData.identifier}</strong>
               </div>
               
               {devOtp && (
