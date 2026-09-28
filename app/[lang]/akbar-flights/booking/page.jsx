@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Sidebar, StepBar } from '@/components/akbar-booking';
-import { fetchCountryOptions, resolveCountryCode } from '@/lib/countries';
+import { resolveCountryCode } from '@/lib/countries';
+import CountryField from '@/components/CountryField';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -815,21 +816,6 @@ export default function BookingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const lang = params?.lang || 'en';
-  const [countryOptions, setCountryOptions] = useState([]);
-  const [countryLoadState, setCountryLoadState] = useState('loading');
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
-    setCountryLoadState('loading');
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    fetchCountryOptions(lang, controller.signal).then(options => {
-      if (active) { setCountryOptions(options); setCountryLoadState('ready'); }
-    }).catch(() => {
-      if (active) setCountryLoadState('manual');
-    }).finally(() => clearTimeout(timeout));
-    return () => { active = false; clearTimeout(timeout); controller.abort(); };
-  }, [lang]);
-  const countryPlaceholder = lang === 'ar' ? 'اختر الدولة' : lang === 'zh' ? '选择国家或地区' : 'Select country';
   const isRTL = lang === 'ar';
   const { t } = useTranslation();
 
@@ -1900,10 +1886,7 @@ export default function BookingPage() {
                   </div>
                   <div className="field">
                     <label className="field-label">{t('forms.nationality')} <span className="req">*</span></label>
-                    {countryLoadState === 'manual' ? <input aria-label={t('forms.nationality')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} /> : <select disabled={countryLoadState === 'loading'} aria-label={t('forms.nationality')} className="field-input" required value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)}>
-                      <option value="">{countryPlaceholder}</option>
-                      {countryOptions.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
-                    </select>}
+                    <CountryField valueMode="code" aria-label={t('forms.nationality')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.nationality} onChange={e => updatePassenger(i, 'nationality', e.target.value)} />
                   </div>
                 </div>
 
@@ -1920,10 +1903,7 @@ export default function BookingPage() {
                   </div>
                   <div className="field">
                     <label className="field-label">{t('flightBooking.passengersStep.issuingCountry')}</label>
-                    {countryLoadState === 'manual' ? <input aria-label={t('flightBooking.passengersStep.issuingCountry')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} /> : <select disabled={countryLoadState === 'loading'} aria-label={t('flightBooking.passengersStep.issuingCountry')} className="field-input" required value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)}>
-                      <option value="">{countryPlaceholder}</option>
-                      {countryOptions.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
-                    </select>}
+                    <CountryField valueMode="code" aria-label={t('flightBooking.passengersStep.issuingCountry')} className="field-input" required placeholder="Country name / code (Pakistan / PK)" value={p.documentIssuingCountry} onChange={e => updatePassenger(i, 'documentIssuingCountry', e.target.value)} />
                   </div>
                 </div>
 
