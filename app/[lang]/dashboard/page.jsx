@@ -119,6 +119,9 @@ export default function DashboardPage() {
 
       if (bookingsResult.status === 'fulfilled') {
         setBookings(bookingsResult.value.bookings || []);
+        for (const warning of bookingsResult.value.warnings || []) {
+          toast.warning(warning.message);
+        }
       } else {
         console.error('Failed to load bookings:', bookingsResult.reason);
         setBookings([]);
