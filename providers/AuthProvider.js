@@ -67,16 +67,19 @@ export const AuthProvider = ({ children }) => {
       if (response.requires_otp) {
         // Store pending OTP state
         setPendingOtp({
-          phone: userData.phone,
+          identifier: response.identifier || userData.email || userData.phone,
           type: 'register',
           userData: response.user,
         });
         
-        toast.info('Please verify your phone number with the OTP code.');
+        toast.info(response.verification_channel === 'email'
+          ? 'Please verify your email with the code we sent.'
+          : 'Please verify your Saudi mobile with the code we sent.');
         return { 
           success: true, 
           requiresOtp: true, 
-          phone: userData.phone,
+          identifier: response.identifier || userData.email || userData.phone,
+          verificationChannel: response.verification_channel,
           message: response.message,
           // Include dev OTP for testing
           devOtp: response.dev_otp,
@@ -179,12 +182,12 @@ export const AuthProvider = ({ children }) => {
   /**
    * Send OTP to phone number
    */
-  const sendOtp = async (phone, type = 'login') => {
+  const sendOtp = async (identifier, type = 'login') => {
     try {
-      const response = await authAPI.sendOtp(phone, type);
+      const response = await authAPI.sendOtp(identifier, type);
       
       if (response.success) {
-        setPendingOtp({ phone, type });
+        setPendingOtp({ identifier, type });
         toast.info('OTP code sent to your phone.');
         return { 
           success: true, 
@@ -204,9 +207,9 @@ export const AuthProvider = ({ children }) => {
   /**
    * Verify OTP and complete authentication
    */
-  const verifyOtp = async (phone, code, type = 'login') => {
+  const verifyOtp = async (identifier, code, type = 'login') => {
     try {
-      const response = await authAPI.verifyOtp(phone, code, type);
+      const response = await authAPI.verifyOtp(identifier, code, type);
       
       if (response.success && response.token) {
         // Store auth data

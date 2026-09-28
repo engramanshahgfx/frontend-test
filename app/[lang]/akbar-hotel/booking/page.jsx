@@ -294,7 +294,10 @@ export default function AkbarHotelBookingPage() {
                 amount: amountInHalalas,
                 currency: 'SAR',
                 description: `Benzy WRC Hotel Reservation (${txId})`,
-                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_vcMyXc4FuA6WpFiZabXA6bSb',
+                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY 
+                  || process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY 
+                  || process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY 
+                  || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
                 callback_url: callbackUrl,
                 methods: ['creditcard', 'stcpay', 'applepay'],
                 apple_pay: {

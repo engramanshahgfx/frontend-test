@@ -13,7 +13,7 @@ export default function ForgotPassword() {
   const lang = params?.lang || 'en';
 
   const [step, setStep] = useState(1); // 1: phone, 2: OTP, 3: password
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -23,13 +23,13 @@ export default function ForgotPassword() {
 const translations = {
     en: {
       title: "Forgot Password",
-      step1Title: "Enter Phone Number",
-      step1Subtitle: "Enter your phone number to receive an OTP",
+      step1Title: "Enter Email or Saudi Mobile",
+      step1Subtitle: "We will send a verification code to your registered email or mobile",
       step2Title: "Verify OTP",
       step2Subtitle: "Enter the OTP sent to your phone",
       step3Title: "Set New Password",
       step3Subtitle: "Enter your new password",
-      phonePlaceholder: "0501234567",
+      identifierPlaceholder: "Email or 05XXXXXXXX / +9665XXXXXXXX",
       otpPlaceholder: "Enter 6-digit OTP",
       passwordPlaceholder: "New password",
       confirmPasswordPlaceholder: "Confirm new password",
@@ -41,13 +41,13 @@ const translations = {
     },
     ar: {
       title: "نسيت كلمة المرور",
-      step1Title: "أدخل رقم الجوال",
-      step1Subtitle: "أدخل رقم جوالك لتلقي رمز التحقق",
+      step1Title: "أدخل البريد الإلكتروني أو الجوال السعودي",
+      step1Subtitle: "سنرسل رمز التحقق إلى بريدك أو رقم جوالك المسجل",
       step2Title: "تحقق من الرمز",
       step2Subtitle: "أدخل الرمز المرسل إلى جوالك",
       step3Title: "تعيين كلمة مرور جديدة",
       step3Subtitle: "أدخل كلمة المرور الجديدة",
-      phonePlaceholder: "0501234567",
+      identifierPlaceholder: "البريد الإلكتروني أو 05XXXXXXXX / +9665XXXXXXXX",
       otpPlaceholder: "أدخل رمز التحقق المكون من 6 أرقام",
       passwordPlaceholder: "كلمة المرور الجديدة",
       confirmPasswordPlaceholder: "تأكيد كلمة المرور الجديدة",
@@ -59,13 +59,13 @@ const translations = {
     },
     zh: {
       title: "忘记密码",
-      step1Title: "输入手机号码",
-      step1Subtitle: "输入您的手机号码以接收验证码",
+      step1Title: "输入电子邮箱或沙特手机号",
+      step1Subtitle: "验证码将发送到您注册的邮箱或手机号",
       step2Title: "验证验证码",
       step2Subtitle: "输入发送到您手机的验证码",
       step3Title: "设置新密码",
       step3Subtitle: "输入您的新密码",
-      phonePlaceholder: "0501234567",
+      identifierPlaceholder: "电子邮箱或沙特手机号",
       otpPlaceholder: "输入6位验证码",
       passwordPlaceholder: "新密码",
       confirmPasswordPlaceholder: "确认新密码",
@@ -83,7 +83,7 @@ const translations = {
     e && e.preventDefault();
     setLoading(true);
     try {
-      const data = await authAPI.sendOtp(phone, 'reset');
+      const data = await authAPI.sendOtp(identifier, 'reset');
       setDevOtp(data.dev_otp || null);
       setStep(2); // Move to OTP verification step
       toast.success('OTP sent successfully');
@@ -99,13 +99,13 @@ const translations = {
     e && e.preventDefault();
     setLoading(true);
     try {
-      const data = await authAPI.verifyOtp(phone, otpCode, 'reset');
+      const data = await authAPI.verifyOtp(identifier, otpCode, 'reset');
       if (!data.success) throw new Error(data.message || 'OTP verification failed');
       setStep(3); // Move to password reset step
       toast.success('OTP verified successfully');
     } catch (err) {
       console.error('verifyOtp error', err);
-      toast.error(err.message || 'OTP verification failed');
+      toast.error('Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ const translations = {
     }
     setLoading(true);
     try {
-      const data = await authAPI.resetPassword(phone, otpCode, password, passwordConfirmation);
+      const data = await authAPI.resetPassword(identifier, otpCode, password, passwordConfirmation);
       if (!data.success) throw new Error(data.message || 'Reset failed');
       toast.success(t.success);
       // Redirect to login page after 2 seconds
@@ -173,12 +173,12 @@ const translations = {
               <form className="w-100" onSubmit={handleSendOtp}>
                 <div className="mb-3 position-relative">
                   <input 
-                    type="tel" 
+                    type="text"
                     className="form-control" 
                     style={{ borderRadius: "15px", paddingLeft: lang === "ar" ? "" : "40px", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }} 
-                    placeholder={t.phonePlaceholder} 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
+                    placeholder={t.identifierPlaceholder}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     required 
                   />
                 </div>

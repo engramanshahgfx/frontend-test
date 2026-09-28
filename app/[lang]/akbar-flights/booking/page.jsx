@@ -825,10 +825,10 @@ export default function BookingPage() {
   const [airlinePnr, setAirlinePnr] = useState(null);
   const [ticketNumber, setTicketNumber] = useState(null);
   const [passengers, setPassengers] = useState([{
-    type: 'ADT', title: 'Mr', firstName: 'Muhammad', middleName: '', lastName: 'Tahir',
-    dateOfBirth: '1992-08-22', gender: 'M', nationality: 'Saudi Arabia',
-    documentType: 'passport', documentNumber: 'CH7127003', documentExpiry: '2036-01-06',
-    documentIssuingCountry: 'Saudi Arabia', email: 'amanshah12sweer@gmail.com', phone: '551981751',
+    type: 'ADT', title: '', firstName: '', middleName: '', lastName: '',
+    dateOfBirth: '', gender: '', nationality: '',
+    documentType: 'passport', documentNumber: '', documentExpiry: '',
+    documentIssuingCountry: '', email: '', phone: '',
   }]);
   const [extras, setExtras] = useState({
     insurance: false, autoCheckin: false, delayProtection: false, cancellationFreedom: false,
@@ -838,7 +838,7 @@ export default function BookingPage() {
   const [holdRemainingTime, setHoldRemainingTime] = useState(null);
   const [paymentReference, setPaymentReference] = useState(null);
   const [cardForm, setCardForm] = useState({
-    cardNumber: '4810841084108410', cardHolder: 'AHMED MOHAMMAD', expiryMonth: '01', expiryYear: '30', cvv: '123',
+    cardNumber: '', cardHolder: '', expiryMonth: '', expiryYear: '', cvv: '',
   });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -978,38 +978,29 @@ export default function BookingPage() {
         const generatedPassengers = [];
 
         for (let a = 0; a < numAdults; a++) {
-          if (a === 0) {
-            generatedPassengers.push({
-              type: 'ADT', title: 'Mr', firstName: 'Muhammad', middleName: '', lastName: 'Tahir',
-              dateOfBirth: '1992-08-22', gender: 'M', nationality: 'Saudi Arabia',
-              documentType: 'passport', documentNumber: 'CH7127003', documentExpiry: '2036-01-06',
-              documentIssuingCountry: 'Saudi Arabia', email: 'amanshah12sweer@gmail.com', phone: '551981751',
-            });
-          } else {
-            generatedPassengers.push({
-              type: 'ADT', title: 'Mr', firstName: '', middleName: '', lastName: '',
-              dateOfBirth: '', gender: '', nationality: 'Saudi Arabia',
-              documentType: 'passport', documentNumber: '', documentExpiry: '',
-              documentIssuingCountry: 'Saudi Arabia', email: '', phone: '',
-            });
-          }
+          generatedPassengers.push({
+            type: 'ADT', title: '', firstName: '', middleName: '', lastName: '',
+            dateOfBirth: '', gender: '', nationality: '',
+            documentType: 'passport', documentNumber: '', documentExpiry: '',
+            documentIssuingCountry: '', email: '', phone: '',
+          });
         }
 
         for (let c = 0; c < numChildren; c++) {
           generatedPassengers.push({
-            type: 'CHD', title: 'Master', firstName: '', middleName: '', lastName: '',
-            dateOfBirth: '', gender: '', nationality: 'Saudi Arabia',
+            type: 'CHD', title: '', firstName: '', middleName: '', lastName: '',
+            dateOfBirth: '', gender: '', nationality: '',
             documentType: 'passport', documentNumber: '', documentExpiry: '',
-            documentIssuingCountry: 'Saudi Arabia', email: '', phone: '',
+            documentIssuingCountry: '', email: '', phone: '',
           });
         }
 
         for (let f = 0; f < numInfants; f++) {
           generatedPassengers.push({
-            type: 'INF', title: 'Master', firstName: '', middleName: '', lastName: '',
-            dateOfBirth: '', gender: '', nationality: 'Saudi Arabia',
+            type: 'INF', title: '', firstName: '', middleName: '', lastName: '',
+            dateOfBirth: '', gender: '', nationality: '',
             documentType: 'passport', documentNumber: '', documentExpiry: '',
-            documentIssuingCountry: 'Saudi Arabia', email: '', phone: '',
+            documentIssuingCountry: '', email: '', phone: '',
           });
         }
 
@@ -1106,7 +1097,10 @@ export default function BookingPage() {
                 amount: amountInHalalas,
                 currency: 'SAR',
                 description: `NDC Flight Booking (${orderReference || 'NDCEG-BR-YBFTIURJD4'})`,
-                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || 'pk_test_vcMyXc4FuA6WpFiZabXA6bSb',
+                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY 
+                  || process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY 
+                  || process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY 
+                  || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
                 callback_url: `${window.location.origin}/${lang}/akbar-flights/booking?payment_status=paid&order_ref=${orderReference || ''}`,
                 methods: ['creditcard', 'stcpay', 'applepay'],
                 apple_pay: {
@@ -1878,9 +1872,9 @@ export default function BookingPage() {
                     <label className="field-label">{t('forms.gender')} <span className="req">*</span></label>
                     <div className="select-wrap">
                       <select className="field-select" value={p.gender} onChange={e => updatePassenger(i, 'gender', e.target.value)}>
-                        <option value="">{t('flightBooking.passengersStep.selectTitle')}</option>
-                        <option value="M">Male</option>
-                        <option value="F">Female</option>
+                        <option value="">{t('flightBooking.passengersStep.selectGender')}</option>
+                        <option value="M">{t('flightBooking.passengersStep.male')}</option>
+                        <option value="F">{t('flightBooking.passengersStep.female')}</option>
                       </select>
                     </div>
                   </div>
@@ -1943,7 +1937,7 @@ export default function BookingPage() {
             gap: 6
           }}
         >
-          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة بالغ (+12 سنة)' : '+ Add Adult (12+ yrs)'}
+          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة بالغ (12 سنة فأكثر)' : 'Add Adult (12+ yrs)'}
         </button>
 
         <button
@@ -1963,7 +1957,7 @@ export default function BookingPage() {
             gap: 6
           }}
         >
-          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة طفل (2-11 سنة)' : '+ Add Child (2-11 yrs)'}
+          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة طفل (2-11 سنة)' : 'Add Child (2-11 yrs)'}
         </button>
 
         <button
@@ -1983,7 +1977,7 @@ export default function BookingPage() {
             gap: 6
           }}
         >
-          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة طفل رضيع (أقل من سنتين)' : '+ Add Infant (< 2 yrs)'}
+          <span style={{ fontSize: '1rem', fontWeight: 800 }}>+</span> {isRTL ? 'إضافة رضيع (أقل من سنتين)' : 'Add Infant (< 2 yrs)'}
         </button>
 
         <button
@@ -2575,9 +2569,9 @@ export default function BookingPage() {
                   <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px', fontWeight: 700, color: '#0f172a' }}>{(p.title || '').toUpperCase()} {(p.firstName || '').toUpperCase()} {(p.lastName || '').toUpperCase()}</td>
                     <td style={{ padding: '12px', color: '#475569', fontWeight: 600 }}>{p.type === 'ADT' ? t('flightBooking.confirmationStep.adult') : p.type === 'CHD' ? t('flightBooking.confirmationStep.child') : t('flightBooking.confirmationStep.infant')}</td>
-                    <td style={{ padding: '12px', color: '#475569', fontWeight: 600 }}>{p.documentNumber || 'CH7127003'}</td>
-                    <td style={{ padding: '12px', color: '#475569' }}>{p.email || 'amanshah12sweer@gmail.com'}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#E85D1F' }}>{p.ticketNumber || ticketNumber || passengers[0]?.ticketNumber || '712-81709422'}</td>
+                    <td style={{ padding: '12px', color: '#475569', fontWeight: 600 }}>{p.documentNumber || 'N/A'}</td>
+                    <td style={{ padding: '12px', color: '#475569' }}>{p.email || 'N/A'}</td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#E85D1F' }}>{p.ticketNumber || ticketNumber || passengers[0]?.ticketNumber || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>

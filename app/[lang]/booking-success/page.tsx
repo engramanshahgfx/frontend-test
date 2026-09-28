@@ -520,12 +520,21 @@ export default function BookingSuccessPage() {
     };
 
     const initPayment = () => {
-      const publishableKey =
+      const configuredKey =
         process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY ||
-        process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY ||
-        'pk_live_JjGYt4f9iWDGpc9uCE9FCMBvZ9u5FBa5SsQvEFAY';
+        process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY;
+      const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const testKey = process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY ||
+        (process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY?.startsWith('pk_test_')
+          ? process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY
+          : '');
+      const publishableKey = isLocalHost
+        ? (testKey || (configuredKey?.startsWith('pk_live_') ? '' : configuredKey || ''))
+        : configuredKey;
       if (!publishableKey) {
-        setError('Payment gateway is not configured.');
+        setError(isLocalHost
+          ? 'Configure a valid Moyasar test publishable key in frontend-test/.env.local and restart the dev server.'
+          : 'Payment gateway is not configured.');
         return;
       }
 
@@ -543,6 +552,7 @@ export default function BookingSuccessPage() {
           element: container,
           amount: Math.round(amount * 100),
           currency: 'SAR',
+          metadata: { booking_id: String(bookingId) },
           description: bookingReference ? `Booking ${bookingReference}` : `Booking #${bookingId}`,
           publishable_api_key: publishableKey,
           callback_url: `${window.location.origin}/${lang}/payment-success?booking_id=${bookingId}`,
@@ -552,8 +562,26 @@ export default function BookingSuccessPage() {
             label: 'Tilal Rimal',
             validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
           },
-          on_completed: () => {
-            window.location.href = `/${lang}/payment-success?booking_id=${bookingId}`;
+          on_completed: async (payment: any) => {
+            try {
+              const verifyResponse = await fetch(`${API_URL}/payments/moyasar/verify`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                },
+                body: JSON.stringify({ booking_id: bookingId, payment_id: payment?.id }),
+              });
+              const verifyResult = await verifyResponse.json();
+              if (!verifyResponse.ok || !verifyResult.success) {
+                throw new Error(verifyResult.message || 'Payment verification failed.');
+              }
+
+              window.location.href = `/${lang}/payment-success?booking_id=${bookingId}&id=${encodeURIComponent(payment.id)}`;
+            } catch (verifyError) {
+              console.error('Moyasar payment verification error:', verifyError);
+              setError('Payment was submitted but could not be verified. Do not pay again; contact support with your booking number.');
+            }
           },
           on_failure: (error: any) => {
             console.error('Payment error:', error);

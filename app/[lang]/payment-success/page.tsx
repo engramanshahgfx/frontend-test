@@ -73,6 +73,23 @@ function PaymentSuccessContent() {
 
       try {
         const cleanBase = API_URL.replace(/\/$/, '');
+        if (statusParam === 'paid' && bookingId && paymentId) {
+          const verifyResponse = await fetch(`${cleanBase}/payments/moyasar/verify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ booking_id: bookingId, payment_id: paymentId }),
+          });
+          const verifyResult = await verifyResponse.json();
+          if (verifyResponse.ok && verifyResult.success) {
+            if (isMounted) setIsPaidVerified(true);
+            return;
+          }
+          console.error('[PaymentSuccess] Backend rejected payment verification:', verifyResult.message);
+        }
+
         const res = await fetch(`${cleanBase}/payments/status/${lookupId}`, {
           cache: 'no-store',
           headers: { Accept: 'application/json' },

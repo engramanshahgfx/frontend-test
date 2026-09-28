@@ -63,6 +63,21 @@ export default function Sidebar({ flight, step, passengerName, addInsurance, ext
   };
 
   const displayAirline = (lang === 'ar' && AIRLINE_TRANSLATIONS[leg.airline]) ? AIRLINE_TRANSLATIONS[leg.airline] : leg.airline;
+  const formatDisplayDate = (value) => {
+    if (!value) return '';
+    const dateValue = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)
+      ? `${value.slice(0, 10)}T00:00:00Z`
+      : value;
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return value;
+    const locale = lang === 'ar' ? 'ar-SA' : lang === 'zh' ? 'zh-CN' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(date);
+  };
 
   const legCode = 
     leg.airlineCode || 
@@ -89,7 +104,7 @@ export default function Sidebar({ flight, step, passengerName, addInsurance, ext
 
         <div style={{ padding: '16px 18px' }}>
           <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500, marginBottom: 2 }}>{t('flightBooking.sidebar.departure')}</div>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>{leg.date}</div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>{formatDisplayDate(leg.date)}</div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

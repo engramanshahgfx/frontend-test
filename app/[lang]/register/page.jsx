@@ -21,6 +21,7 @@ export default function RegisterPage({ params }) {
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [visibleConfirm, setVisibleConfirm] = useState(false);
+  const [registrationMethod, setRegistrationMethod] = useState("email");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,6 +38,8 @@ export default function RegisterPage({ params }) {
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [devOtp, setDevOtp] = useState(null);
+  const [verificationIdentifier, setVerificationIdentifier] = useState("");
+  const [verificationChannel, setVerificationChannel] = useState("email");
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const translations = {
@@ -45,19 +48,22 @@ export default function RegisterPage({ params }) {
       subtitle: "Join us today! Fill in your details to get started",
       name: "Full Name",
       namePlaceholder: "Enter your full name",
-      email: "Email (optional)",
-      emailPlaceholder: "you@example.com (optional)",
+      emailMethod: "Email",
+      phoneMethod: "Saudi mobile",
+      email: "Email address",
+      emailPlaceholder: "you@example.com",
       phone: "Phone",
-      phonePlaceholder: "+966xxxxxxxxx",
+      phonePlaceholder: "05XXXXXXXX or +9665XXXXXXXX",
+      chooseContact: "Choose how to verify your account",
       password: "Password",
-      passwordPlaceholder: "Create a password (min 6 chars)",
+      passwordPlaceholder: "Create a strong password (8+ chars, upper/lowercase, number, symbol)",
       confirmPassword: "Confirm Password",
       confirmPasswordPlaceholder: "Repeat your password",
       register: "Create Account",
       haveAccount: "Have an account?",
       login: "Login",
-      otpTitle: "Verify Your Phone",
-      otpSubtitle: "Enter the verification code sent to your phone",
+      otpTitle: "Verify Your Account",
+      otpSubtitle: "Enter the verification code sent to your email or phone",
       otpPlaceholder: "Enter 6-digit code",
       verify: "Verify",
       resendCode: "Resend Code",
@@ -72,19 +78,22 @@ export default function RegisterPage({ params }) {
       subtitle: "انضم إلينا اليوم! أكمل بياناتك للبدء",
       name: "الاسم الكامل",
       namePlaceholder: "أدخل اسمك الكامل",
-      email: "البريد الإلكتروني (اختياري)",
-      emailPlaceholder: "you@example.com (اختياري)",
+      emailMethod: "البريد الإلكتروني",
+      phoneMethod: "جوال سعودي",
+      email: "البريد الإلكتروني",
+      emailPlaceholder: "you@example.com",
       phone: "رقم الجوال",
-      phonePlaceholder: "+966xxxxxxxxx",
+      phonePlaceholder: "05XXXXXXXX أو +9665XXXXXXXX",
+      chooseContact: "اختر طريقة التحقق من الحساب",
       password: "كلمة المرور",
-      passwordPlaceholder: "أنشئ كلمة مرور (6 أحرف على الأقل)",
+      passwordPlaceholder: "كلمة مرور قوية (8 أحرف، كبيرة وصغيرة ورقم ورمز)",
       confirmPassword: "تأكيد كلمة المرور",
       confirmPasswordPlaceholder: "أعد إدخال كلمة المرور",
       register: "إنشاء حساب",
       haveAccount: "لديك حساب؟",
       login: "تسجيل الدخول",
-      otpTitle: "تحقق من رقم الجوال",
-      otpSubtitle: "أدخل رمز التحقق المرسل إلى هاتفك",
+      otpTitle: "تحقق من حسابك",
+      otpSubtitle: "أدخل رمز التحقق المرسل إلى بريدك أو جوالك",
       otpPlaceholder: "أدخل الرمز المكون من 6 أرقام",
       verify: "تحقق",
       resendCode: "إعادة إرسال الرمز",
@@ -100,19 +109,22 @@ export default function RegisterPage({ params }) {
     subtitle: "立即加入我们！填写您的信息开始使用",
     name: "全名",
     namePlaceholder: "请输入您的全名",
-    email: "电子邮箱（选填）",
-    emailPlaceholder: "you@example.com（可选）",
+    emailMethod: "电子邮箱",
+    phoneMethod: "沙特手机号",
+    email: "电子邮箱",
+    emailPlaceholder: "you@example.com",
     phone: "电话号码",
-    phonePlaceholder: "+966xxxxxxxxx",
+    phonePlaceholder: "05XXXXXXXX 或 +9665XXXXXXXX",
+    chooseContact: "选择账户验证方式",
     password: "密码",
-    passwordPlaceholder: "设置密码（至少6位）",
+    passwordPlaceholder: "设置强密码（至少8位，含大小写、数字和符号）",
     confirmPassword: "确认密码",
     confirmPasswordPlaceholder: "再次输入密码",
     register: "创建账户",
     haveAccount: "已有账户？",
     login: "登录",
-    otpTitle: "验证您的手机",
-    otpSubtitle: "请输入发送到您手机的验证码",
+    otpTitle: "验证您的账户",
+    otpSubtitle: "请输入发送到您邮箱或手机的验证码",
     otpPlaceholder: "输入6位数字验证码",
     verify: "验证",
     resendCode: "重新发送验证码",
@@ -139,7 +151,7 @@ export default function RegisterPage({ params }) {
     let timer;
     setEmailExists(false);
 
-    if (!formData.email) return;
+    if (registrationMethod !== "email" || !formData.email) return;
 
     timer = setTimeout(async () => {
       setCheckingEmail(true);
@@ -155,7 +167,7 @@ export default function RegisterPage({ params }) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [formData.email]);
+  }, [formData.email, registrationMethod]);
 
   const handleDataChange = (e) => {
     const { name, value } = e.target;
@@ -181,7 +193,15 @@ export default function RegisterPage({ params }) {
   const handleRegister = async (e) => {
     e.preventDefault();
     
-    if (emailExists) {
+    if (registrationMethod === "email" && !formData.email.trim()) {
+      toast.error(t.emailPlaceholder);
+      return;
+    }
+    if (registrationMethod === "phone" && !formData.phone.trim()) {
+      toast.error(t.phonePlaceholder);
+      return;
+    }
+    if (registrationMethod === "email" && emailExists) {
       toast.error(t.emailTaken);
       return;
     }
@@ -196,8 +216,8 @@ export default function RegisterPage({ params }) {
     try {
       const registerData = {
         name: formData.name,
-        email: formData.email && formData.email.trim() ? formData.email.trim() : null,
-        phone: formData.phone,
+        email: registrationMethod === "email" ? formData.email.trim() : null,
+        phone: registrationMethod === "phone" ? formData.phone.trim() : null,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
       };
@@ -208,6 +228,8 @@ export default function RegisterPage({ params }) {
         if (result.requiresOtp) {
           setShowOtp(true);
           setDevOtp(result.devOtp);
+          setVerificationIdentifier(result.identifier);
+          setVerificationChannel(result.verificationChannel || registrationMethod);
           setResendCooldown(60);
         } else {
           toast.success(lang === 'ar' ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!');
@@ -229,7 +251,7 @@ export default function RegisterPage({ params }) {
     setLoading(true);
     
     try {
-      const result = await verifyOtp(formData.phone, otpCode, 'register');
+      const result = await verifyOtp(verificationIdentifier, otpCode, 'register');
       
       if (result.success) {
         toast.success(lang === 'ar' ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!');
@@ -251,7 +273,7 @@ export default function RegisterPage({ params }) {
     
     setLoading(true);
     try {
-      const result = await sendOtp(formData.phone, 'register');
+      const result = await sendOtp(verificationIdentifier, 'register');
       if (result.success) {
         setResendCooldown(60);
         setDevOtp(result.devOtp);
@@ -326,7 +348,7 @@ export default function RegisterPage({ params }) {
                 {t.otpSubtitle}
               </div>
               <div className="text-center mb-4" style={{ fontSize: "14px", color: "#0d6efd" }}>
-                {t.codeSentTo}: <strong>{formData.phone}</strong>
+                {t.codeSentTo}: <strong>{verificationIdentifier}</strong>
               </div>
               
               {devOtp && (
@@ -464,8 +486,29 @@ export default function RegisterPage({ params }) {
                 />
               </div>
 
-              {/* Email (optional) */}
-              <div className="mb-3 position-relative">
+              <div className="mb-3">
+                <label className="form-label small fw-semibold d-block">{t.chooseContact}</label>
+                <div className="btn-group w-100" role="group" aria-label={t.chooseContact}>
+                  <button
+                    type="button"
+                    className={`btn ${registrationMethod === "email" ? "btn-primary" : "btn-outline-secondary"}`}
+                    aria-pressed={registrationMethod === "email"}
+                    onClick={() => setRegistrationMethod("email")}
+                  >
+                    {t.emailMethod}
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${registrationMethod === "phone" ? "btn-primary" : "btn-outline-secondary"}`}
+                    aria-pressed={registrationMethod === "phone"}
+                    onClick={() => setRegistrationMethod("phone")}
+                  >
+                    {t.phoneMethod}
+                  </button>
+                </div>
+              </div>
+
+              {registrationMethod === "email" && <div className="mb-3 position-relative">
                 <label className="form-label small fw-semibold">{t.email}</label>
                 <div
                   style={{
@@ -502,10 +545,9 @@ export default function RegisterPage({ params }) {
                 {!checkingEmail && !emailExists && formData.email && (
                   <small className="text-success">✅ {t.emailAvailable}</small>
                 )}
-              </div>
+              </div>}
 
-              {/* Phone */}
-              <div className="mb-3 position-relative">
+              {registrationMethod === "phone" && <div className="mb-3 position-relative">
                 <label className="form-label small fw-semibold">{t.phone}</label>
                 <div
                   style={{
@@ -532,9 +574,8 @@ export default function RegisterPage({ params }) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleDataChange}
-                  required
                 />
-              </div>
+              </div>}
 
               {/* Password */}
               <div className="mb-3 position-relative">
@@ -564,7 +605,7 @@ export default function RegisterPage({ params }) {
                   placeholder={t.passwordPlaceholder}
                   value={formData.password}
                   onChange={handleDataChange}
-                  minLength={6}
+                    minLength={8}
                   required
                 />
                 {visible ? (
@@ -626,7 +667,7 @@ export default function RegisterPage({ params }) {
                   placeholder={t.confirmPasswordPlaceholder}
                   value={formData.password_confirmation}
                   onChange={handleDataChange}
-                  minLength={6}
+                    minLength={8}
                   required
                 />
                 {visibleConfirm ? (

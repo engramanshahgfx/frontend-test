@@ -20,7 +20,7 @@ export default function LoginPage({ params }) {
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [userData, setUserData] = useState({
-    phone: "",
+    identifier: "",
     password: "",
   });
   
@@ -34,7 +34,7 @@ export default function LoginPage({ params }) {
     en: {
       title: "Log in to your account",
       subtitle: "Welcome back! Please enter your details",
-      phone: "Phone (e.g., +966501234567)",
+      identifier: "Email or Saudi mobile (05XXXXXXXX)",
       password: "Password",
       forgotPassword: "Forgot password?",
       login: "Login",
@@ -51,7 +51,7 @@ export default function LoginPage({ params }) {
     ar: {
       title: "تسجيل الدخول إلى حسابك",
       subtitle: "مرحبًا بعودتك! الرجاء إدخال بياناتك",
-      phone: "رقم الجوال (مثال: +966501234567)",
+      identifier: "البريد الإلكتروني أو رقم جوال سعودي (05XXXXXXXX)",
       password: "كلمة المرور",
       forgotPassword: "هل نسيت كلمة المرور؟",
       login: "تسجيل الدخول",
@@ -69,7 +69,7 @@ export default function LoginPage({ params }) {
      zh: {
     title: "登录您的账户",
     subtitle: "欢迎回来！请输入您的详细信息",
-    phone: "电话号码（例如：+966501234567）",
+    identifier: "电子邮箱或沙特手机号",
     password: "密码",
     forgotPassword: "忘记密码？",
     login: "登录",
@@ -122,7 +122,7 @@ export default function LoginPage({ params }) {
     
     try {
       const result = await login({
-        phone: userData.phone,
+        identifier: userData.identifier,
         password: userData.password,
       });
 
@@ -365,16 +365,16 @@ export default function LoginPage({ params }) {
             <form className="w-100" onSubmit={handleLogin}>
               <div className="mb-3 position-relative">
                 <input
-                  type="tel"
+                  type="text"
                   className="form-control"
                   style={{
                     borderRadius: "15px",
                     height: "50px",
                   }}
-                  placeholder={t.phone}
-                  id="userPhone"
-                  name="phone"
-                  value={userData.phone}
+                  placeholder={t.identifier}
+                  id="userIdentifier"
+                  name="identifier"
+                  value={userData.identifier}
                   onChange={handleDataChange}
                   required
                 />

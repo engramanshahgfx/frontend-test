@@ -33,6 +33,7 @@ import {
   FaChevronUp,
   FaUserCircle,
   FaSignOutAlt,
+  FaSignInAlt,
   FaUser,
   FaTiktok,
   FaSnapchat,
@@ -61,7 +62,7 @@ const REGION_LABELS = {
 export default function Navbar({ lang }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
@@ -632,22 +633,37 @@ export default function Navbar({ lang }) {
 
           <div className="header-actions">
             <LanguageSwitcher lang={lang} showFlagOnly />
-            {isAuthenticated && (
+            {!authLoading && (
               <div className="user-menu" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="user-trigger"
+                  aria-label={lang === "ar" ? "قائمة الحساب" : "Account menu"}
+                  aria-expanded={userMenuOpen}
                 >
                   <FaUserCircle size={20} />
                 </button>
                 {userMenuOpen && (
                   <div className="user-dropdown" style={{ zIndex: 1001 }}>
-                    <Link href={`/${lang}/dashboard`} className="user-link">
-                      <FaUser /> Dashboard
-                    </Link>
-                    <button onClick={logout} className="user-link logout">
-                      <FaSignOutAlt /> Logout
-                    </button>
+                    {isAuthenticated ? (
+                      <>
+                        <Link href={`/${lang}/dashboard`} className="user-link">
+                          <FaUser /> {t("nav.dashboard")}
+                        </Link>
+                        <button onClick={logout} className="user-link logout">
+                          <FaSignOutAlt /> {t("buttons.logout")}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href={`/${lang}/login`} className="user-link">
+                          <FaSignInAlt /> {t("buttons.login")}
+                        </Link>
+                        <Link href={`/${lang}/register`} className="user-link">
+                          <FaUser /> {t("buttons.register")}
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

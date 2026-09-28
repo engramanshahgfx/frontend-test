@@ -100,7 +100,7 @@ export default function DashboardPage() {
     try {
       const results = await Promise.allSettled([
         reservationsAPI.getMyReservations(),
-        bookingsAPI.getAll(),
+        bookingsAPI.getAccountBookings(),
         paymentsAPI.getAll(),
       ]);
 
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                     {bookings.map((booking) => (
                       <div key={booking.id} className="booking-card">
                         <div className="booking-header">
-                          <h3>{t.booking} #{booking.id + 1000}</h3>
+                          <h3>{booking.title || `${t.booking} #${booking.id}`}</h3>
                           {getStatusBadge(booking.status)}
                         </div>
                         <div className="booking-details">
@@ -325,15 +325,18 @@ export default function DashboardPage() {
                           {booking.details?.amount && (
                             <p><strong>{t.amount}:</strong> {formatCurrency(amountWithVAT(booking.details.amount), 'SAR', lang)}</p>
                           )}
-                          {booking.details?.trip_title && (
-                            <p><strong>{t.trip}:</strong> {booking.details.trip_title}</p>
+                          {booking.reference && (
+                            <p><strong>{t.id}:</strong> {booking.reference}</p>
+                          )}
+                          {booking.source && (
+                            <p><strong>{t.booking}:</strong> {booking.source}</p>
                           )}
                         </div>
                         <div className="booking-actions">
-                          {booking.status === 'pending' && booking.payment_status !== 'paid' && (
+                          {booking.source === 'tourism' && booking.status === 'pending' && booking.payment_status !== 'paid' && (
                             <>
                               <Link
-                                href={`/${lang}/payment?booking_id=${booking.id}`}
+                                href={`/${lang}/booking-success?booking_id=${booking.id}`}
                                 className="btn-pay"
                               >
                                 {t.payNow}
