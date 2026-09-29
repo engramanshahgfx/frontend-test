@@ -5,11 +5,22 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Sidebar, StepBar } from '@/components/akbar-booking';
 import { resolveCountryCode } from '@/lib/countries';
+// Single source of truth for the session token AND its scope. This page used to keep its own copy
+// of these helpers, which is how the scope concept ended up existing in one place and not the
+// other. See lib/akbarBookingApi.js for why a guest token is not an account session.
+import {
+  setAuthToken as persistAuthToken,
+  isGuestBookingToken as isSharedGuestToken,
+  isAuthenticated as isAccountSession,
+  DEBUG_AUTH,
+  clearAuthToken,
+} from '@/lib/akbarBookingApi';
+import { stripOneShotPaymentParams } from '@/lib/bookingUrlParams';
 import CountryField from '@/components/CountryField';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
-const STEPS = { PASSENGERS: 1, EXTRAS: 2, CHECKOUT: 3, PAYMENT: 4, CONFIRMATION: 5 };
+const STEPS = { REVIEW: 1, PASSENGERS: 2, EXTRAS: 3, CHECKOUT: 4, PAYMENT: 5, CONFIRMATION: 6 };
 
 // ─── Inline Styles ────────────────────────────────────────────────────────────
 const styles = `
@@ -819,7 +830,7 @@ export default function BookingPage() {
   const isRTL = lang === 'ar';
   const { t } = useTranslation();
 
-  const [currentStep, setCurrentStep] = useState(STEPS.PASSENGERS);
+  const [currentStep, setCurrentStep] = useState(STEPS.REVIEW);
   const [flight, setFlight] = useState(null);
   const [bundle, setBundle] = useState(null);
   const [orderReference, setOrderReference] = useState(null);
@@ -845,6 +856,18 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+  // True while we are telling the customer their quote expired and re-running the search.
+  const [offerExpired, setOfferExpired] = useState(false);
+  const reSearchTimerRef = useRef(null);
+  // In-flight guards.
+  //
+  // startBooking() and handleNextStep() are BOTH async and both were reachable twice. Because a
+  // start is only triggered when `orderReference` is still null, a second invocation that arrives
+  // before the first response commits also calls start-guest — creating a second booking and a
+  // second token. The losing token is what then authorises the winning reference, which the backend
+  // correctly rejects with 403 BOOKING_SCOPE_FORBIDDEN.
+  const startInFlightRef = useRef(false);
+  const advanceInFlightRef = useRef(false);
   const [touched, setTouched] = useState({});
   const [expandedPassengers, setExpandedPassengers] = useState({ 0: true });
 
@@ -891,12 +914,20 @@ export default function BookingPage() {
     let sess = searchParams?.get('session') || searchParams?.get('sl');
     if (!sess) {
       sess = `sl-${Math.random().toString(36).substring(2, 11)}-${Date.now()}`;
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('session', sess);
-        window.history.replaceState(null, '', url.toString());
-      } catch (e) { }
     }
+
+    // Strip the one-shot payment parameters once they have been consumed.
+    //
+    // The return handler further down reads order_ref / id / status from the `searchParams`
+    // snapshot taken at render time, so it still sees them for this pass. Only the ADDRESS BAR is
+    // cleaned — and the address bar is what a refresh uses. Leaving them in place meant every
+    // reload re-entered the payment flow and re-attempted the same booking with whatever token
+    // was in localStorage, producing BOOKING_SCOPE_FORBIDDEN on every refresh, even after
+    // clearing storage.
+    try {
+      window.history.replaceState(null, '', stripOneShotPaymentParams(window.location.href, sess));
+    } catch (e) { }
+
     setSessionId(sess);
   }, [searchParams]);
 
@@ -1014,6 +1045,9 @@ export default function BookingPage() {
       }
     }
 
+    // The booking reference arrives in the callback URL already percent-encoded by the browser
+    // (spaces become %20). URLSearchParams decodes it for us on read — never pre-encode on the
+    // write side, or it double-encodes ("%2520") and the reference matches no booking.
     const paymentStatus = searchParams.get('payment_status') || searchParams.get('status');
     const orderRef = searchParams.get('order_ref') || searchParams.get('order_reference');
     const paymentId = searchParams.get('id');
@@ -1026,26 +1060,45 @@ export default function BookingPage() {
     const currentSession = searchParams.get('session') || searchParams.get('sl');
 
     if (isTicketRequested) {
-      const activeRef = orderRef || currentSession || 'NDCEG-BR-YBFTIURJD4';
-      setOrderReference(activeRef);
-      setBookingStatus('TICKETED');
-      if (!ticketNumber) setTicketNumber('TK-' + Math.floor(1000000000 + Math.random() * 9000000000));
-      setCurrentStep(STEPS.CONFIRMATION);
-      setError(null);
-      if (orderRef) fetchBookingDetails(orderRef);
+      // Ask the server for the truth. The booking status and any ticket number must come from
+      // the booking record, never from a URL parameter.
+      if (orderRef) {
+        setOrderReference(orderRef);
+        setCurrentStep(STEPS.CONFIRMATION);
+        fetchBookingDetails(orderRef);
+      } else {
+        setError(isRTL
+          ? 'لم يتم تمرير مرجع حجز. يرجى استرجاع حجزك من صفحة حجوزاتي.'
+          : 'No booking reference was supplied. Please retrieve your booking from My Bookings.');
+      }
       setLoading(false);
       return;
     }
 
     if (orderRef) {
-      if (paymentStatus === 'cancelled' || paymentStatus === 'failed') {
-        setError(isRTL ? 'فشلت عملية الدفع أو تم إلغاؤها. لم يتم تأكيد حجزك.' : 'Payment failed or was cancelled. Your booking has NOT been confirmed.');
+      // Moyasar appends ITS OWN id/status/message to the callback URL. Those are the only
+      // trustworthy signals here: the callback_url used to hardcode `payment_status=paid`, so a
+      // booking could be reported as paid by a URL parameter alone.
+      const moyasarStatus = (searchParams.get('status') || '').toLowerCase();
+      const moyasarMessage = searchParams.get('message') || '';
+      const FAILED_STATUSES = ['failed', 'voided', 'refunded'];
+
+      const declined = FAILED_STATUSES.includes(moyasarStatus)
+        || paymentStatus === 'cancelled'
+        || paymentStatus === 'failed';
+
+      if (declined) {
+        setError(isRTL
+          ? 'فشلت عملية الدفع أو تم إلغاؤها. لم يتم تأكيد حجزك.'
+          : `Payment failed or was cancelled. Your booking has NOT been confirmed.${moyasarMessage ? ` (${moyasarMessage})` : ''}`);
         setCurrentStep(STEPS.PAYMENT);
         setLoading(false);
         return;
       }
 
-      if ((paymentStatus === 'paid' || paymentId)) {
+      if (paymentId) {
+        // The gateway issued a payment id. Whether that id constitutes PAYMENT is the server's
+        // decision, not this page's — this handler must never infer success from a URL parameter.
         setOrderReference(orderRef);
         setProcessing(true);
 
@@ -1103,7 +1156,13 @@ export default function BookingPage() {
                   || process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY 
                   || process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY 
                   || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
-                callback_url: `${window.location.origin}/${lang}/akbar-flights/booking?payment_status=paid&order_ref=${orderReference || ''}`,
+                // Do NOT encode the outcome in this URL. It used to hardcode `payment_status=paid`,
+                // which meant the return page could be told a booking was paid by a URL anyone could
+                // type. Moyasar appends its own id/status/message here; the SERVER decides. The
+                // reference is left raw: the browser percent-encodes its spaces on redirect and
+                // URLSearchParams decodes them on read, so do NOT pre-encode here (that would
+                // double-encode to "%2520" and the reference would match no booking).
+                callback_url: `${window.location.origin}/${lang}/akbar-flights/booking?order_ref=${orderReference || ''}`,
                 methods: ['creditcard', 'stcpay', 'applepay'],
                 apple_pay: {
                   country: 'SA',
@@ -1184,75 +1243,89 @@ export default function BookingPage() {
     return () => clearInterval(timer);
   }, [holdExpiresAt]);
 
-  const getAuthToken = () => typeof window !== 'undefined' ? (localStorage.getItem('authToken') || localStorage.getItem('token')) : null;
+  // Never leave the re-search redirect pending after the customer navigates away.
+  useEffect(() => () => {
+    if (reSearchTimerRef.current) clearTimeout(reSearchTimerRef.current);
+  }, []);
 
-  const getMockBookingResponse = (endpoint, body) => {
-    const mockRef = orderReference || `TLR 100 012 ${String(Math.floor(100 + Math.random() * 899)).padStart(3, '0')}`;
+  /**
+   * The canonical session token key is `auth_token`. Older builds used `authToken` / `token`;
+   * reading them here as a fallback would silently send no Authorization header, which is what
+   * produced the 401 on /bookings/start.
+   */
+  const TOKEN_SCOPE_KEY = 'auth_token_scope';
+  const getAuthToken = () => {
+    if (typeof window === 'undefined') return null;
 
-    if (endpoint.includes('/start')) {
-      return {
-        success: true,
-        data: {
-          order_reference: mockRef,
-          booking_status: 'OFFER_SELECTED',
-          message: 'Booking initiated successfully'
-        }
-      };
-    }
+    const token = localStorage.getItem('auth_token');
 
-    if (endpoint.includes('/passengers')) {
-      return {
-        success: true,
-        data: {
-          order_reference: mockRef,
-          booking_status: 'PASSENGERS_ADDED',
-          message: 'Passengers added successfully'
-        }
-      };
-    }
-
-    if (endpoint.includes('/hold')) {
-      return {
-        success: true,
-        data: {
-          order_reference: mockRef,
-          pnr: 'PNR' + Math.floor(100000 + Math.random() * 900000),
-          booking_status: 'HELD',
-          message: 'Booking held successfully'
-        }
-      };
-    }
-
-    if (endpoint.includes('/ticket') || endpoint.includes('/pay')) {
-      return {
-        success: true,
-        data: {
-          order_reference: mockRef,
-          ticket_number: 'TK-' + Math.floor(1000000000 + Math.random() * 9000000000),
-          booking_status: 'TICKETED',
-          message: 'Ticket issued successfully'
-        }
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        order_reference: mockRef,
-        booking_status: 'CONFIRMED'
+    if (token) return token;
+    for (const legacyKey of ['authToken', 'token']) {
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy) {
+        localStorage.setItem('auth_token', legacy);
+        localStorage.removeItem(legacyKey);
+        return legacy;
       }
-    };
+    }
+
+    return null;
   };
 
-  const apiCall = async (endpoint, method = 'GET', body = null) => {
+  const setAuthToken = (token, scope) => persistAuthToken(token, scope);
+
+  // Delegated to the shared module, which owns the scope rules.
+  const isAuthenticated = () => isAccountSession();
+
+  /**
+   * A booking-scoped guest token is not an account session.
+   *
+   * start-guest issues a token limited to a single booking reference. Because isAuthenticated() is
+   * only an "is there a token" test, that token made the NEXT booking take the authenticated branch
+   * and POST /bookings/start — an endpoint that creates a booking but issues NO token. The guest
+   * token from the PREVIOUS booking therefore stayed in localStorage and the following
+   * add-passengers sent it with the new reference:
+   *
+   *   403 BOOKING_SCOPE_FORBIDDEN
+   *   token_abilities:            ["booking:TLR 100 012 016"]
+   *   requested_order_reference:  "TLR 100 012 019"
+   *
+   * Tagging the scope keeps a guest on the guest path for every booking. Missing tag means a real
+   * account session, so existing logged-in customers are unaffected.
+   */
+  const isGuestBookingToken = () => isSharedGuestToken();
+
+  /**
+   * Build an Idempotency-Key for one user action.
+   *
+   * It is generated per action and reused for the whole retry cycle, so a network retry returns
+   * the original response instead of booking twice.
+   */
+  const newIdempotencyKey = (prefix) =>
+    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+  const MUTATING_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+  const apiCall = async (endpoint, method = 'GET', body = null, idempotencyKey = null) => {
     const token = getAuthToken();
+    const upperMethod = String(method).toUpperCase();
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const options = { method, headers };
-    if (body) options.body = JSON.stringify(body);
+    // Ground truth: the exact token/order_reference PAIR this request is sending. A 403
+    // BOOKING_SCOPE_FORBIDDEN means these two disagree, and this line shows which is stale.
+    if (DEBUG_AUTH) console.log('[auth] request', { endpoint, method: upperMethod, order_reference: body?.order_reference ?? null, tokenTail: token ? token.slice(-8) : null });
+
+    // Every mutating call must carry an Idempotency-Key or the API answers 428.
+    if (MUTATING_METHODS.includes(upperMethod)) {
+      headers['Idempotency-Key'] = idempotencyKey || newIdempotencyKey('idem');
+    }
+
+    const options = { method: upperMethod, headers };
+    if (body) options.body = JSON.stringify({ ...body, lang });
 
     const url = `${API_BASE}${endpoint}`;
-    console.log(`📡 API Call: ${method} ${url}`, body);
+    console.log(`📡 API Call: ${upperMethod} ${url}`, body);
 
     try {
       const response = await fetch(url, options);
@@ -1290,22 +1363,103 @@ export default function BookingPage() {
           }
         }
 
-        throw new Error(errorMsg);
+        // Preserve the machine-readable code so callers can react to specific failures
+        // (e.g. OFFER_NOT_FOUND) instead of pattern-matching a human message.
+        const apiError = new Error(errorMsg);
+        apiError.status = response.status;
+        apiError.code = data?.error?.code || data?.code || null;
+        throw apiError;
       }
 
       console.log(`✅ API Success:`, data);
       return data;
     } catch (err) {
       console.error('❌ API Call failed:', err.message);
-      if (err.message === 'Failed to fetch' || err.name === 'TypeError' || err.message?.includes('fetch')) {
-        console.warn(`⚠️ Network offline/Backend unreachable for ${endpoint}. Returning fallback mock response.`);
-        return getMockBookingResponse(endpoint, body);
+
+      // The backend is the only source of truth for a booking. When it cannot be reached the
+      // request must fail loudly so the customer is told the truth. Never invent a booking,
+      // PNR or ticket number here.
+      const unreachable = err?.name === 'TypeError' || String(err?.message || '').includes('fetch');
+
+      // A booking-scoped token the server rejects can never succeed on retry: the reference in
+      // play is not the one the token was minted for. Drop it here, once, so the next attempt
+      // starts a clean guest booking instead of repeating the same 403 forever.
+      if (err?.code === 'BOOKING_SCOPE_FORBIDDEN' || err?.status === 403) {
+        try { clearAuthToken(); } catch (e) { }
       }
-      throw err;
+
+      const wrapped = new Error(
+        unreachable
+          ? 'We could not reach the booking service. Please check your connection and try again. Your booking has NOT been confirmed.'
+          : (err?.message || 'The booking request failed. Your booking has NOT been confirmed.')
+      );
+
+      // Preserve the machine-readable fields. Wrapping in a plain Error used to drop `code` and
+      // `status`, which silently made every caller-specific branch dead code — including offer
+      // expiry (it only worked because of its wording regex) and scope rejection.
+      wrapped.code = err?.code || null;
+      wrapped.status = err?.status || null;
+
+      throw wrapped;
     }
   };
 
+  /** Error codes the API returns when a quote is no longer bookable. */
+  const OFFER_EXPIRED_CODES = ['OFFER_NOT_FOUND', 'OFFER_EXPIRED', 'SEARCH_EXPIRED', 'QUOTE_EXPIRED'];
+
+  /**
+   * Was this failure caused by a quote that is no longer bookable?
+   *
+   * Matches on the machine-readable code first, then falls back to the supplier wording
+   * ("No Available Offers / Selected Offer Expired").
+   */
+  const isOfferExpiredError = (err) => {
+    if (!err) return false;
+    if (OFFER_EXPIRED_CODES.includes(err.code)) return true;
+
+    return /no longer exists or has expired|offer.*expired|selected offer expired|no available offers/i.test(
+      String(err.message || '')
+    );
+  };
+
+  /**
+   * Rebuild the search URL for the chosen flight so an expired quote can be replaced with
+   * fresh prices for exactly the same itinerary.
+   */
+  const buildSearchUrl = () => {
+    const origin = flight?.origin || flight?.legs?.[0]?.from || '';
+    const destination = flight?.destination || flight?.legs?.[0]?.to || '';
+    const date = flight?.departureDate || flight?.legs?.[0]?.date || '';
+    const cabin = bundle?.cabin || flight?.cabinClass || 'Economy';
+    const adults = flight?.adults || 1;
+
+    return `/${lang}/flights/${origin}-${destination}/${date}/${cabin}/${adults}Adult`;
+  };
+
+  /** Flight details persisted against the order. Shared by the authenticated and guest paths. */
+  const buildFlightData = () => ({
+    origin: flight?.origin || flight?.legs?.[0]?.from,
+    destination: flight?.destination || flight?.legs?.[0]?.to,
+    origin_airport: flight?.originAirport || flight?.legs?.[0]?.originAirport || flight?.origin,
+    destination_airport: flight?.destinationAirport || flight?.legs?.[0]?.destinationAirport || flight?.destination,
+    departure_date: flight?.departureDate || flight?.legs?.[0]?.date,
+    departure_time: flight?.depTime || flight?.legs?.[0]?.dep,
+    arrival_time: flight?.arrTime || flight?.legs?.[0]?.arr,
+    airline: flight?.airline || flight?.legs?.[0]?.airline,
+    flight_number: flight?.flightNo || flight?.flightNumber || flight?.legs?.[0]?.flightNo,
+    duration: flight?.duration || flight?.legs?.[0]?.duration,
+    cabinClass: bundle?.cabin || 'economy',
+    price: calculateTotal(),
+    total_amount: calculateTotal(),
+  });
+
   const startBooking = async () => {
+    // A booking may only be started once per attempt. The guard lives in the function rather than a
+    // useEffect because nothing mounts a booking: startBooking() is called from a click handler.
+    if (startInFlightRef.current) {
+      throw new Error('A booking is already being started. Please wait a moment.');
+    }
+    startInFlightRef.current = true;
     setProcessing(true);
     setError(null);
     try {
@@ -1314,28 +1468,54 @@ export default function BookingPage() {
 
       console.log('Starting booking with:', { offerId, flightData: flight });
 
-      const data = await apiCall('/v2/akbar/bookings/start', 'POST', {
-        offer_id: offerId,
-        bundle_id: bundle?.bundleId || bundle?.id,
-        total_amount: calculateTotal(),
-        flight_data: {
-          origin: flight?.origin || flight?.legs?.[0]?.from,
-          destination: flight?.destination || flight?.legs?.[0]?.to,
-          origin_airport: flight?.originAirport || flight?.legs?.[0]?.originAirport || flight?.origin,
-          destination_airport: flight?.destinationAirport || flight?.legs?.[0]?.destinationAirport || flight?.destination,
-          departure_date: flight?.departureDate || flight?.legs?.[0]?.date,
-          departure_time: flight?.depTime || flight?.legs?.[0]?.dep,
-          arrival_time: flight?.arrTime || flight?.legs?.[0]?.arr,
-          airline: flight?.airline || flight?.legs?.[0]?.airline,
-          flight_number: flight?.flightNo || flight?.flightNumber || flight?.legs?.[0]?.flightNo,
-          duration: flight?.duration || flight?.legs?.[0]?.duration,
-          cabinClass: bundle?.cabin || 'economy',
-          price: calculateTotal(),
-          total_amount: calculateTotal()
-        },
-      });
+      // POST /bookings/start is behind auth:sanctum and answers 401 for an anonymous caller. It also
+      // issues NO token, so a booking-scoped guest token must never route here: the previous
+      // booking's token would survive and then fail the scope check on add-passengers. Guests stay
+      // on start-guest for every booking, which reuses their account by email and mints a fresh
+      // token scoped to the new reference.
+      const authenticated = isAuthenticated() && !isGuestBookingToken();
+      const endpoint = authenticated
+        ? '/v2/akbar/bookings/start'
+        : '/v2/akbar/bookings/start-guest';
+
+      // One key for this user action, generated before the request so a retry reuses it.
+      const idempotencyKey = newIdempotencyKey(authenticated ? 'idem-start' : 'idem-start-guest');
+
+      const contact = passengers[0] || {};
+
+      const payload = authenticated
+        ? {
+            offer_id: offerId,
+            bundle_id: bundle?.bundleId || bundle?.id,
+            total_amount: calculateTotal(),
+            flight_data: buildFlightData(),
+          }
+        : {
+            offer_id: offerId,
+            email: contact.email || undefined,
+            first_name: contact.firstName || undefined,
+            last_name: contact.lastName || undefined,
+            mobile: contact.phone || undefined,
+          };
+
+      console.log(`Starting booking as ${authenticated ? 'authenticated customer' : 'guest'} via ${endpoint}`);
+
+      const data = await apiCall(endpoint, 'POST', payload, idempotencyKey);
 
       console.log('Booking API response:', data);
+
+      // Always adopt the token the server just issued.
+      //
+      // This used to be gated on `!authenticated`, so a stale booking-scoped token left in
+      // localStorage by an earlier booking suppressed the new one. The following add-passengers
+      // call then sent the OLD token with the NEW reference, and the backend answered
+      // 403 BOOKING_SCOPE_FORBIDDEN — the reference exists, it just is not this token's booking.
+      const guestToken = data?.data?.token || data?.token;
+      if (guestToken) {
+        // Tag the scope so the next booking does not mistake this for an account session.
+        setAuthToken(guestToken, 'guest');
+        console.log('Guest booking token stored as auth_token (scope=guest).');
+      }
 
       // Extract order reference from various possible locations
       const ref = data?.data?.order_reference || data?.order_reference || data?.orderReference;
@@ -1350,11 +1530,27 @@ export default function BookingPage() {
       console.log('Order reference set:', ref);
       return data;
     } catch (err) {
+      // A quote only lives for the search cache TTL. When it is gone the customer must be told
+      // plainly and given fresh prices, never shown a stale one.
+      if (isOfferExpiredError(err)) {
+        setError(isRTL
+          ? 'انتهت صلاحية هذا السعر. جاري البحث عن أسعار جديدة...'
+          : 'This price has expired. Re-searching for fresh offers...');
+        setOfferExpired(true);
+
+        const searchUrl = buildSearchUrl();
+        console.log('Offer expired — re-searching:', searchUrl);
+        reSearchTimerRef.current = setTimeout(() => router.push(searchUrl), 2500);
+
+        return;
+      }
+
       const msg = `Failed to start booking: ${err.message}`;
       console.error(msg, err);
       setError(msg);
       throw err;
     } finally {
+      startInFlightRef.current = false;
       setProcessing(false);
     }
   };
@@ -1368,6 +1564,9 @@ export default function BookingPage() {
     }
     setProcessing(true); setError(null);
     try {
+      // One key for this action: re-submitting the same passenger list returns the first result
+      // rather than adding them twice.
+      const idempotencyKey = newIdempotencyKey('idem-passengers');
       const data = await apiCall('/v2/akbar/bookings/passengers', 'POST', {
         order_reference: ref,
         total_amount: calculateTotal(),
@@ -1386,18 +1585,31 @@ export default function BookingPage() {
           total_amount: calculateTotal()
         },
         passengers: passengers.map(p => ({ passenger_type: p.type, title: p.title, first_name: p.firstName, middle_name: p.middleName, last_name: p.lastName, date_of_birth: p.dateOfBirth, birth_date: p.dateOfBirth, dateOfBirth: p.dateOfBirth, gender: p.gender, nationality: resolveCountryCode(p.nationality), document_type: p.documentType, document_number: p.documentNumber, passport_number: p.documentNumber, document_expiry: p.documentExpiry, passport_expiry: p.documentExpiry, document_issuing_country: resolveCountryCode(p.documentIssuingCountry), email: p.email, phone: p.phone })),
-      });
+      }, idempotencyKey);
       const pd = data?.data || data;
       setBookingStatus(pd.booking_status || 'PASSENGERS_ADDED');
       return data;
-    } catch (err) { setError(err.message); throw err; } finally { setProcessing(false); }
+    } catch (err) {
+      // A booking-scoped token can only ever touch its own booking. If the server rejects the
+      // scope, this session is out of sync (normally a stale token from an earlier booking) and
+      // the customer must be told plainly, because retrying the same form can never succeed.
+      if (err?.code === 'BOOKING_SCOPE_FORBIDDEN' || err?.status === 403) {
+        setError(isRTL
+          ? 'جلستك غير متزامنة. يرجى تحديث الصفحة والمحاولة مرة أخرى.'
+          : 'Your session got out of sync. Please refresh the page and try again.');
+      } else {
+        setError(err.message);
+      }
+      throw err;
+    } finally { setProcessing(false); }
   };
 
   const holdBooking = async () => {
     if (!orderReference) throw new Error('Order not started');
     setProcessing(true); setError(null);
     try {
-      const data = await apiCall('/v2/akbar/bookings/hold', 'POST', { order_reference: orderReference, hold_duration: 30, selected_extras: extras, total_amount: calculateTotal() });
+      const idempotencyKey = newIdempotencyKey('idem-hold');
+      const data = await apiCall('/v2/akbar/bookings/hold', 'POST', { order_reference: orderReference, hold_duration: 30, selected_extras: extras, total_amount: calculateTotal() }, idempotencyKey);
       const hd = data?.data || data;
       setBookingStatus(hd.booking_status || 'HELD');
       setAirlinePnr(hd.airline_pnr || hd.airlinePnr);
@@ -1406,23 +1618,38 @@ export default function BookingPage() {
     } catch (err) { setError(err.message); throw err; } finally { setProcessing(false); }
   };
 
+  /**
+   * UI-only transition to the payment step.
+   *
+   * This deliberately does NOT report success: it makes no network call, so claiming
+   * `success: true` would tell the caller that a payment was initiated when nothing was sent to
+   * the backend. The only function that may report a payment outcome is `handleSubmitPayment`,
+   * and only from the backend's own response.
+   */
   const initiatePayment = async () => {
     if (!orderReference) throw new Error('Order not started');
     setBookingStatus('PENDING_PAYMENT');
-    return { success: true, order_reference: orderReference };
+    return { ui_step: 'PENDING_PAYMENT', order_reference: orderReference };
   };
 
   const handleSubmitPayment = async () => {
     setProcessing(true);
     setError(null);
     try {
-      const ref = orderReference || ('NDCEG-BR-' + Math.random().toString(36).substring(2, 10).toUpperCase());
+      // Never invent a booking reference. A fabricated reference cannot exist server-side, so it
+      // would 404 (or 403 against a booking-scoped guest token) and could be mistaken for a real
+      // booking if the failure were swallowed.
+      const ref = orderReference;
+      if (!ref) {
+        throw new Error('Order not started. Please complete the booking start process first.');
+      }
+      const idempotencyKey = newIdempotencyKey('idem-pay');
       const data = await apiCall('/v2/akbar/bookings/pay', 'POST', {
         order_reference: ref,
         amount: calculateTotal(),
         currency: 'SAR',
         payment_method: selectedPaymentMethod || 'creditcard'
-      });
+      }, idempotencyKey);
       setCurrentStep(STEPS.CONFIRMATION);
       fetchBookingDetails(ref);
       return data;
@@ -1509,7 +1736,10 @@ export default function BookingPage() {
 
       // Extract nested response data (backend returns { success, data: { ... } })
       const rd = data?.data || data;
-      setBookingStatus(rd.booking_status || rd.status || 'TICKETED');
+      // Only the server may declare a booking ticketed.
+      if (rd.booking_status || rd.status) {
+        setBookingStatus(rd.booking_status || rd.status);
+      }
       setAirlinePnr(rd.airline_pnr || rd.airlinePnr || airlinePnr);
 
       // Extract ticket number from response
@@ -1551,12 +1781,28 @@ export default function BookingPage() {
       if (!p.documentExpiry) missing.push('Passport Expiry Date');
       if (!p.nationality) missing.push('Nationality');
       if (!p.documentIssuingCountry) missing.push('Passport Issuing Country');
-      if (p.nationality && !resolveCountryCode(p.nationality)) missing.push('Valid nationality (country name or two-letter code, e.g. PK)');
-      if (p.documentIssuingCountry && !resolveCountryCode(p.documentIssuingCountry)) missing.push('Valid passport issuing country (country name or two-letter code, e.g. PK)');
       if (missing.length > 0) {
         setError(`Passenger ${i + 1}: Please fill in ${missing.join(', ')}`);
         return false;
       }
+
+      // A date of birth in the future is never a legitimate booking. The backend rejects it too
+      // (INVALID_BIRTH_DATE), but catching it here keeps the customer on the form with the value
+      // they can actually correct instead of bouncing off a server error.
+      const dob = new Date(p.dateOfBirth);
+      const dobCutoff = new Date();
+      dobCutoff.setHours(23, 59, 59, 999);
+
+      if (Number.isNaN(dob.getTime())) {
+        setError(`Passenger ${i + 1}: Date of Birth is not a valid date`);
+        return false;
+      }
+
+      if (dob > dobCutoff) {
+        setError(`Passenger ${i + 1}: Date of Birth cannot be in the future`);
+        return false;
+      }
+
       const expiry = new Date(p.documentExpiry);
       const travelDate = flight?.departureDate || flight?.legs?.[0]?.date;
       if (travelDate) {
@@ -1608,9 +1854,15 @@ export default function BookingPage() {
   };
 
   const handleNextStep = async () => {
+    // The handler awaits the network, so a double click runs it twice. The second run still sees a
+    // null orderReference and therefore calls startBooking() again — the duplicate-booking path.
+    if (advanceInFlightRef.current) return;
+    advanceInFlightRef.current = true;
     setError(null);
     try {
-      if (currentStep === STEPS.PASSENGERS) {
+      if (currentStep === STEPS.REVIEW) {
+        setCurrentStep(STEPS.PASSENGERS);
+      } else if (currentStep === STEPS.PASSENGERS) {
         if (!validatePassengers()) return; // Error already set by validatePassengers
 
         // Start booking if needed
@@ -1639,12 +1891,14 @@ export default function BookingPage() {
     } catch (err) {
       console.error('Step error:', err);
       setError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      advanceInFlightRef.current = false;
     }
   };
 
   const handlePreviousStep = () => {
     setError(null); // Clear errors when going back
-    if (currentStep > STEPS.PASSENGERS) setCurrentStep(currentStep - 1);
+    if (currentStep > STEPS.REVIEW) setCurrentStep(currentStep - 1);
     else router.push(`/${lang}/akbar-flights`);
   };
 
@@ -1700,6 +1954,134 @@ export default function BookingPage() {
   );
 
   // ─── Passengers Step ────────────────────────────────────────────────────────
+  const renderReview = () => {
+    if (!flight) return null;
+    
+    return (
+      <div className="card">
+        <h2 className="card-title" style={{ fontSize: '1.5rem', marginBottom: '24px' }}>
+          {isRTL ? 'مراجعة تفاصيل الرحلة' : 'Review Flight Details'}
+        </h2>
+        
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          {/* Left Column: Itinerary */}
+          <div style={{ flex: '2 1 500px' }}>
+            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <img src={`https://pics.avs.io/100/100/${flight.airlineCode}.png`} alt={flight.airline} style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                <div>
+                  <div style={{ fontWeight: '700', color: '#0f172a' }}>{flight.airline}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Flight {flight.flightNo}</div>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{flight.depTime}</div>
+                  <div style={{ color: '#64748b' }}>{flight.origin}</div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '4px', color: '#0f172a' }}>{formatDate(flight.departureDate)}</div>
+                </div>
+                
+                <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>{flight.duration}</div>
+                  <div style={{ height: '2px', background: '#cbd5e1', position: 'relative' }}>
+                    <div style={{ position: 'absolute', right: 0, top: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: '#0284c7' }} />
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#00875a', marginTop: '4px', fontWeight: '600' }}>Direct</div>
+                </div>
+                
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{flight.arrTime}</div>
+                  <div style={{ color: '#64748b' }}>{flight.destination}</div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '4px', color: '#0f172a' }}>{formatDate(flight.departureDate)}</div>
+                </div>
+              </div>
+            </div>
+            
+            {flight.isRoundTrip && flight.legs[1] && (
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                <div style={{ fontWeight: '700', marginBottom: '16px', color: '#0284c7' }}>{isRTL ? 'العودة' : 'Return'}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{flight.legs[1].dep}</div>
+                    <div style={{ color: '#64748b' }}>{flight.legs[1].from}</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '4px', color: '#0f172a' }}>{formatDate(flight.legs[1].date)}</div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>{flight.legs[1].duration}</div>
+                    <div style={{ height: '2px', background: '#cbd5e1', position: 'relative' }}>
+                      <div style={{ position: 'absolute', right: 0, top: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: '#0284c7' }} />
+                    </div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{flight.legs[1].arr}</div>
+                    <div style={{ color: '#64748b' }}>{flight.legs[1].to}</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '4px', color: '#0f172a' }}>{formatDate(flight.legs[1].date)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Fare & Baggage */}
+          <div style={{ flex: '1 1 300px' }}>
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+              <div style={{ paddingBottom: '16px', borderBottom: '1px solid #e2e8f0', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: '0 0 16px 0', color: '#0f172a' }}>
+                  {isRTL ? 'تفاصيل السعر المختار' : 'Selected Fare Details'}
+                </h3>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#64748b' }}>{isRTL ? 'نوع السعر' : 'Fare Type'}</span>
+                  <span style={{ fontWeight: '700', color: '#0284c7' }}>{flight.fareType || 'Economy'}</span>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <span style={{ color: '#0f172a', fontWeight: '700' }}>{isRTL ? 'السعر الإجمالي' : 'Total Price'}</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a' }}>{flight.price} {flight.currency}</span>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', marginBottom: '12px' }}>{isRTL ? 'الأمتعة المسموح بها' : 'Baggage Allowance'}</h4>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569' }}>
+                  <svg width="16" height="16" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <span>{flight.cabinBaggage || '7 kg Cabin baggage'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: '#475569' }}>
+                  {flight.checkedBaggage?.includes('No') ? (
+                    <svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  ) : (
+                    <svg width="16" height="16" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                  <span>{flight.checkedBaggage || 'No Checked baggage'}</span>
+                </div>
+              </div>
+              
+              {(flight.cancellationRule || flight.changeRule) && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', marginBottom: '12px' }}>{isRTL ? 'قواعد الإلغاء' : 'Cancellation Rules'}</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: '#475569' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ color: '#0284c7', marginTop: '2px' }}>ℹ️</span>
+                      <span>{flight.cancellationRule}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ color: '#0284c7', marginTop: '2px' }}>ℹ️</span>
+                      <span>{flight.changeRule}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderPassengers = () => (
     <div>
       {/* Log-in vs Guest Choice Banner */}
@@ -2548,7 +2930,7 @@ export default function BookingPage() {
         <div style={{ padding: '14px 24px', background: '#fafafa', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginRight: 6 }}>{t('flightBooking.confirmationStep.ticketNumber')}:</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{ticketNumber || passengers[0]?.ticketNumber || '712-81709422'}</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{ticketNumber || passengers[0]?.ticketNumber || '—'}</span>
           </div>
           <div>
             <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginRight: 6 }}>{t('flightBooking.confirmationStep.paymentStatus')}:</span>
@@ -2632,35 +3014,9 @@ export default function BookingPage() {
       <style dangerouslySetInnerHTML={{ __html: styles }} />
       <div className="booking-root">
         {currentStep !== STEPS.CONFIRMATION && renderStepBar()}
-        {currentStep !== STEPS.CONFIRMATION && (
-          <div style={{ maxWidth: 1100, margin: '8px auto 0 auto', padding: '0 16px', display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => {
-                setOrderReference(orderReference || sessionId || 'NDCEG-BR-YBFTIURJD4');
-                setBookingStatus('TICKETED');
-                if (!ticketNumber) setTicketNumber('TK-' + Math.floor(1000000000 + Math.random() * 9000000000));
-                setCurrentStep(STEPS.CONFIRMATION);
-                setError(null);
-              }}
-              style={{
-                background: '#E85D1F',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                padding: '6px 16px',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                boxShadow: '0 2px 6px rgba(232, 93, 31, 0.25)'
-              }}
-            >
-              🎟️ {isRTL ? 'معاينة / عرض التذكرة الإلكترونية' : 'View / See E-Ticket'}
-            </button>
-          </div>
-        )}
+        {/* The former "View / See E-Ticket" shortcut was removed: it set the status to TICKETED
+            and minted a ticket number in the browser without asking the server. A ticket view
+            must always be driven by a real booking reference. */}
 
         <div className="booking-body">
           {error && (
@@ -2670,11 +3026,33 @@ export default function BookingPage() {
             </div>
           )}
 
+          {offerExpired && (
+            <div
+              className="offer-expired-banner"
+              role="status"
+              aria-live="polite"
+              style={{
+                gridColumn: '1 / -1',
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e',
+                borderRadius: 8, padding: '12px 16px', marginBottom: 12, fontWeight: 600,
+              }}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {isRTL
+                ? 'انتهت صلاحية هذا السعر. يتم الآن جلب أسعار جديدة لنفس الرحلة.'
+                : 'This price is no longer available. Fetching fresh prices for the same flight.'}
+            </div>
+          )}
+
           {currentStep === STEPS.CONFIRMATION ? (
             renderConfirmation()
           ) : (
             <>
               <main className="booking-main">
+                {currentStep === STEPS.REVIEW && renderReview()}
                 {currentStep === STEPS.PASSENGERS && renderPassengers()}
                 {currentStep === STEPS.EXTRAS && renderExtras()}
                 {currentStep === STEPS.CHECKOUT && renderCheckout()}

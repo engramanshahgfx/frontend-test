@@ -165,6 +165,8 @@ export default function AkbarFlights({ initialParams }) {
 
   const [showPaxModal, setShowPaxModal] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null); // 'origin' | 'dest' | 'leg-X-origin' | 'leg-X-dest' | null
+  const [showFareModal, setShowFareModal] = useState(false);
+  const [selectedFareOffer, setSelectedFareOffer] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [backendAirports, setBackendAirports] = useState([]);
 
@@ -610,10 +612,22 @@ export default function AkbarFlights({ initialParams }) {
   };
 
   const selectOffer = (offer) => {
+    setSelectedFareOffer(offer);
+    setShowFareModal(true);
+  };
+
+  const confirmFare = (fareDetails) => {
+    const offer = selectedFareOffer;
     const isRoundTrip = tripType === 'roundtrip' && !!returnDate;
     const numAdults = adults || 1;
     const numChildren = children || 0;
     const numInfants = infants || 0;
+    
+    // Calculate new price based on fare selection
+    const basePrice = parseFloat(offer.price) || 0;
+    const extraPrice = parseFloat(fareDetails.priceAddition) || 0;
+    const finalPrice = basePrice + extraPrice;
+
     const stored = {
       offerId: offer.offerId,
       airline: offer.airline,
@@ -627,10 +641,13 @@ export default function AkbarFlights({ initialParams }) {
       depTime: offer.departureTime,
       arrTime: offer.arrivalTime,
       duration: offer.duration,
-      price: offer.price,
+      price: finalPrice,
       currency: offer.currency,
-      checkedBaggage: offer.checkedBaggage,
-      cabinBaggage: offer.cabinBaggage,
+      checkedBaggage: fareDetails.checkedBaggage || offer.checkedBaggage,
+      cabinBaggage: fareDetails.cabinBaggage || offer.cabinBaggage,
+      fareType: fareDetails.name,
+      cancellationRule: fareDetails.cancellationRule,
+      changeRule: fareDetails.changeRule,
       adults: numAdults,
       children: numChildren,
       infants: numInfants,
@@ -646,8 +663,8 @@ export default function AkbarFlights({ initialParams }) {
           dep: offer.departureTime,
           arr: offer.arrivalTime,
           duration: offer.duration,
-          checkedBaggage: offer.checkedBaggage,
-          cabinBaggage: offer.cabinBaggage,
+          checkedBaggage: fareDetails.checkedBaggage || offer.checkedBaggage,
+          cabinBaggage: fareDetails.cabinBaggage || offer.cabinBaggage,
           isDirect: offer.stops === 0
         },
         ...(isRoundTrip ? [{
@@ -660,8 +677,8 @@ export default function AkbarFlights({ initialParams }) {
           dep: offer.departureTime,
           arr: offer.arrivalTime,
           duration: offer.duration,
-          checkedBaggage: offer.checkedBaggage,
-          cabinBaggage: offer.cabinBaggage,
+          checkedBaggage: fareDetails.checkedBaggage || offer.checkedBaggage,
+          cabinBaggage: fareDetails.cabinBaggage || offer.cabinBaggage,
           isDirect: offer.stops === 0
         }] : [])
       ],
@@ -1890,6 +1907,106 @@ export default function AkbarFlights({ initialParams }) {
           </div>
         )}
       </div>
+
+      {showFareModal && selectedFareOffer && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 960,
+            maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column'
+          }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                {isRTL ? 'اختر فئة السعر' : 'Select Fare Type'}
+              </h2>
+              <button onClick={() => setShowFareModal(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+            
+            <div style={{ padding: 24, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              {/* Fare Option 1: Basic */}
+              <div style={{ flex: '1 1 280px', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>{isRTL ? 'الأساسي' : 'Basic'}</h3>
+                  <div style={{ fontWeight: 700, color: '#64748b' }}>+ 0 {selectedFareOffer.currency}</div>
+                </div>
+                
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, fontSize: '0.9rem', color: '#475569' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الأمتعة' : 'Baggage allowance'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FaCheckCircle color="#10b981" /> 7 kg Cabin baggage</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, color: '#ef4444' }}><FaTimes /> No Checked baggage</div>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الإلغاء وتغيير الموعد' : 'Cancel & date change'}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}><FaCheckCircle color="#0284c7" style={{ marginTop: 3 }} /> If you cancel, you will get a partial amount as credit with the airline</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><FaCheckCircle color="#10b981" /> Changeable with fees</div>
+                  </div>
+                </div>
+                
+                <button onClick={() => confirmFare({ name: 'Basic', priceAddition: 0, checkedBaggage: 'No Checked baggage', cabinBaggage: '7 kg', cancellationRule: 'Partial credit with airline', changeRule: 'Changeable with fees' })} style={{ marginTop: 24, width: '100%', padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
+                  {isRTL ? 'اختر الأساسي' : 'Select Basic'}
+                </button>
+              </div>
+
+              {/* Fare Option 2: Value */}
+              <div style={{ flex: '1 1 280px', border: '2px solid #0284c7', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#0284c7', color: '#fff', padding: '4px 12px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700 }}>{isRTL ? 'الأكثر اختياراً' : 'Most Popular'}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: 8 }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#0284c7' }}>{isRTL ? 'القيّمة' : 'Value'}</h3>
+                  <div style={{ fontWeight: 700, color: '#0284c7' }}>+ 147 {selectedFareOffer.currency}</div>
+                </div>
+                
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, fontSize: '0.9rem', color: '#475569' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الأمتعة' : 'Baggage allowance'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FaCheckCircle color="#10b981" /> 7 kg Cabin baggage</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><FaCheckCircle color="#10b981" /> 20 kg Checked baggage</div>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الإلغاء وتغيير الموعد' : 'Cancel & date change'}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}><FaCheckCircle color="#0284c7" style={{ marginTop: 3 }} /> If you cancel, you will get a partial amount as credit with the airline</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><FaCheckCircle color="#10b981" /> Changeable without fees</div>
+                  </div>
+                </div>
+                
+                <button onClick={() => confirmFare({ name: 'Value', priceAddition: 147, checkedBaggage: '20 kg Checked baggage', cabinBaggage: '7 kg', cancellationRule: 'Partial credit with airline', changeRule: 'Changeable without fees' })} style={{ marginTop: 24, width: '100%', padding: '12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
+                  {isRTL ? 'اختر القيّمة' : 'Select Value'}
+                </button>
+              </div>
+
+              {/* Fare Option 3: Ultimate */}
+              <div style={{ flex: '1 1 280px', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>{isRTL ? 'المطلقة' : 'Ultimate'}</h3>
+                  <div style={{ fontWeight: 700, color: '#64748b' }}>+ 614 {selectedFareOffer.currency}</div>
+                </div>
+                
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, fontSize: '0.9rem', color: '#475569' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الأمتعة' : 'Baggage allowance'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FaCheckCircle color="#10b981" /> 7 kg Cabin baggage</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><FaCheckCircle color="#10b981" /> 40 kg Checked baggage</div>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{isRTL ? 'الإلغاء وتغيير الموعد' : 'Cancel & date change'}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}><FaCheckCircle color="#10b981" style={{ marginTop: 3 }} /> If you cancel, you will receive credit with the airline</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><FaCheckCircle color="#10b981" /> Changeable without fees</div>
+                  </div>
+                </div>
+                
+                <button onClick={() => confirmFare({ name: 'Ultimate', priceAddition: 614, checkedBaggage: '40 kg Checked baggage', cabinBaggage: '7 kg', cancellationRule: 'Full credit with airline', changeRule: 'Changeable without fees' })} style={{ marginTop: 24, width: '100%', padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
+                  {isRTL ? 'اختر المطلقة' : 'Select Ultimate'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -296,7 +296,16 @@ All endpoints under `/api/v2/akbar/bookings/`:
 | `/{ref}/confirm` | POST | Confirm with akbar | CONFIRMED |
 | `/{ref}/ticket` | POST | Issue e-ticket | TICKETED |
 | `/{ref}` | GET | Get booking details | - |
-| `/{ref}/cancel` | POST | Cancel booking | CANCELLED |
+| `/{ref}/cancellation-request` | POST | Ask support to cancel (customer path) | unchanged |
+
+> **Cancellation is not a customer capability.** It releases the seat with the airline and moves
+> money, so `POST /api/v2/akbar/cancel` is support/admin only: guests receive `401` and
+> signed-in customers (including guest booking tokens) receive `403`.
+>
+> Customers use `POST /api/v2/akbar/bookings/{ref}/cancellation-request` with a `reason`. That
+> endpoint records a cancellation request and emails the support team, and changes **nothing**
+> else — no airline cancellation, no refund, no status change. Support decides and then runs the
+> admin cancellation.
 
 ---
 

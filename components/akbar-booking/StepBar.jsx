@@ -9,10 +9,12 @@ export default function StepBar({ currentStep = 1, onStepChange }) {
   const lang = language || 'en';
 
   const steps = [
-    { n: 1, label: lang === 'ar' ? 'اختر رحلتك' : 'Choose your flight', path: '' },
-    { n: 2, label: lang === 'ar' ? 'أدخل بياناتك' : 'Enter your details', path: '/passengers' },
-    { n: 3, label: lang === 'ar' ? 'تفاصيل الدفع' : 'Payment Details', path: '/checkout' },
+    { n: 1, label: lang === 'ar' ? 'مراجعة الرحلة' : 'Flight Details', path: '' },
+    { n: 2, label: lang === 'ar' ? 'أدخل بياناتك' : 'Personal Details', path: '/passengers' },
+    { n: 3, label: lang === 'ar' ? 'الإضافات' : 'Extras', path: '/extras' },
+    { n: 4, label: lang === 'ar' ? 'تفاصيل الدفع' : 'Payment Details', path: '/checkout' },
   ];
+
 
   const handleStepClick = (s) => {
     if (onStepChange) {
@@ -27,8 +29,8 @@ export default function StepBar({ currentStep = 1, onStepChange }) {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
         {steps.map((s, i) => {
           const isDone = s.n < currentStep;
-          const isActive = s.n === currentStep;
-          const isClickable = s.n <= currentStep;
+          const isActive = s.n === currentStep || (s.n === 4 && currentStep === 5);
+          const isClickable = s.n <= currentStep || (s.n === 4 && currentStep === 5);
           
           return (
             <div key={s.n} style={{ display: 'flex', alignItems: 'center' }}>
