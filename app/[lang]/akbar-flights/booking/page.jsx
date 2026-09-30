@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Sidebar, StepBar } from '@/components/akbar-booking';
 import { resolveCountryCode } from '@/lib/countries';
+import { getMoyasarPublishableKey } from '@/lib/moyasarClientKey';
 // Single source of truth for the session token AND its scope. This page used to keep its own copy
 // of these helpers, which is how the scope concept ended up existing in one place and not the
 // other. See lib/akbarBookingApi.js for why a guest token is not an account session.
@@ -1147,15 +1148,26 @@ export default function BookingPage() {
               const amountInHalalas = Math.round(currentTotal * 100);
               targetEl.innerHTML = '';
 
+              // No test-key fallback: a hardcoded `pk_test_…` literal used to sit at the end of this
+              // chain, so a deployment without NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY silently created
+              // payments in Moyasar's test account while the backend verified them with another
+              // account's secret key. Every lookup 404'd and no card could be ticketed, with nothing
+              // in the UI explaining it. Refuse loudly instead.
+              const publishableKey = getMoyasarPublishableKey();
+              if (!publishableKey) {
+                console.error('[Moyasar] NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY is not configured for this origin.');
+                setError(isRTL
+                  ? 'بوابة الدفع غير مهيأة حاليًا. يرجى التواصل مع الدعم.'
+                  : 'The payment gateway is not configured. Please contact support.');
+                return;
+              }
+
               window.Moyasar.init({
                 element: '.mysr-form',
                 amount: amountInHalalas,
                 currency: 'SAR',
                 description: `NDC Flight Booking (${orderReference || 'NDCEG-BR-YBFTIURJD4'})`,
-                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY 
-                  || process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY 
-                  || process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY 
-                  || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
+                publishable_api_key: publishableKey,
                 // Do NOT encode the outcome in this URL. It used to hardcode `payment_status=paid`,
                 // which meant the return page could be told a booking was paid by a URL anyone could
                 // type. Moyasar appends its own id/status/message here; the SERVER decides. The

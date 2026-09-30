@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { akbarHotelApi } from '@/lib/akbarHotelApi';
+import { getMoyasarPublishableKey } from '@/lib/moyasarClientKey';
 import {
   FaBuilding,
   FaCalendarAlt,
@@ -289,15 +290,24 @@ export default function AkbarHotelBookingPage() {
               const txId = holdOrder?.transaction_id || 'HTL-8891';
               const callbackUrl = `${window.location.origin}/${lang}/akbar-hotel/booking?payment_status=paid&tx_id=${txId}&session=${sessionId}`;
 
+              // No test-key fallback: see lib/moyasarClientKey.js. A committed `pk_test_…` literal
+              // made a missing publishable key silently transact in Moyasar's test account, where
+              // the backend could never verify or ticket the payment.
+              const publishableKey = getMoyasarPublishableKey();
+              if (!publishableKey) {
+                console.error('[Moyasar] NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY is not configured for this origin.');
+                setError(isAr
+                  ? 'بوابة الدفع غير مهيأة حاليًا. يرجى التواصل مع الدعم.'
+                  : 'The payment gateway is not configured. Please contact support.');
+                return;
+              }
+
               window.Moyasar.init({
                 element: '.mysr-form',
                 amount: amountInHalalas,
                 currency: 'SAR',
                 description: `Benzy WRC Hotel Reservation (${txId})`,
-                publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY 
-                  || process.env.NEXT_PUBLIC_MOYASAR_TEST_PUBLISHABLE_KEY 
-                  || process.env.NEXT_PUBLIC_MOYASAR_PUBLIC_KEY 
-                  || 'pk_test_RkhX8tYa6szipY7w5ZQF33pz5YZAbxa42qqGbmJh',
+                publishable_api_key: publishableKey,
                 callback_url: callbackUrl,
                 methods: ['creditcard', 'stcpay', 'applepay'],
                 apple_pay: {
