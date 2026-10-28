@@ -964,7 +964,22 @@ export default function BookingPage() {
 
     const passengerCount = passengers?.length || 1;
 
-    const perPaxPrice = extractPrice(flight?.price) 
+    const extrasFor = (count) => [
+      ...(extras?.insurance ? [32] : []),
+      ...(extras?.autoCheckin ? [12] : []),
+      ...(extras?.delayProtection ? [18] : []),
+      ...(extras?.cancellationFreedom ? [23] : []),
+      ...(extras?.baggage ? [extractPrice(extras.baggage?.price)] : []),
+      ...(extras?.seat ? [extractPrice(extras.seat?.price)] : []),
+      ...(extras?.meal ? [extractPrice(extras.meal?.price)] : []),
+    ].reduce((sum, p) => sum + (p || 0), 0) * count;
+
+    // The flight search stores the trip total for every traveller, service fee included.
+    if (flight?.priceIsTotal && extractPrice(flight.price) > 0) {
+      return extractPrice(flight.price) + extrasFor(passengerCount);
+    }
+
+    const perPaxPrice = extractPrice(flight?.price)
       || extractPrice(flight?.baseFare)
       || extractPrice(flight?.totalPrice) 
       || extractPrice(flight?.total_amount) 
@@ -1495,15 +1510,24 @@ export default function BookingPage() {
 
       const contact = passengers[0] || {};
 
+      // An offer id is unique only within its search, and a round trip or multi-city booking names
+      // one offer per flight in travel order; without both the backend refuses the booking.
+      const selection = {
+        search_id: flight.searchId || undefined,
+        selected_offer_ids: Array.isArray(flight.selectedOfferIds) && flight.selectedOfferIds.length ? flight.selectedOfferIds : undefined,
+      };
+
       const payload = authenticated
         ? {
             offer_id: offerId,
+            ...selection,
             bundle_id: bundle?.bundleId || bundle?.id,
             total_amount: calculateTotal(),
             flight_data: buildFlightData(),
           }
         : {
             offer_id: offerId,
+            ...selection,
             email: contact.email || undefined,
             first_name: contact.firstName || undefined,
             last_name: contact.lastName || undefined,

@@ -237,6 +237,7 @@ export default function Navbar({ lang }) {
   };
 
   const menuItems = [
+    { href: "/flights", label: lang === "ar" ? "الطيران" : "Flights" },
     {
       href: "#",
       label: lang === "ar" ? "الرحلات الدولية" : "International Trips",
