@@ -31,8 +31,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('auth_token');
-    
-    if (!token) {
+
+    // A guest flight checkout keeps a token valid for its one booking only. It is not a login:
+    // /user answers 403 for it, and removing it here broke the checkout after the 3-D Secure redirect.
+    if (!token || localStorage.getItem('auth_token_scope') === 'guest') {
       setLoading(false);
       return;
     }

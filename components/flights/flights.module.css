@@ -1,13 +1,19 @@
 /* Flights: search, results and fare selection */
 
-.page {
-  --navy: #0b2d3f;
-  --navy-2: #12405a;
-  --teal: #0b7a85;
-  --teal-50: #e6f4f5;
-  --teal-100: #c9e8ea;
-  --cta: #e5484d;
-  --cta-hover: #d23b40;
+/* Design tokens. .dpPortal is the phone calendar sheet, rendered into <body> outside .page. */
+.page,
+.dpPortal {
+  /* Tilal Rimal brand (public/newIdentity colour palette): Deep Heritage Purple, Desert Sunset Orange.
+     --teal is the historical name of the primary accent token; it now holds the brand purple. */
+  --navy: #1c0052;
+  --navy-2: #2f057f;
+  --teal: #1c0052;
+  --teal-50: #f1ecfa;
+  --teal-100: #ddd3f2;
+  --cta: #e85d1f;
+  --cta-hover: #d34c12;
+  --sand: #f9e5d2;
+  --gold: #ffc60b;
   --ink: #0f1d2b;
   --ink-2: #3c4b5b;
   --muted: #6b7a8a;
@@ -20,13 +26,23 @@
   --warn-bg: #fff6e8;
   --radius: 12px;
   --shadow: 0 1px 2px rgba(15, 29, 43, 0.04), 0 4px 16px rgba(15, 29, 43, 0.06);
+}
 
+.dpPortal *,
+.dpPortal *::before,
+.dpPortal *::after {
+  box-sizing: border-box;
+}
+
+.page {
   background: var(--bg);
   min-height: 100vh;
   color: var(--ink);
   font-feature-settings: "tnum" 1;
   /* The site header is fixed: 35px top bar + 72px nav, shrinking to 64px once scrolled. */
   padding-top: 107px;
+  /* The footer's wave (components/Footer.jsx) rises 100px above the footer and would cover the last row. */
+  padding-bottom: 120px;
 }
 
 .page *,
@@ -43,27 +59,116 @@
 
 /* ── Hero (landing) ─────────────────────────────────────────────── */
 
+/* Brand colour only, no photo: Deep Heritage Purple, a violet light top right and a Desert Sunset
+   Orange glow bottom right, with a faint dot grid and a dashed flight path on the far side.
+   No overflow: hidden here: the airport and traveller popovers must hang out below the banner.
+   z-index keeps them above the sections that follow. */
 .hero {
   position: relative;
-  padding: 56px 0 72px;
+  isolation: isolate;
+  z-index: 5;
+  padding: 72px 0 36px;
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   background:
-    linear-gradient(100deg, rgba(11, 45, 63, 0.92) 0%, rgba(11, 45, 63, 0.55) 55%, rgba(11, 45, 63, 0.2) 100%),
-    url("https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000") center / cover;
+    radial-gradient(ellipse 42% 70% at 96% 108%, rgba(232, 93, 31, 0.5) 0%, rgba(232, 93, 31, 0) 70%),
+    radial-gradient(ellipse 50% 85% at 82% -10%, rgba(126, 70, 224, 0.42) 0%, rgba(126, 70, 224, 0) 70%),
+    linear-gradient(110deg, #11002f 0%, #1c0052 48%, #2b0a72 100%);
+}
+
+/* Auto side margins on a flex item shrink it to its content: the card narrowed in multi-city. */
+.hero > .container {
+  width: 100%;
+}
+
+/* Faint dot grid, fading in towards the side away from the text. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1.6px) 0 0 / 22px 22px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 25%, #000 80%);
+  mask-image: linear-gradient(90deg, transparent 25%, #000 80%);
+}
+
+/* Dashed flight path from a departure dot up to a small plane. */
+.hero::after {
+  content: "";
+  position: absolute;
+  top: 36px;
+  inset-inline-end: 4%;
+  width: min(760px, 50%);
+  aspect-ratio: 760 / 300;
+  z-index: -1;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 300' fill='none'%3E%3Cpath d='M24 276C210 150 430 70 716 52' stroke='white' stroke-opacity='.38' stroke-width='2' stroke-dasharray='1 11' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='276' r='5' fill='white' fill-opacity='.6'/%3E%3Ccircle cx='24' cy='276' r='13' stroke='white' stroke-opacity='.22' stroke-width='1.5'/%3E%3Cpath transform='translate(726 51) rotate(-4)' d='M14 0 2 -3 -6 -15 -10 -15 -5 -3 -14 -2 -18 -7 -21 -7 -18 0 -21 7 -18 7 -14 2 -5 3 -10 15 -6 15 2 3Z' fill='white' fill-opacity='.75'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
 .heroTitle {
   color: #fff;
-  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
-  font-weight: 800;
-  margin: 0 0 8px;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  margin: 0 0 12px;
+  letter-spacing: -0.015em;
+  max-width: 640px;
 }
 
 .heroSub {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 1.05rem;
-  font-weight: 500;
-  margin: 0 0 32px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.12rem;
+  font-weight: 600;
+  margin: 0 0 88px;
+  max-width: 640px;
+}
+
+.hero .searchCard {
+  border-radius: 12px;
+  padding: 18px 24px 24px;
+}
+
+.hero .searchTop {
+  justify-content: flex-start;
+  gap: 24px;
+}
+
+/* Arabic reads from the right: glows, dots and flight path move to the left. */
+.page[dir="rtl"] .hero {
+  background:
+    radial-gradient(ellipse 42% 70% at 4% 108%, rgba(232, 93, 31, 0.5) 0%, rgba(232, 93, 31, 0) 70%),
+    radial-gradient(ellipse 50% 85% at 18% -10%, rgba(126, 70, 224, 0.42) 0%, rgba(126, 70, 224, 0) 70%),
+    linear-gradient(250deg, #11002f 0%, #1c0052 48%, #2b0a72 100%);
+}
+
+.page[dir="rtl"] .hero::before {
+  -webkit-mask-image: linear-gradient(270deg, transparent 25%, #000 80%);
+  mask-image: linear-gradient(270deg, transparent 25%, #000 80%);
+}
+
+.page[dir="rtl"] .hero::after {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 720px) {
+  .hero {
+    min-height: 0;
+    padding: 40px 0 32px;
+  }
+
+  .heroSub {
+    margin-bottom: 28px;
+  }
+
+  .hero .searchCard {
+    padding: 16px;
+  }
+
+  /* Text spans the full width on phones; the flight path would run behind it. */
+  .hero::after {
+    display: none;
+  }
 }
 
 .trustRow {
@@ -91,18 +196,30 @@
   box-shadow: 0 18px 48px rgba(6, 22, 33, 0.25);
 }
 
+/* Results page: a light bar with the search fields in one row, separated from the results by a line. */
 .searchBand {
-  background: var(--navy);
-  padding: 14px 0;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(15, 29, 43, 0.04);
+  padding: 12px 0;
   position: sticky;
   top: 64px;
   z-index: 40;
 }
 
 .searchBand .searchCard {
-  padding: 12px;
-  border-radius: 12px;
+  padding: 0;
+  border-radius: 0;
   box-shadow: none;
+  background: transparent;
+}
+
+.searchBand .field {
+  min-height: 52px;
+}
+
+.searchBand .btnSearch {
+  min-height: 52px;
 }
 
 .searchTop {
@@ -288,13 +405,113 @@
   border-color: var(--teal);
 }
 
-.dateInput {
+/* Calendar (DatePicker.jsx): a card under the field; a bottom sheet on phones (see the 720px rules). */
+.dp {
   position: absolute;
-  inset: 0;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
+  top: calc(100% + 8px);
+  inset-inline-start: 0;
+  z-index: 70;
+  width: 320px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(15, 29, 43, 0.18);
+  cursor: default;
+}
+
+.dpBackdrop,
+.dpSheetHead {
+  display: none;
+}
+
+.dpHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.dpHead strong {
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.dpNav {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
   cursor: pointer;
+}
+
+.dpNav:hover:not(:disabled) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.dpNav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dpGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 2px;
+}
+
+.dpWeekday {
+  padding: 4px 0 6px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.dpDay {
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.dpDay:hover:not(:disabled) {
+  background: var(--teal-50);
+}
+
+.dpDay:disabled {
+  color: #c2ccd6;
+  cursor: not-allowed;
+}
+
+.dpToday {
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--teal-100);
+}
+
+.dpInRange {
+  background: var(--teal-50);
+  border-radius: 0;
+}
+
+.dpFrom {
+  background: var(--teal-100);
+}
+
+.dpSelected,
+.dpSelected:hover:not(:disabled) {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
 }
 
 .clearBtn {
@@ -352,7 +569,7 @@
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background: #096a74;
+  background: var(--navy-2);
 }
 
 .btnGhost {
@@ -378,30 +595,46 @@
 }
 
 /* Multi-city */
-.legRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 2fr) minmax(0, 1fr) 40px;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+/* Multi-city: every flight on the one-way columns; travellers and Search stay on the first row. */
+.multiGrid {
+  row-gap: 10px;
 }
 
-.legTag {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--teal);
-  background: var(--teal-50);
-  border-radius: 6px;
-  padding: 6px 10px;
-  white-space: nowrap;
-}
-
-.multiActions {
+.legRemoveCell {
+  grid-column: span 2;
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
+  align-items: center;
+}
+
+.legRemove,
+.addLegLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.legRemove {
+  color: var(--muted);
+}
+
+.legRemove:hover {
+  color: #b42318;
+}
+
+.addLegLink {
+  color: var(--teal);
+  margin-top: 12px;
+}
+
+.addLegLink:hover {
+  text-decoration: underline;
 }
 
 /* ── Popovers ───────────────────────────────────────────────────── */
@@ -425,23 +658,79 @@
   inset-inline-end: 0;
 }
 
-.popSearch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
+/* The box whose list is open sits above the other boxes, so their buttons (the return date's ×, the
+   swap button) are not drawn over the list. */
+.fieldGroup:has(.fieldEditing) {
+  z-index: 80;
 }
 
-.popSearch input {
+/* From / To while typing: the box itself is the search input. */
+.fieldEditing {
+  cursor: text;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--teal);
+  z-index: 2;
+}
+
+.fieldEditing:hover {
+  background: #fff;
+}
+
+.fieldInput {
+  display: block;
+  width: 100%;
   border: 0;
   outline: 0;
-  flex: 1;
-  font: inherit;
-  font-size: 0.95rem;
-  color: var(--ink);
+  padding: 0;
   background: transparent;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.fieldInput::placeholder {
+  color: #9aa7b4;
+  font-weight: 500;
+}
+
+/* Airport list: a city row, then its airports indented beneath it. */
+.apPopover {
+  min-width: 420px;
+  cursor: default;
+}
+
+.apPopover .popList {
+  max-height: 380px;
+  padding: 4px 0 6px;
+}
+
+.apIcon {
+  width: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+
+.apChild {
+  padding-inline-start: 46px;
+}
+
+.apOption + .apOption {
+  border-top: 1px solid var(--line);
+}
+
+.apCity,
+.apName {
+  display: block;
+}
+
+.apMatch {
+  background: transparent;
+  color: var(--teal);
+  padding: 0;
+  font-weight: 700;
 }
 
 .popHeading {
@@ -670,16 +959,45 @@
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
   gap: 24px;
-  padding: 24px 0 80px;
+  /* Top and bottom only: the side padding comes from .container (a shorthand here zeroed it, so on
+     phones the results touched the screen edges). */
+  padding-top: 24px;
+  padding-bottom: 80px;
   align-items: start;
 }
 
 .sidebar {
-  position: sticky;
-  top: 172px;
-  max-height: calc(100vh - 188px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+  position: relative;
+}
+
+/* Desktop: two scrolls. The page scroll moves the sidebar, full height with no scrollbar of its own,
+   down to its last filter. The results column is pinned under the fixed site header (64px) and the
+   sticky search bar (~77px), one screen tall, and scrolls by itself. Because it is pinned, it always
+   fills the screen and never ends halfway down it. */
+@media (min-width: 1081px) {
+  .resultsMain {
+    position: sticky;
+    top: 157px;
+    max-height: calc(100vh - 173px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--teal-100) transparent;
+  }
+
+  .resultsMain::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .resultsMain::-webkit-scrollbar-thumb {
+    background: var(--teal-100);
+    border-radius: 999px;
+  }
+
+  .resultsMain::-webkit-scrollbar-thumb:hover {
+    background: var(--navy-2);
+  }
 }
 
 .panel {
@@ -735,8 +1053,98 @@
 }
 
 .filterBlock h3 {
-  font-size: 0.9rem;
-  margin: 0 0 10px;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.filterHead {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.filterContent {
+  margin-top: 10px;
+}
+
+.filterSub {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.filterCode {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.chip {
+  border: 1px solid var(--line-2);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.chipActive {
+  border-color: var(--teal);
+  background: var(--teal-50);
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.switch {
+  appearance: none;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--line-2);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: inset-inline-start 0.15s;
+}
+
+.switch:checked {
+  background: var(--teal);
+}
+
+.switch:checked::after {
+  inset-inline-start: 21px;
 }
 
 .filterOpt {
@@ -779,12 +1187,14 @@
 .timeChip {
   border: 1px solid var(--line-2);
   background: #fff;
-  border-radius: 8px;
-  padding: 8px 6px;
+  border-radius: 999px;
+  padding: 7px 6px;
   text-align: center;
   cursor: pointer;
   font: inherit;
+  font-size: 0.78rem;
   color: var(--ink-2);
+  white-space: nowrap;
 }
 
 .timeChip strong {
@@ -888,11 +1298,126 @@
 }
 
 /* Sort tabs */
+/* No overflow: hidden: the "Sort by other" menu opens out of this box. The corner tabs are rounded
+   themselves instead. */
 .sortTabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr) auto;
   margin-bottom: 14px;
-  overflow: hidden;
+  position: relative;
+  z-index: 30;
+}
+
+.sortTab:first-child {
+  border-start-start-radius: var(--radius);
+  border-end-start-radius: var(--radius);
+}
+
+.sortMenu {
+  position: relative;
+  display: flex;
+}
+
+.sortMenu .sortSelect {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-start-end-radius: var(--radius);
+  border-end-end-radius: var(--radius);
+}
+
+.sortList {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 50;
+  min-width: 230px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(15, 29, 43, 0.16);
+}
+
+.sortOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  text-align: start;
+  cursor: pointer;
+}
+
+.sortOption:hover {
+  background: var(--teal-50);
+}
+
+.sortOptionOn {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.sortSelect {
+  border: 0;
+  border-inline-start: 1px solid var(--line);
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 0 16px;
+  cursor: pointer;
+  min-width: 170px;
+}
+
+.sortSelectActive {
+  color: var(--teal);
+  background: var(--teal-50);
+}
+
+.nearbyAsk {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  border: 1px solid #f5dcb5;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+  margin-bottom: 14px;
+}
+
+.sectionHead {
+  margin: 14px 0 2px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eef2f5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+
+.sectionHead span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.nearbyAsk > span {
+  flex: 1;
+  min-width: 200px;
 }
 
 .sortTab {
@@ -976,6 +1501,7 @@
 .dateCell small {
   font-size: 0.76rem;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .dateCellActive {
@@ -1025,12 +1551,116 @@
 
 .flightMain {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 210px;
+  grid-template-columns: minmax(0, 1fr) 190px;
 }
 
 .flightInfo {
-  padding: 18px 20px;
+  padding: 14px 18px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* One-line result row: airline · times · stops · baggage */
+.rowGrid {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.1fr) minmax(220px, 1.9fr) minmax(110px, 1fr) minmax(120px, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.rowAirline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rowAirlineText {
+  min-width: 0;
+}
+
+.rowTimes {
+  display: grid;
+  grid-template-columns: auto minmax(24px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.rowDash {
+  height: 1px;
+  background: var(--line-2);
+}
+
+.chipLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.chipPlane {
+  color: var(--muted);
+}
+
+[dir="rtl"] .chipPlane {
+  transform: scaleX(-1);
+}
+
+.codeChip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fff4d6;
+  color: #7a5200;
+  letter-spacing: 0.03em;
+}
+
+.codeChipWarn {
+  background: #ffe1c2;
+  color: #a33d00;
+  box-shadow: inset 0 0 0 1px #f3a35c;
+}
+
+.rowStops {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.rowBags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.rowBags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priceActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.btnSelect {
+  min-height: 38px;
+  width: 100%;
+}
+
+.logoSm {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  padding: 2px;
 }
 
 .tagRow {
@@ -1220,12 +1850,12 @@
 
 .priceCol {
   border-inline-start: 1px dashed var(--line-2);
-  padding: 18px 20px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
-  gap: 4px;
+  gap: 8px;
   text-align: end;
 }
 
@@ -1668,6 +2298,309 @@
   line-height: 1.5;
 }
 
+/* ── Smart filters ──────────────────────────────────────────────── */
+
+.aiBox {
+  margin: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, var(--teal-50) 0%, #fdf5ee 100%);
+  border: 1px solid var(--teal-100);
+}
+
+.aiHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+
+.aiHead svg {
+  color: var(--cta);
+}
+
+.aiHint {
+  margin: 6px 0 10px;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+.aiInputRow {
+  display: flex;
+  gap: 6px;
+}
+
+.aiInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--teal-100);
+  border-radius: 8px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 0.84rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+.aiInput:focus {
+  outline: none;
+  border-color: var(--navy-2);
+  box-shadow: 0 0 0 3px rgba(47, 5, 127, 0.12);
+}
+
+.aiGo {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--navy);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.aiGo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aiTry {
+  margin: 12px 0 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.aiExample {
+  display: block;
+  border: 0;
+  background: transparent;
+  padding: 3px 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--navy-2);
+  text-align: start;
+  cursor: pointer;
+}
+
+.aiExample:hover {
+  text-decoration: underline;
+}
+
+.aiResult {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--teal-100);
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+
+.aiChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.aiChip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--teal-100);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ── Promo banners between results ──────────────────────────────── */
+
+.promo {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 0;
+  padding-inline-end: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(100deg, var(--navy) 0%, var(--navy-2) 100%);
+  color: #fff;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.promo:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.promoImg {
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  display: block;
+}
+
+/* An icon instead of a photo: centred on a light tile. */
+.promoIcon {
+  object-fit: contain;
+  padding: 18px;
+  background: var(--sand);
+}
+
+.promoText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.promoText strong {
+  font-size: 1.02rem;
+}
+
+.promoText span {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.promoCta {
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: var(--cta);
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Slider holding the promos */
+.carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--navy);
+}
+
+.carouselTrack {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.carouselTrack > .promo {
+  flex: 0 0 100%;
+  border: 0;
+  border-radius: 0;
+  padding-inline-end: 52px;
+  min-height: 112px;
+}
+
+.carouselTrack > .promo:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.carouselTrack .promoImg {
+  height: 112px;
+}
+
+.carouselArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  opacity: 0.85;
+}
+
+.carouselArrow:hover {
+  opacity: 1;
+}
+
+.carouselPrev {
+  inset-inline-start: 10px;
+}
+
+.carouselNext {
+  inset-inline-end: 12px;
+}
+
+.carouselDots {
+  position: absolute;
+  bottom: 8px;
+  inset-inline-start: 180px;
+  inset-inline-end: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carouselDot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: width 0.2s, background 0.2s;
+}
+
+.carouselDotOn {
+  width: 20px;
+  background: var(--cta);
+}
+
+@media (max-width: 640px) {
+  .carouselTrack > .promo {
+    padding-inline-end: 12px;
+  }
+
+  .carouselTrack .promoImg {
+    height: 100%;
+  }
+
+  .carouselArrow {
+    display: none;
+  }
+
+  .carouselDots {
+    inset-inline-start: 96px;
+  }
+
+  .promo {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+    padding-inline-end: 12px;
+  }
+
+  .promoImg {
+    height: 100%;
+    min-height: 88px;
+  }
+
+  .promoCta {
+    display: none;
+  }
+}
+
 /* ── Responsive ─────────────────────────────────────────────────── */
 
 @media (max-width: 1080px) {
@@ -1714,7 +2647,114 @@
   }
 }
 
+@media (max-width: 860px) {
+  .rowGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .rowAirline,
+  .rowTimes {
+    grid-column: 1 / -1;
+  }
+
+  .sortTabs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* "Sort by other" drops to its own row under the three tabs. */
+  .sortMenu {
+    grid-column: 1 / -1;
+  }
+
+  .sortMenu .sortSelect {
+    border-inline-start: 0;
+    border-top: 1px solid var(--line);
+    min-height: 40px;
+    border-start-end-radius: 0;
+    border-end-start-radius: var(--radius);
+  }
+
+  .sortTab:first-child {
+    border-end-start-radius: 0;
+  }
+
+  .sortList {
+    inset-inline: 0;
+    min-width: 0;
+  }
+}
+
+/* Results page, phones only: the trip summary that opens the search form. */
+.searchSummary {
+  display: none;
+}
+
 @media (max-width: 720px) {
+  .searchSummary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    background: #fff;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .summaryText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .summaryText strong {
+    font-size: 0.98rem;
+    color: var(--ink);
+  }
+
+  .summaryText small {
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .summaryEdit {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--teal);
+  }
+
+  .searchFormWrap {
+    display: none;
+  }
+
+  .searchFormOpen {
+    display: block;
+    margin-top: 12px;
+  }
+
+  /* Price card footer: details link on one side, a full-size Check fare button on the other. */
+  .priceActions {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .btnSelect {
+    width: auto;
+    min-width: 150px;
+    min-height: 42px;
+  }
+
   .hero {
     padding: 28px 0 40px;
   }
@@ -1723,17 +2763,63 @@
     padding: 14px;
   }
 
-  .searchRow,
-  .legRow {
+  .searchRow {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .legRow .iconBtn {
-    justify-self: end;
+  .legRemoveCell {
+    grid-column: auto;
+    justify-content: flex-end;
   }
 
   .popover {
     min-width: 0;
+  }
+
+  /* The airport list spans the whole From / To box instead of the half being typed in. */
+  .fieldGroup .fieldEditing {
+    position: static;
+  }
+
+  .apPopover {
+    inset-inline: 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  /* Calendar as a bottom sheet. */
+  .dpBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    background: rgba(8, 20, 30, 0.5);
+  }
+
+  .dp {
+    position: fixed;
+    top: auto;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 2101;
+    width: auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 16px 16px 24px;
+    border: 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .dpSheetHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 1rem;
+  }
+
+  .dpDay {
+    height: 44px;
   }
 
   .searchBand {
@@ -1773,6 +2859,10 @@
 
   .dateHideSm {
     display: none;
+  }
+
+  .dateCell small {
+    font-size: 0.68rem;
   }
 
   .sortTab small {

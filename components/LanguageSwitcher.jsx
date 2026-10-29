@@ -8,7 +8,7 @@ const LANGUAGES = [
   { code: "ar", name: "العربية", nativeName: "العربية" },
 ];
 
-export default function LanguageSwitcher({ lang, className = "", displayText = null, showFlagOnly = false }) {
+export default function LanguageSwitcher({ lang, className = "", displayText = null, showFlagOnly = false, onDark = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function LanguageSwitcher({ lang, className = "", displayText = n
   // If showFlagOnly is true, show simple EN/AR text buttons
   if (showFlagOnly) {
     return (
-      <div className={`${styles.languageSwitcher} ${className}`}>
+      <div className={`${styles.languageSwitcher} ${onDark ? styles.onDark : ''} ${className}`}>
         <button
           onClick={() => switchLanguage('en')}
           className={`${styles.textButton} ${lang === 'en' ? styles.activeText : ''}`}

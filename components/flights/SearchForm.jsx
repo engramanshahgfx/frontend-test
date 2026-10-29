@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { FaPlaneDeparture, FaPlaneArrival, FaRegCalendarAlt, FaUserFriends, FaExchangeAlt, FaSearch, FaMinus, FaPlus, FaTimes } from "react-icons/fa";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { FaPlaneDeparture, FaPlaneArrival, FaRegCalendarAlt, FaUserFriends, FaExchangeAlt, FaSearch, FaMinus, FaPlus, FaTimes, FaMapMarkerAlt, FaPlane } from "react-icons/fa";
 import akbarApi from "@/lib/akbarApi";
 import { airportInfo, addDays, formatDate, todayISO, CABINS, MAX_PASSENGERS, POPULAR_AIRPORTS } from "@/lib/flights/offerModel";
 import { t as dict } from "./i18n";
+import DatePicker from "./DatePicker";
 import s from "./flights.module.css";
 
 const toAirport = (ap) => ({
   code: ap.Code,
+  cityCode: ap.CityCode || ap.Code,
   city: ap.CityName,
   cityAr: ap.city_ar || ap.CityNameAr || "",
   name: ap.Name,
@@ -27,7 +29,8 @@ function useOutsideClose(open, onClose) {
   const ref = useRef(null);
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => ref.current && !ref.current.contains(e.target) && onClose();
+    // A popup rendered into <body> (the phone calendar sheet) is outside ref but still part of the field.
+    const handler = (e) => ref.current && !ref.current.contains(e.target) && !e.target.closest?.("[data-popup-portal]") && onClose();
     const esc = (e) => e.key === "Escape" && onClose();
     document.addEventListener("mousedown", handler);
     document.addEventListener("keydown", esc);
@@ -39,71 +42,98 @@ function useOutsideClose(open, onClose) {
   return ref;
 }
 
-function AirportPopover({ lang, onPick, onClose }) {
-  const L = dict(lang);
-  const [q, setQ] = useState("");
-  const [list, setList] = useState(POPULAR);
-  const [active, setActive] = useState(0);
+const countryLabel = (ap, lang) => (lang === "ar" && ap.countryAr ? ap.countryAr : ap.country);
 
+/** Airports matching the typed text (popular airports while it is empty), debounced. */
+function useAirportSearch(q) {
+  const [list, setList] = useState(POPULAR);
   useEffect(() => {
     const query = q.trim();
     if (!query) {
       setList(POPULAR);
-      return;
+      return undefined;
     }
     const ctrl = new AbortController();
     const timer = setTimeout(async () => {
       const res = await akbarApi.request(`/airports?q=${encodeURIComponent(query)}`, "GET", null, {}, ctrl.signal);
-      if (res.ok && Array.isArray(res.data?.data)) {
-        setList(res.data.data.slice(0, 30).map(toAirport));
-        setActive(0);
-      }
+      if (res.ok && Array.isArray(res.data?.data)) setList(res.data.data.slice(0, 30).map(toAirport));
     }, 200);
     return () => {
       clearTimeout(timer);
       ctrl.abort();
     };
   }, [q]);
+  return list;
+}
 
-  const onKey = (e) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActive((i) => Math.min(i + 1, list.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && list[active]) {
-      e.preventDefault();
-      onPick(list[active]);
-    } else if (e.key === "Escape") {
-      onClose();
-    }
-  };
+/**
+ * One row per city, its airports indented beneath it. Grouped by the catalog's CityCode, since an
+ * airport's CityName can differ from its city's ("London Heathrow" is in LON).
+ *
+ * The city row picks the catalog entry whose code is the city code itself when there is one (LON
+ * "All Airports, London", DMM King Fahad), otherwise the city's first airport.
+ */
+function groupByCity(list) {
+  const groups = new Map();
+  for (const ap of list) {
+    const key = `${ap.cityCode}|${ap.country}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(ap);
+  }
+  const rows = [];
+  for (const airports of groups.values()) {
+    const cityEntry = airports.find((a) => a.code === a.cityCode) || airports[0];
+    rows.push({ kind: "city", ap: cityEntry });
+    // "All Airports, London" is what the city row already offers; real airports are all listed.
+    const children = airports.filter((a) => !/^all airports/i.test(a.name || ""));
+    for (const ap of children.length ? children : airports) rows.push({ kind: "airport", ap });
+  }
+  return rows;
+}
 
+/** The typed text, highlighted wherever it appears in a label. */
+function Highlight({ text, q }) {
+  const query = q.trim();
+  const i = query ? String(text).toLowerCase().indexOf(query.toLowerCase()) : -1;
+  if (i < 0) return text;
   return (
-    <div className={s.popover} role="dialog">
-      <div className={s.popSearch}>
-        <FaSearch />
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} placeholder={L.searchAirport} aria-label={L.searchAirport} />
-      </div>
-      <div className={s.popHeading}>{q.trim() ? L.results : L.popular}</div>
-      <div className={s.popList} role="listbox">
-        {list.length === 0 && <div className={s.popEmpty}>{L.noAirport(q)}</div>}
-        {list.map((ap, i) => (
+    <>
+      {text.slice(0, i)}
+      <mark className={s.apMatch}>{text.slice(i, i + query.length)}</mark>
+      {text.slice(i + query.length)}
+    </>
+  );
+}
+
+function AirportResults({ lang, q, rows, active, setActive, onPick }) {
+  const L = dict(lang);
+  return (
+    <div className={`${s.popover} ${s.apPopover}`} role="listbox">
+      {!q.trim() && <div className={s.popHeading}>{L.popular}</div>}
+      {rows.length === 0 && <div className={s.popEmpty}>{L.noAirport(q)}</div>}
+      <div className={s.popList}>
+        {rows.map(({ kind, ap }, i) => (
           <button
             type="button"
-            key={`${ap.code}-${i}`}
+            key={`${kind}-${ap.code}-${i}`}
             role="option"
             aria-selected={i === active}
-            className={`${s.apOption} ${i === active ? s.apActive : ""}`}
+            className={`${s.apOption} ${kind === "airport" ? s.apChild : ""} ${i === active ? s.apActive : ""}`}
             onMouseEnter={() => setActive(i)}
-            onClick={() => onPick(ap)}
+            // mousedown, not click: the field's input would otherwise lose focus and close the list first.
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onPick(ap);
+            }}
           >
+            <span className={s.apIcon}>{kind === "city" ? <FaMapMarkerAlt /> : <FaPlane />}</span>
             <span className={s.apText}>
               <span className={s.apCity}>
-                {cityLabel(ap, lang)}, {lang === "ar" && ap.countryAr ? ap.countryAr : ap.country}
+                <Highlight text={`${cityLabel(ap, lang)}, ${countryLabel(ap, lang)}`} q={q} />
               </span>
-              <span className={s.apName} style={{ display: "block" }}>{ap.name}</span>
+              <span className={s.apName}>
+                <Highlight text={kind === "city" ? cityLabel(ap, lang) : ap.name} q={q} />
+              </span>
             </span>
             <span className={s.code}>{ap.code}</span>
           </button>
@@ -113,58 +143,136 @@ function AirportPopover({ lang, onPick, onClose }) {
   );
 }
 
+/** From / To box: shows the chosen airport, and becomes a text input while it is open. */
+function AirportField({ lang, open, ap, icon, label, placeholder, onOpen, onClose, onPick }) {
+  const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+  const found = useAirportSearch(q);
+  // Popular airports are one per city already, so they are listed flat.
+  const rows = q.trim() ? groupByCity(found) : found.map((a) => ({ kind: "popular", ap: a }));
+
+  useEffect(() => {
+    setActive(0);
+  }, [q]);
+  useEffect(() => {
+    if (!open) setQ("");
+  }, [open]);
+
+  const onKey = (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, rows.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (rows[active]) onPick(rows[active].ap);
+    } else if (e.key === "Escape" || e.key === "Tab") {
+      onClose();
+    }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className={s.field} onClick={onOpen} aria-haspopup="listbox">
+        <span className={s.fieldIcon}>{icon}</span>
+        <span className={s.fieldBody}>
+          <span className={s.fieldLabel}>{label}</span>
+          <span className={s.fieldValue}>
+            {ap ? (
+              <>
+                <span className={s.code}>{ap.code}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{cityLabel(ap, lang)}</span>
+              </>
+            ) : (
+              <span className={s.placeholder}>{placeholder}</span>
+            )}
+          </span>
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <div className={`${s.field} ${s.fieldEditing}`}>
+      <span className={s.fieldIcon}>{icon}</span>
+      <span className={s.fieldBody}>
+        <span className={s.fieldLabel}>{label}</span>
+        <input
+          autoFocus
+          className={s.fieldInput}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={onKey}
+          placeholder={ap ? `${ap.code} · ${cityLabel(ap, lang)}` : dict(lang).searchAirport}
+          aria-label={label}
+          aria-autocomplete="list"
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </span>
+      <AirportResults lang={lang} q={q} rows={rows} active={active} setActive={setActive} onPick={onPick} />
+    </div>
+  );
+}
+
 function RouteFields({ lang, from, to, onFrom, onTo, onSwap }) {
   const L = dict(lang);
   const [open, setOpen] = useState(null);
   const ref = useOutsideClose(Boolean(open), () => setOpen(null));
 
-  const pick = (ap) => {
-    (open === "from" ? onFrom : onTo)(ap);
-    setOpen(open === "from" && !to ? "to" : null);
+  const pick = (key) => (ap) => {
+    (key === "from" ? onFrom : onTo)(ap);
+    // Choosing the origin moves straight on to the destination.
+    setOpen(key === "from" && !to ? "to" : null);
   };
-
-  const field = (key, ap, icon, label, placeholder) => (
-    <button type="button" className={s.field} onClick={() => setOpen(open === key ? null : key)} aria-expanded={open === key}>
-      <span className={s.fieldIcon}>{icon}</span>
-      <span className={s.fieldBody}>
-        <span className={s.fieldLabel}>{label}</span>
-        <span className={s.fieldValue}>
-          {ap ? (
-            <>
-              <span className={s.code}>{ap.code}</span>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{cityLabel(ap, lang)}</span>
-            </>
-          ) : (
-            <span className={s.placeholder}>{placeholder}</span>
-          )}
-        </span>
-      </span>
-    </button>
-  );
 
   return (
     <div className={s.fieldGroup} ref={ref}>
-      {field("from", from, <FaPlaneDeparture />, L.from, L.origin)}
+      <AirportField
+        lang={lang}
+        open={open === "from"}
+        ap={from}
+        icon={<FaPlaneDeparture />}
+        label={L.from}
+        placeholder={L.origin}
+        onOpen={() => setOpen("from")}
+        onClose={() => setOpen(null)}
+        onPick={pick("from")}
+      />
       <button type="button" className={s.swap} onClick={onSwap} aria-label="Swap">
         <FaExchangeAlt size={11} />
       </button>
-      {field("to", to, <FaPlaneArrival />, L.to, L.destination)}
-      {open && <AirportPopover lang={lang} onPick={pick} onClose={() => setOpen(null)} />}
+      <AirportField
+        lang={lang}
+        open={open === "to"}
+        ap={to}
+        icon={<FaPlaneArrival />}
+        label={L.to}
+        placeholder={L.destination}
+        onOpen={() => setOpen("to")}
+        onClose={() => setOpen(null)}
+        onPick={pick("to")}
+      />
     </div>
   );
 }
 
-function DateField({ lang, label, value, min, onChange, children, accent }) {
-  const inputRef = useRef(null);
-  const openPicker = () => {
-    try {
-      inputRef.current?.showPicker?.();
-    } catch {
-      /* browsers without showPicker fall back to the native click on the input */
-    }
-  };
+function DateField({ lang, label, value, min, onChange, children, accent, rangeFrom }) {
+  const [open, setOpen] = useState(false);
+  const ref = useOutsideClose(open, () => setOpen(false));
   return (
-    <div className={s.field} onClick={openPicker} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && openPicker()}>
+    <div
+      ref={ref}
+      className={`${s.field} ${open ? s.fieldEditing : ""}`}
+      onClick={() => setOpen((o) => !o)}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      aria-haspopup="dialog"
+      onKeyDown={(e) => e.key === "Enter" && setOpen((o) => !o)}
+    >
       <span className={s.fieldIcon} style={accent ? { color: "var(--teal)" } : undefined}>
         <FaRegCalendarAlt />
       </span>
@@ -172,8 +280,21 @@ function DateField({ lang, label, value, min, onChange, children, accent }) {
         <span className={s.fieldLabel}>{label}</span>
         <span className={s.fieldValue}>{formatDate(value, lang)}</span>
       </span>
-      <input ref={inputRef} type="date" className={s.dateInput} value={value} min={min} onChange={(e) => e.target.value && onChange(e.target.value)} tabIndex={-1} aria-label={label} />
       {children}
+      {open && (
+        <DatePicker
+          lang={lang}
+          title={label}
+          value={value}
+          min={min}
+          rangeFrom={rangeFrom}
+          onPick={(d) => {
+            onChange(d);
+            setOpen(false);
+          }}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -261,6 +382,7 @@ export default function SearchForm({ lang, initial, compact = false, busy = fals
   const [pax, setPax] = useState({ adults: initial?.adults || 1, children: initial?.children || 0, infants: initial?.infants || 0 });
   const [cabin, setCabin] = useState(initial?.cabin || "Economy");
   const [directOnly, setDirectOnly] = useState(Boolean(initial?.directOnly));
+  const [bagsOnly, setBagsOnly] = useState(Boolean(initial?.bagsOnly));
   const [legs, setLegs] = useState(() => initial?.legs?.length
     ? initial.legs.map((l) => ({ from: fromCode(l.origin), to: fromCode(l.destination), date: l.date }))
     : [
@@ -286,7 +408,7 @@ export default function SearchForm({ lang, initial, compact = false, busy = fals
   const submit = (e) => {
     e.preventDefault();
     setError("");
-    const base = { cabin, ...pax, directOnly };
+    const base = { cabin, ...pax, directOnly, bagsOnly };
 
     if (tripType === "multicity") {
       const bad = legs.findIndex((l) => !l.from || !l.to || l.from.code === l.to.code);
@@ -325,58 +447,68 @@ export default function SearchForm({ lang, initial, compact = false, busy = fals
               <input type="checkbox" checked={directOnly} onChange={(e) => setDirectOnly(e.target.checked)} />
               {L.directOnly}
             </label>
+            <label className={s.check}>
+              <input type="checkbox" checked={bagsOnly} onChange={(e) => setBagsOnly(e.target.checked)} />
+              {L.includedBaggage}
+            </label>
           </div>
         </div>
       )}
 
       {tripType === "multicity" ? (
+        // Same columns as the one-way row: the first flight carries travellers and Search, the
+        // others line up underneath it.
         <>
-          {legs.map((leg, i) => (
-            <div className={s.legRow} key={i}>
-              <span className={s.legTag}>{L.flightN(i + 1)}</span>
-              <RouteFields
-                lang={lang}
-                from={leg.from}
-                to={leg.to}
-                onFrom={(ap) => updateLeg(i, { from: ap })}
-                onTo={(ap) => updateLeg(i, { to: ap })}
-                onSwap={() => updateLeg(i, { from: leg.to, to: leg.from })}
-              />
-              <div className={s.fieldGroup}>
-                <DateField lang={lang} label={L.departure} value={leg.date} min={i ? legs[i - 1].date : todayISO()} onChange={(d) => updateLeg(i, { date: d })} />
-              </div>
-              {legs.length > 2 ? (
-                <button type="button" className={s.iconBtn} onClick={() => setLegs(legs.filter((_, j) => j !== i))} aria-label="Remove">
-                  <FaTimes size={12} />
-                </button>
-              ) : (
-                <span />
-              )}
-            </div>
-          ))}
-          <div className={s.multiActions}>
-            {legs.length < 5 ? (
-              <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => setLegs([...legs, { from: legs[legs.length - 1].to, to: null, date: addDays(legs[legs.length - 1].date, 2) }])}>
-                {L.addFlight}
-              </button>
-            ) : (
-              <span />
-            )}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <TravellersField
-                lang={lang}
-                pax={pax}
-                cabin={cabin}
-                onChange={(p, c) => {
-                  setPax(p);
-                  setCabin(c);
-                }}
-              />
-              <button type="submit" className={`${s.btn} ${s.btnCta}`} disabled={busy}>
-                <FaSearch /> {L.searchFlights}
-              </button>
-            </div>
+          <div className={`${s.searchRow} ${s.multiGrid}`}>
+            {legs.map((leg, i) => (
+              <Fragment key={i}>
+                <RouteFields
+                  lang={lang}
+                  from={leg.from}
+                  to={leg.to}
+                  onFrom={(ap) => updateLeg(i, { from: ap })}
+                  onTo={(ap) => updateLeg(i, { to: ap })}
+                  onSwap={() => updateLeg(i, { from: leg.to, to: leg.from })}
+                />
+                <div className={s.fieldGroup}>
+                  <DateField lang={lang} label={L.flightN(i + 1)} value={leg.date} min={i ? legs[i - 1].date : todayISO()} onChange={(d) => updateLeg(i, { date: d })} />
+                </div>
+                {i === 0 ? (
+                  <>
+                    <TravellersField
+                      lang={lang}
+                      pax={pax}
+                      cabin={cabin}
+                      onChange={(p, c) => {
+                        setPax(p);
+                        setCabin(c);
+                      }}
+                    />
+                    <button type="submit" className={`${s.btn} ${s.btnCta} ${s.btnSearch}`} disabled={busy}>
+                      <FaSearch /> {L.search}
+                    </button>
+                  </>
+                ) : (
+                  <div className={s.legRemoveCell}>
+                    {legs.length > 2 && (
+                      <button type="button" className={s.legRemove} onClick={() => setLegs(legs.filter((_, j) => j !== i))}>
+                        <FaTimes size={11} /> {L.removeFlight}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </Fragment>
+            ))}
           </div>
+          {legs.length < 5 && (
+            <button
+              type="button"
+              className={s.addLegLink}
+              onClick={() => setLegs([...legs, { from: legs[legs.length - 1].to, to: null, date: addDays(legs[legs.length - 1].date, 2) }])}
+            >
+              <FaPlus size={11} /> {L.addFlight}
+            </button>
+          )}
         </>
       ) : (
         <div className={s.searchRow}>
@@ -394,7 +526,7 @@ export default function SearchForm({ lang, initial, compact = false, busy = fals
           <div className={s.fieldGroup}>
             <DateField lang={lang} label={L.departure} value={depart} min={todayISO()} onChange={setDepartDate} />
             {tripType === "roundtrip" ? (
-              <DateField lang={lang} label={L.return} value={ret} min={depart} onChange={setRet} accent>
+              <DateField lang={lang} label={L.return} value={ret} min={depart} onChange={setRet} accent rangeFrom={depart}>
                 <button
                   type="button"
                   className={s.clearBtn}

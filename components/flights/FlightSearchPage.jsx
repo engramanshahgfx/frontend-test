@@ -8,16 +8,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaSlidersH, FaShieldAlt, FaBolt, FaHeadset, FaReceipt, FaEnvelopeOpenText, FaPlane, FaChevronLeft, FaChevronRight, FaInfoCircle, FaRedo } from "react-icons/fa";
+import { FaSlidersH, FaBolt, FaReceipt, FaChevronDown, FaCheck, FaEnvelopeOpenText, FaPlane, FaChevronLeft, FaChevronRight, FaInfoCircle, FaRedo } from "react-icons/fa";
 import akbarApi from "@/lib/akbarApi";
 import {
-  normalizeOffer, groupByJourney, applyFilters, sortFlights, buildSearchUrl, EMPTY_FILTERS,
+  normalizeOffer, groupByJourney, applyFilters, sortFlights, buildSearchUrl, startFilters, EMPTY_FILTERS,
   addDays, todayISO, formatDate, clock, datePart, airportInfo,
 } from "@/lib/flights/offerModel";
 import SearchForm from "./SearchForm";
 import FlightCard, { AirlineLogo, Price } from "./FlightCard";
 import FiltersPanel from "./FiltersPanel";
 import FareDrawer from "./FareDrawer";
+import PromoCarousel from "./PromoBanner";
 import { t as dict } from "./i18n";
 import s from "./flights.module.css";
 
@@ -64,17 +65,6 @@ function Landing({ lang, onSearch, router }) {
           <h1 className={s.heroTitle}>{L.heroTitle}</h1>
           <p className={s.heroSub}>{L.heroSub}</p>
           <SearchForm lang={lang} onSubmit={onSearch} />
-          <div className={s.trustRow}>
-            <span>
-              <FaBolt /> {L.trustLive}
-            </span>
-            <span>
-              <FaShieldAlt /> {L.trustSecure}
-            </span>
-            <span>
-              <FaHeadset /> {L.trustSupport}
-            </span>
-          </div>
         </div>
       </section>
       <Services lang={lang} router={router} />
@@ -158,6 +148,52 @@ function Skeletons({ lang }) {
   );
 }
 
+/** "Sort by other": a menu in the page's own style rather than the browser's select popup. */
+function SortMenu({ label, value, options, onPick }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const outside = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const esc = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", outside);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  const current = options.find(([k]) => k === value);
+  return (
+    <div ref={ref} className={s.sortMenu}>
+      <button type="button" className={`${s.sortSelect} ${current ? s.sortSelectActive : ""}`} onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}>
+        <span>{current ? current[1] : label}</span>
+        <FaChevronDown size={10} />
+      </button>
+      {open && (
+        <div className={s.sortList} role="listbox" aria-label={label}>
+          {options.map(([k, text]) => (
+            <button
+              type="button"
+              role="option"
+              aria-selected={k === value}
+              key={k}
+              className={`${s.sortOption} ${k === value ? s.sortOptionOn : ""}`}
+              onClick={() => {
+                onPick(k);
+                setOpen(false);
+              }}
+            >
+              {text}
+              {k === value && <FaCheck size={11} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmptyState({ icon, title, text, children }) {
   return (
     <div className={`${s.panel} ${s.empty}`}>
@@ -198,10 +234,34 @@ export default function FlightSearchPage({ initialParams }) {
   const [step, setStep] = useState(0);
   const [chosen, setChosen] = useState([]); // [{ flight, fare }] per leg already picked
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [sortBy, setSortBy] = useState("best");
+  const [sortBy, setSortBy] = useState("cheapest");
+  // Flights via a nearby airport stay hidden until the customer asks for them (null = not asked).
+  const [showNearby, setShowNearby] = useState(null);
+  const [ampm, setAmpm] = useState(false);
+  useEffect(() => {
+    try {
+      setAmpm(localStorage.getItem("flightsAmPm") === "1");
+    } catch {
+      /* preference is optional */
+    }
+  }, []);
+  const changeAmpm = (on) => {
+    setAmpm(on);
+    try {
+      localStorage.setItem("flightsAmPm", on ? "1" : "0");
+    } catch {
+      /* preference is optional */
+    }
+  };
   const [drawer, setDrawer] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const abortRef = useRef(null);
+  // The results column scrolls on its own (desktop); a new filter, sort or flight starts it at the top.
+  const resultsRef = useRef(null);
+  useEffect(() => {
+    resultsRef.current?.scrollTo({ top: 0 });
+  }, [filters, sortBy, step]);
 
   const legCount = search ? (search.tripType === "multicity" ? search.legs.length : search.tripType === "roundtrip" ? 2 : 1) : 1;
   const cacheKey = search ? [search.origin, search.destination, search.tripType, search.returnDate && "rt", search.cabin, search.adults, search.children, search.infants].join("|") : "";
@@ -214,15 +274,23 @@ export default function FlightSearchPage({ initialParams }) {
     setOffers([]);
     setStep(0);
     setChosen([]);
-    setFilters(q.directOnly ? { ...EMPTY_FILTERS, stops: ["0"] } : EMPTY_FILTERS);
+    setFilters(startFilters(q));
+    setShowNearby(null);
 
-    const pax = { adults: q.adults, children: q.children, infants: q.infants, cabin_class: q.cabin };
+    // compact: the API drops outbound_offers/return_offers, which repeat `offers` and double the payload.
+    const pax = { adults: q.adults, children: q.children, infants: q.infants, cabin_class: q.cabin, compact: true };
     const payload =
       q.tripType === "multicity"
         ? { ...pax, legs: q.legs.map((l) => ({ origin: l.origin, destination: l.destination, departure_date: l.date })) }
         : { ...pax, origin: q.origin, destination: q.destination, departure_date: q.departDate, return_date: q.tripType === "roundtrip" ? q.returnDate : null };
 
-    const res = await akbarApi.search(payload, ctrl.signal);
+    let res = await akbarApi.search(payload, ctrl.signal);
+    // Akbar intermittently fails to open a search session; an immediate second attempt usually
+    // succeeds. Only that kind of failure is retried, never "no flights for this date".
+    const transient = /did not return a search session|unavailable|did not complete in time/i;
+    if (!res.ok && !res.aborted && !ctrl.signal.aborted && [502, 503, 504].includes(res.status) && transient.test(res.data?.error?.message || "")) {
+      res = await akbarApi.search(payload, ctrl.signal);
+    }
     if (res.aborted || ctrl.signal.aborted) return;
 
     const list = res.ok ? res.data?.data?.offers || [] : [];
@@ -244,8 +312,9 @@ export default function FlightSearchPage({ initialParams }) {
 
   useEffect(() => {
     if (!search) return;
-    // ?direct=1 is carried in the URL from the landing form.
-    const q = { ...search, directOnly: new URLSearchParams(window.location.search).get("direct") === "1" };
+    // ?direct=1 and ?bags=1 are carried in the URL from the landing form.
+    const params = new URLSearchParams(window.location.search);
+    const q = { ...search, directOnly: params.get("direct") === "1", bagsOnly: params.get("bags") === "1" };
     setSearch(q);
     runSearch(q);
     return () => abortRef.current?.abort();
@@ -254,6 +323,7 @@ export default function FlightSearchPage({ initialParams }) {
   }, []);
 
   const onSearch = (q) => {
+    setEditOpen(false);
     if (q.tripType === "multicity") {
       setSearch(q);
       runSearch(q);
@@ -289,7 +359,10 @@ export default function FlightSearchPage({ initialParams }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [legs, chosen, step, legCount]);
 
-  const current = useMemo(() => (legs[step] || []).map((f) => ({ ...f, legPrice: f.price, price: f.price + otherLegs })), [legs, step, otherLegs]);
+  const allOfLeg = useMemo(() => (legs[step] || []).map((f) => ({ ...f, legPrice: f.price, price: f.price + otherLegs })), [legs, step, otherLegs]);
+  // Nearby-airport flights are only held back while flights to the searched airports exist.
+  const nearbyHidden = showNearby !== true && allOfLeg.some((f) => !f.nearbyAirport) && allOfLeg.some((f) => f.nearbyAirport);
+  const current = useMemo(() => (nearbyHidden ? allOfLeg.filter((f) => !f.nearbyAirport) : allOfLeg), [allOfLeg, nearbyHidden]);
   const visible = useMemo(() => sortFlights(applyFilters(current, filters), sortBy), [current, filters, sortBy]);
 
   // Highlights only consider fares whose price already includes taxes.
@@ -397,7 +470,8 @@ export default function FlightSearchPage({ initialParams }) {
     if (step + 1 < legCount) {
       setChosen(picks);
       setStep(step + 1);
-      setFilters(search.directOnly ? { ...EMPTY_FILTERS, stops: ["0"] } : EMPTY_FILTERS);
+      setFilters(startFilters(search));
+      setShowNearby(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       finish(picks);
@@ -422,9 +496,18 @@ export default function FlightSearchPage({ initialParams }) {
   const legTitle = search.tripType === "multicity" ? L.selectLegN(step + 1) : L.selectLeg[step] || L.selectLegN(step + 1);
   const stepLeg = search.tripType === "multicity" ? search.legs[step] : step === 0 ? { origin: search.origin, destination: search.destination } : { origin: search.destination, destination: search.origin };
   const routeTitle = `${airportInfo(stepLeg.origin).city || stepLeg.origin} ${isRTL ? "←" : "→"} ${airportInfo(stepLeg.destination).city || stepLeg.destination}`;
-  const hasNearby = current.some((f) => f.nearbyAirport);
+  const nearbyCodes = [...new Set(allOfLeg.filter((f) => f.nearbyAirport).flatMap((f) => [f.from !== f.requestedFrom && f.from, f.to !== f.requestedTo && f.to]).filter(Boolean))];
   const nextLabel = step + 1 < legCount ? (isRT ? L.continueReturn : L.continueNext) : L.continue;
-  const priceLabel = legCount > 1 ? L.totalPrice : L.fromPrice;
+  const priceLabel = isRT ? L.roundTripLbl : legCount > 1 ? L.tripTotalLbl : L.oneWayLbl;
+  const otherSorts = Object.keys(L.sortOpts);
+
+  const renderCard = (f) => {
+    const tags = [];
+    if (f.journeyKey === tops.cheapest?.journeyKey) tags.push({ label: L.cheapest, tone: "green" });
+    if (f.journeyKey === tops.fastest?.journeyKey) tags.push({ label: L.shortest });
+    if (f.journeyKey === tops.best?.journeyKey && f.journeyKey !== tops.cheapest?.journeyKey) tags.push({ label: L.bestValue });
+    return <FlightCard key={f.journeyKey} flight={f} lang={lang} price={f.price} priceLabel={priceLabel} tags={tags} onSelect={setDrawer} ampm={ampm} />;
+  };
 
   let body;
   if (status === "loading") {
@@ -448,38 +531,66 @@ export default function FlightSearchPage({ initialParams }) {
         </button>
       </EmptyState>
     );
-  } else {
+  }
+
+  // Sort tabs sit above the date strip, so they are built apart from the result list.
+  const sortBar = status === "done" && current.length > 0 && (
+    <div className={`${s.panel} ${s.sortTabs}`} role="tablist">
+      {[
+        ["cheapest", L.cheapest],
+        ["best", L.bestValue],
+        ["fastest", L.shortest],
+      ].map(([k, label]) => (
+        <button type="button" role="tab" aria-selected={sortBy === k} key={k} className={`${s.sortTab} ${sortBy === k ? s.sortTabActive : ""}`} onClick={() => setSortBy(k)}>
+          <strong>{label}</strong>
+          {tops[k] && (
+            <small>
+              <Price value={tops[k].price} /> · {tops[k].durationText}
+            </small>
+          )}
+        </button>
+      ))}
+      <SortMenu
+        label={L.sortOther}
+        value={otherSorts.includes(sortBy) ? sortBy : ""}
+        options={otherSorts.map((k) => [k, L.sortOpts[k]])}
+        onPick={setSortBy}
+      />
+    </div>
+  );
+
+  if (status === "done" && current.length > 0) {
     body = (
       <>
-        <div className={`${s.panel} ${s.sortTabs}`} role="tablist">
-          {[
-            ["best", L.best],
-            ["cheapest", L.cheapest],
-            ["fastest", L.fastest],
-          ].map(([k, label]) => (
-            <button type="button" role="tab" aria-selected={sortBy === k} key={k} className={`${s.sortTab} ${sortBy === k ? s.sortTabActive : ""}`} onClick={() => setSortBy(k)}>
-              <strong>{label}</strong>
-              {tops[k] && (
-                <small>
-                  <Price value={tops[k].price} /> · {tops[k].durationText}
-                </small>
-              )}
+        {nearbyHidden && showNearby === null && (
+          <div className={s.nearbyAsk}>
+            <span>
+              {L.nearbyAsk} <span className={s.codeChip}>{nearbyCodes.slice(0, 3).join(", ")}</span>
+            </span>
+            <button type="button" className={s.linkBtn} onClick={() => setShowNearby(true)}>
+              {L.yes}
             </button>
-          ))}
-        </div>
-        {hasNearby && !filters.exactAirports && (
-          <div className={s.notice}>
-            <FaInfoCircle style={{ marginTop: 3, flexShrink: 0 }} /> {L.nearbyNotice}
+            <button type="button" className={s.linkBtn} style={{ color: "var(--muted)" }} onClick={() => setShowNearby(false)}>
+              {L.no}
+            </button>
           </div>
         )}
         {visible.length ? (
           <div className={s.flightList}>
-            {visible.map((f) => {
-              const tags = [];
-              if (f.journeyKey === tops.cheapest?.journeyKey) tags.push({ label: L.cheapest, tone: "green" });
-              if (f.journeyKey === tops.fastest?.journeyKey && f.journeyKey !== tops.cheapest?.journeyKey) tags.push({ label: L.fastest });
-              return <FlightCard key={f.journeyKey} flight={f} lang={lang} price={f.price} priceLabel={priceLabel} tags={tags} onSelect={setDrawer} />;
+            {visible.filter((f) => f.taxesIncluded).flatMap((f, i) => {
+              const card = renderCard(f);
+              // A banner after the 2nd result, then after every 5th.
+              const slot = i === 1 ? 0 : i > 1 && (i - 1) % 5 === 0 ? (i - 1) / 5 : null;
+              // Each slider starts on a different service, so consecutive ones don't repeat.
+              return slot === null ? [card] : [card, <PromoCarousel key={`promo-${i}`} lang={lang} start={slot * 2} />];
             })}
+            {visible.some((f) => !f.taxesIncluded) && (
+              <div className={s.sectionHead}>
+                <strong>{L.unconfirmedTitle}</strong>
+                <span>{L.unconfirmedHint}</span>
+              </div>
+            )}
+            {visible.filter((f) => !f.taxesIncluded).map(renderCard)}
           </div>
         ) : (
           <EmptyState icon={<FaSlidersH />} title={L.noMatch} text={L.noMatchHint}>
@@ -496,18 +607,53 @@ export default function FlightSearchPage({ initialParams }) {
     <div className={s.page} dir={isRTL ? "rtl" : "ltr"}>
       <div className={s.searchBand}>
         <div className={s.container}>
-          <SearchForm key={JSON.stringify(search)} lang={lang} initial={search} compact busy={status === "loading"} onSubmit={onSearch} />
+          {/* Phones: a one-line summary of the trip; the form opens on demand. */}
+          <button type="button" className={s.searchSummary} onClick={() => setEditOpen((o) => !o)} aria-expanded={editOpen}>
+            <span className={s.summaryText}>
+              <strong>
+                {search.tripType === "multicity"
+                  ? [...search.legs.map((l) => l.origin), search.legs[search.legs.length - 1].destination].join(" → ")
+                  : `${search.origin} ${isRT ? "⇄" : "→"} ${search.destination}`}
+              </strong>
+              <small>
+                {formatDate(search.departDate, lang)}
+                {isRT && search.returnDate ? ` – ${formatDate(search.returnDate, lang)}` : ""} · {L.travellerCount(search.adults + search.children + search.infants)}, {L.cabins[search.cabin]}
+              </small>
+            </span>
+            <span className={s.summaryEdit}>{editOpen ? L.close : L.editSearch}</span>
+          </button>
+          <div className={`${s.searchFormWrap} ${editOpen ? s.searchFormOpen : ""}`}>
+            <SearchForm key={JSON.stringify(search)} lang={lang} initial={search} compact busy={status === "loading"} onSubmit={onSearch} />
+          </div>
         </div>
       </div>
 
       <div className={`${s.container} ${s.results}`}>
         {status === "done" && current.length > 0 ? (
-          <FiltersPanel lang={lang} flights={current} filters={filters} onChange={setFilters} shown={visible.length} open={filtersOpen} onClose={() => setFiltersOpen(false)} />
+          <FiltersPanel
+            lang={lang}
+            flights={current}
+            filters={filters}
+            onChange={setFilters}
+            shown={visible.length}
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            ampm={ampm}
+            onAmpm={changeAmpm}
+            legFrom={stepLeg.origin}
+            legTo={stepLeg.destination}
+            onSort={setSortBy}
+          />
+        ) : status === "loading" ? (
+          <aside className={s.sidebar} aria-hidden="true">
+            <div className={s.skeleton} style={{ height: 220, marginBottom: 12 }} />
+            <div className={s.skeleton} style={{ height: 460 }} />
+          </aside>
         ) : (
           <div />
         )}
 
-        <main style={{ minWidth: 0 }}>
+        <main ref={resultsRef} className={s.resultsMain} style={{ minWidth: 0 }}>
           <div className={s.stepHead}>
             <div className={s.stepTitle}>
               {legCount > 1 && <span className={s.stepNum}>{step + 1}</span>}
@@ -528,6 +674,8 @@ export default function FlightSearchPage({ initialParams }) {
           {chosen.slice(0, step).map((c, k) => (
             <ChosenLeg key={k} lang={lang} label={search.tripType === "multicity" ? L.flightN(k + 1) : L.chosen[k]} flight={c.flight} fare={c.fare} onChange={() => backToLeg(k)} />
           ))}
+
+          {sortBar}
 
           {search.tripType !== "multicity" && step < 2 && (
             <DateStrip

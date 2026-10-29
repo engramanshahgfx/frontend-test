@@ -266,7 +266,9 @@ select.form-control option {
 .top-bar {
   background: #E85D1F;
   color: white;
-  padding: 8px 0;
+  height: 35px;
+  display: flex;
+  align-items: center;
   font-size: 13px;
   position: fixed;
   top: 0;
@@ -281,8 +283,10 @@ select.form-control option {
 }
 .top-bar-container {
   max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 0 24px;
 }
@@ -309,6 +313,41 @@ select.form-control option {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+}
+
+/* Social links, language switch and account menu share the right side of the top bar. The bar stays
+   35px tall because .main-header is fixed at top: 35px. */
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.top-bar-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.45);
+}
+.top-bar .user-trigger {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  padding: 3px;
+}
+.top-bar .user-trigger:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.top-bar .user-dropdown {
+  color: var(--primary-color);
+  font-size: 14px;
+}
+[dir="rtl"] .top-bar .user-dropdown {
+  right: auto;
+  left: 0;
+}
+@media (max-width: 420px) {
+  .top-bar .social-icons {
+    display: none;
+  }
 }
 .social-icon {
   color: #ffffff !important;
@@ -406,7 +445,21 @@ select.form-control option {
 @media (min-width: 1210px) {
   .desktop-nav {
     display: flex;
+    gap: 22px;
+    padding: 0 16px;
   }
+}
+/* Wider screens have room for more breathing space between menu items. */
+@media (min-width: 1360px) {
+  .desktop-nav {
+    gap: 34px;
+    padding: 0 28px;
+  }
+}
+/* Bootstrap's later .nav-link rule sets padding from --bs-nav-link-* variables that only exist inside
+   a Bootstrap .nav, which zeroes it here. Spacing comes from the gap above instead. */
+.desktop-nav .nav-link {
+  padding-inline: 0;
 }
 
 .nav-item-wrapper {

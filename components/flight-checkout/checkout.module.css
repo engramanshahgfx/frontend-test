@@ -1,0 +1,589 @@
+/* Flight checkout. Colour tokens come from .page in components/flights/flights.module.css. */
+
+.shell {
+  padding: 24px 0 24px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.step + .step::before {
+  content: "";
+  width: 36px;
+  height: 2px;
+  background: var(--line-2);
+  margin-inline-end: 2px;
+}
+
+.dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #fff;
+  border: 2px solid var(--line-2);
+}
+
+.stepActive {
+  color: var(--ink);
+}
+
+.stepActive .dot {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.stepDone .dot {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.aside {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.cardHead {
+  padding: 18px 22px 0;
+}
+
+.cardHead h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardHead p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.cardBody {
+  padding: 18px 22px 22px;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--teal);
+  background: var(--teal-50);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Form */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.gridTitle {
+  grid-template-columns: 140px repeat(2, minmax(0, 1fr));
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.input {
+  height: 46px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: #fff;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-50);
+}
+
+.invalid .input,
+.invalid :global(input),
+.invalid :global(button) {
+  border-color: #d92d20;
+}
+
+.err {
+  font-size: 0.76rem;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 46px;
+}
+
+.segmented button {
+  flex: 1;
+  border: 0;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+
+.segmented button + button {
+  border-inline-start: 1px solid var(--line-2);
+}
+
+.segmented .on {
+  background: var(--teal-50);
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.phoneRow {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.countryWrap :global(button),
+.countryWrap :global(input) {
+  min-height: 46px;
+  height: 46px;
+  width: 100%;
+  border: 1px solid var(--line-2) !important;
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.countryWrap :global(input):focus {
+  outline: none;
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 0 3px var(--teal-50);
+}
+
+.formFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.secureNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+  background: #fef3f2;
+  color: #b42318;
+  border: 1px solid #fecdca;
+}
+
+.info {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-color: #f5dcb5;
+}
+
+.ok {
+  background: #ecfdf3;
+  color: var(--ok);
+  border-color: #abefc6;
+}
+
+/* Progress overlay while the airline confirms */
+.working {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--teal-50);
+  color: var(--teal);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--teal-100);
+  border-top-color: var(--teal);
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Summary */
+.sumLeg {
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.sumLegHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.sumAirline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.86rem;
+}
+
+.sumTimes {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.sumTime {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.sumCode {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sumMid {
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.sumMid hr {
+  border: 0;
+  border-top: 1px dashed var(--line-2);
+  margin: 4px 0;
+}
+
+.sumMeta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+
+.priceRows {
+  padding: 14px 18px 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.priceTotal {
+  border-top: 1px dashed var(--line-2);
+  padding-top: 10px;
+  margin-top: 4px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  align-items: center;
+}
+
+.priceNote {
+  font-size: 0.76rem;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Payment */
+.payHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.amountBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+.amountBox strong {
+  font-size: 1.4rem;
+}
+
+.mysr {
+  max-width: 460px;
+  margin: 0 auto;
+  min-height: 120px;
+}
+
+/* Confirmation */
+.hero {
+  text-align: center;
+  padding: 32px 24px 26px;
+}
+
+.heroIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  font-size: 1.6rem;
+  background: #ecfdf3;
+  color: var(--ok);
+}
+
+.heroPending {
+  background: var(--teal-50);
+  color: var(--teal);
+}
+
+.hero h1 {
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+}
+
+.hero p {
+  color: var(--muted);
+  margin: 0 auto;
+  max-width: 520px;
+}
+
+.refGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.refCell {
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.refCell + .refCell {
+  border-inline-start: 1px solid var(--line);
+}
+
+.refCell small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+.refCell strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.table th {
+  text-align: start;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.table td {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aside {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid,
+  .gridTitle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stepper .stepLabel {
+    display: none;
+  }
+
+  .cardHead,
+  .cardBody {
+    padding-inline: 16px;
+  }
+
+  .refGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .refCell + .refCell {
+    border-inline-start: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+}

@@ -43,6 +43,31 @@
   user-select: none;
 }
 
+/* On the orange top bar: white text, the active language as a white chip. */
+.onDark {
+  height: 22px;
+}
+
+.onDark .textButton {
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 3px 7px;
+}
+
+.onDark .textButton:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.onDark .activeText {
+  color: #E85D1F !important;
+  background: #fff !important;
+}
+
+.onDark .textDivider {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 /* ===== Dropdown Mode ===== */
 .switcherButton {
   display: flex;

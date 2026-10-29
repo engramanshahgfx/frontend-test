@@ -21,7 +21,8 @@ const ContextProvider = ({ children }) => {
     const fetchProfile = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-        if (!token) {
+        // A guest flight checkout token is scoped to one booking and has no profile.
+        if (!token || localStorage.getItem('auth_token_scope') === 'guest') {
           // Not authenticated yet, skip fetch
           return;
         }

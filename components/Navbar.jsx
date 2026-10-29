@@ -240,7 +240,7 @@ export default function Navbar({ lang }) {
     { href: "/flights", label: lang === "ar" ? "الطيران" : "Flights" },
     {
       href: "#",
-      label: lang === "ar" ? "الرحلات الدولية" : "International Trips",
+      label: lang === "ar" ? "الرحلات " : " Trips",
       dropdown: true,
       type: "packages",
     },
@@ -454,6 +454,43 @@ export default function Navbar({ lang }) {
                 <SiX size={16} />
               </a>
             </div>
+            <span className="top-bar-divider" aria-hidden="true" />
+            <LanguageSwitcher lang={lang} showFlagOnly onDark />
+            {!authLoading && (
+              <div className="user-menu" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="user-trigger"
+                  aria-label={lang === "ar" ? "قائمة الحساب" : "Account menu"}
+                  aria-expanded={userMenuOpen}
+                >
+                  <FaUserCircle size={16} />
+                </button>
+                {userMenuOpen && (
+                  <div className="user-dropdown" style={{ zIndex: 1001 }}>
+                    {isAuthenticated ? (
+                      <>
+                        <Link href={`/${lang}/dashboard`} className="user-link">
+                          <FaUser /> {t("nav.dashboard")}
+                        </Link>
+                        <button onClick={logout} className="user-link logout">
+                          <FaSignOutAlt /> {t("buttons.logout")}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href={`/${lang}/login`} className="user-link">
+                          <FaSignInAlt /> {t("buttons.login")}
+                        </Link>
+                        <Link href={`/${lang}/register`} className="user-link">
+                          <FaUser /> {t("buttons.register")}
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -633,42 +670,6 @@ export default function Navbar({ lang }) {
           </nav>
 
           <div className="header-actions">
-            <LanguageSwitcher lang={lang} showFlagOnly />
-            {!authLoading && (
-              <div className="user-menu" ref={userMenuRef}>
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="user-trigger"
-                  aria-label={lang === "ar" ? "قائمة الحساب" : "Account menu"}
-                  aria-expanded={userMenuOpen}
-                >
-                  <FaUserCircle size={20} />
-                </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown" style={{ zIndex: 1001 }}>
-                    {isAuthenticated ? (
-                      <>
-                        <Link href={`/${lang}/dashboard`} className="user-link">
-                          <FaUser /> {t("nav.dashboard")}
-                        </Link>
-                        <button onClick={logout} className="user-link logout">
-                          <FaSignOutAlt /> {t("buttons.logout")}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link href={`/${lang}/login`} className="user-link">
-                          <FaSignInAlt /> {t("buttons.login")}
-                        </Link>
-                        <Link href={`/${lang}/register`} className="user-link">
-                          <FaUser /> {t("buttons.register")}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
             <button
               className="mobile-toggle"
               onClick={() => setMobileMenuOpen(true)}

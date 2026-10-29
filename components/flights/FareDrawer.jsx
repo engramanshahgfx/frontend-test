@@ -10,8 +10,11 @@ import s from "./flights.module.css";
 
 const titleCase = (str) => String(str || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
+// "0 Pc" / "0 Kg" is the airline saying no checked bag; that is shown as "Not included".
+const noBag = (b) => b?.check_in_kg === 0 || b?.check_in_pieces === 0 || /^\s*0\s*(pc|pcs|piece|kg)/i.test(String(b?.check_in || ""));
+
 function bagLabel(b) {
-  if (!b) return null;
+  if (!b || noBag(b)) return null;
   if (b.check_in_kg) return ltr(`${b.check_in_kg} kg`);
   if (b.check_in_pieces) return ltr(`${b.check_in_pieces} pc`);
   return ltr(b.check_in) || null;
@@ -26,7 +29,7 @@ function fromBundle(b, lang) {
     name: b.group ? titleCase(b.group) : null,
     fareClass: b.name,
     checkedBag: bagLabel(b.baggage),
-    checkedKnown: Boolean(b.baggage?.check_in || b.baggage?.check_in_kg || b.baggage?.check_in_pieces),
+    checkedKnown: Boolean(b.baggage?.check_in || b.baggage?.check_in_kg || b.baggage?.check_in_pieces) || noBag(b.baggage),
     cabinBag: ltr(b.baggage?.cabin || (b.inclusions?.cabin_kg ? `${b.inclusions.cabin_kg} kg` : null)),
     cancellation: b.cancellation ? { status: b.cancellation.status, text: (ar && b.cancellation.label_ar) || b.cancellation.label } : null,
     change: b.change ? { status: b.change.status, text: (ar && b.change.label_ar) || b.change.label } : null,
@@ -171,7 +174,7 @@ export default function FareDrawer({ lang, flight, searchId, extra, isRoundTripT
                     </div>
                   </div>
                   <ul className={s.fareRows}>
-                    <Row icon={<FaSuitcaseRolling size={12} />} label={L.checkedBag} value={f.checkedBag || (f.checkedKnown ? L.noChecked : L.notStated)} tone={f.checkedBag ? "yes" : "unknown"} />
+                    <Row icon={<FaSuitcaseRolling size={12} />} label={L.checkedBag} value={f.checkedBag || (f.checkedKnown ? L.noChecked : L.notStated)} tone={f.checkedBag ? "yes" : f.checkedKnown ? "no" : "unknown"} />
                     <Row icon={<FaSuitcase size={12} />} label={L.cabinBagT} value={f.cabinBag || L.notStated} tone={f.cabinBag ? "yes" : "unknown"} />
                     {termRow(f.cancellation, L.cancellation, <FaUndo size={11} />)}
                     {termRow(f.change, L.dateChange, <FaExchangeAlt size={11} />)}
