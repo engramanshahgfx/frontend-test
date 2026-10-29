@@ -46,10 +46,15 @@ const nextConfig = {
   },
 
   async rewrites() {
+  // localhost on Vercel is Vercel's own private address, so every proxied /api call (including
+  // the Moyasar webhook sent to tilalr.com) failed with DNS_HOSTNAME_RESOLVED_PRIVATE.
+  const backend =
+    process.env.BACKEND_URL ||
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://admin.tilalr.com');
   return [
     {
       source: '/api/:path*',
-      destination: 'http://localhost:8000/api/:path*',
+      destination: `${backend}/api/:path*`,
     },
     {
       source: '/:lang/proxy/:path*',

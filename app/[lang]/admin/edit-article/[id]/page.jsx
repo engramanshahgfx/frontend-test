@@ -14,6 +14,7 @@ const JoditEditor = dynamic(() => import("jodit-react"), {
   loading: () => <p>Loading editor...</p>,
 });
 import { db } from "@/configuration/firebase-config";
+import { adminAuthHeader } from "@/lib/adminAuthHeader";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
@@ -120,7 +121,7 @@ export default function EditArticle({ params }) {
       if (newImage) {
         await fetch("/api/delete", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(await adminAuthHeader()) },
           body: JSON.stringify({ path: `articles/${storageId}` }),
         });
 
@@ -131,6 +132,7 @@ export default function EditArticle({ params }) {
 
         const res = await fetch("/api/upload", {
           method: "POST",
+          headers: await adminAuthHeader(),
           body: formData,
         });
 

@@ -8,6 +8,7 @@ const JoditEditor = dynamic(() => import("jodit-react"), {
 });
 import { nanoid } from "nanoid";
 import { db, storage } from "@/configuration/firebase-config";
+import { adminAuthHeader } from "@/lib/adminAuthHeader";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
 
@@ -120,6 +121,7 @@ export default function AddProduct({ params }) {
 
       const res = await fetch("/api/upload", {
         method: "POST",
+        headers: await adminAuthHeader(),
         body: formData,
       });
 

@@ -14,6 +14,7 @@ const JoditEditor = dynamic(() => import("jodit-react"), {
   loading: () => <p>Loading editor...</p>,
 });
 import { db } from "@/configuration/firebase-config";
+import { adminAuthHeader } from "@/lib/adminAuthHeader";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
@@ -125,7 +126,7 @@ export default function EditProducts({ params }) {
       if (newImage) {
         await fetch("/api/delete", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(await adminAuthHeader()) },
           body: JSON.stringify({ path: `products/${storageId}` }),
         });
         storageId = nanoid();
@@ -135,6 +136,7 @@ export default function EditProducts({ params }) {
 
         const res = await fetch("/api/upload", {
           method: "POST",
+          headers: await adminAuthHeader(),
           body: formData,
         });
 

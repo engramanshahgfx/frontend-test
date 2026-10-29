@@ -3,6 +3,7 @@ import React, { useContext, useEffect, use } from "react";
 import { Context } from "@/providers/ContextProvider";
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/configuration/firebase-config";
+import { adminAuthHeader } from "@/lib/adminAuthHeader";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Pagination from "@mui/material/Pagination";
@@ -55,7 +56,7 @@ export default function Products({ params }) {
     try {
       await fetch("/api/delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await adminAuthHeader()) },
         body: JSON.stringify({ path: `products/${product.storageId}` }),
       });
 
