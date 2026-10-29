@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaSlidersH, FaBolt, FaReceipt, FaChevronDown, FaCheck, FaEnvelopeOpenText, FaPlane, FaChevronLeft, FaChevronRight, FaInfoCircle, FaRedo } from "react-icons/fa";
+import { FaSlidersH, FaBolt, FaReceipt, FaChevronDown, FaCheck, FaHourglassHalf, FaEnvelopeOpenText, FaPlane, FaChevronLeft, FaChevronRight, FaInfoCircle, FaRedo } from "react-icons/fa";
 import akbarApi from "@/lib/akbarApi";
 import {
   normalizeOffer, groupByJourney, applyFilters, sortFlights, buildSearchUrl, startFilters, EMPTY_FILTERS,
@@ -194,6 +194,50 @@ function SortMenu({ label, value, options, onPick }) {
   );
 }
 
+// Results older than this are treated as stale: airline availability moves, and the supplier search
+// session behind them stops accepting fare checks.
+const STALE_AFTER_MS = 15 * 60 * 1000;
+
+/** True once results have been on screen for STALE_AFTER_MS; also checked when the tab is shown again. */
+function useStaleResults(loadedAt) {
+  const [stale, setStale] = useState(false);
+  useEffect(() => {
+    setStale(false);
+    if (!loadedAt) return undefined;
+    const check = () => Date.now() - loadedAt >= STALE_AFTER_MS && setStale(true);
+    const timer = setTimeout(check, STALE_AFTER_MS);
+    // Background tabs throttle timers, so a returning visitor is checked straight away.
+    const onVisible = () => document.visibilityState === "visible" && check();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [loadedAt]);
+  return stale;
+}
+
+function StaleDialog({ lang, onRefresh, onNewSearch }) {
+  const L = dict(lang);
+  return (
+    <div className={s.staleOverlay} role="dialog" aria-modal="true" aria-labelledby="stale-title">
+      <div className={s.staleCard}>
+        <div className={s.staleIcon}>
+          <FaHourglassHalf />
+        </div>
+        <h2 id="stale-title">{L.staleTitle}</h2>
+        <p>{L.staleText}</p>
+        <button type="button" className={s.staleRefresh} onClick={onRefresh} autoFocus>
+          {L.staleRefresh}
+        </button>
+        <button type="button" className={s.staleNew} onClick={onNewSearch}>
+          {L.staleNew}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ icon, title, text, children }) {
   return (
     <div className={`${s.panel} ${s.empty}`}>
@@ -256,6 +300,9 @@ export default function FlightSearchPage({ initialParams }) {
   const [drawer, setDrawer] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  // When the current results arrived; the "Still around?" prompt counts from here.
+  const [loadedAt, setLoadedAt] = useState(null);
+  const stale = useStaleResults(loadedAt);
   const abortRef = useRef(null);
   // The results column scrolls on its own (desktop); a new filter, sort or flight starts it at the top.
   const resultsRef = useRef(null);
@@ -271,6 +318,7 @@ export default function FlightSearchPage({ initialParams }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     setStatus("loading");
+    setLoadedAt(null);
     setOffers([]);
     setStep(0);
     setChosen([]);
@@ -308,6 +356,7 @@ export default function FlightSearchPage({ initialParams }) {
     setSearchId(res.data.data.search_id);
     setOffers(list.map(normalizeOffer).filter((o) => o.id && o.price > 0));
     setStatus("done");
+    setLoadedAt(Date.now());
   }, []);
 
   useEffect(() => {
@@ -702,6 +751,17 @@ export default function FlightSearchPage({ initialParams }) {
           nextLabel={nextLabel}
           onClose={() => setDrawer(null)}
           onChoose={onChooseFare}
+        />
+      )}
+
+      {stale && status === "done" && (
+        <StaleDialog
+          lang={lang}
+          onRefresh={() => {
+            setDrawer(null);
+            runSearch(search);
+          }}
+          onNewSearch={() => router.push(`/${lang}/flights`)}
         />
       )}
     </div>

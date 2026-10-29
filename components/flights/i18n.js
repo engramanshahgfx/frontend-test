@@ -110,6 +110,10 @@ const en = {
   operatedBy: (x) => x,
 
   searching: 'Searching live fares from airlines…',
+  staleTitle: 'Still around?',
+  staleText: 'Flight prices and seats change often with airline availability. Refresh to see the latest fares.',
+  staleRefresh: 'Refresh results',
+  staleNew: 'Start a new flight search',
   noResults: 'No flights found for these dates',
   noResultsHint: 'Airlines have no seats for this search. Try nearby dates or a different route.',
   noMatch: 'No flights match your filters',
@@ -283,6 +287,10 @@ const ar = {
   operatedBy: (x) => x,
 
   searching: 'جارٍ البحث عن الأسعار المباشرة من شركات الطيران…',
+  staleTitle: 'هل ما زلت هنا؟',
+  staleText: 'تتغير أسعار الرحلات والمقاعد باستمرار حسب توفرها لدى شركات الطيران. حدّث النتائج لرؤية أحدث الأسعار.',
+  staleRefresh: 'تحديث النتائج',
+  staleNew: 'بحث جديد عن رحلة',
   noResults: 'لا توجد رحلات في هذه التواريخ',
   noResultsHint: 'لا تتوفر مقاعد لهذا البحث. جرّب تواريخ قريبة أو مساراً آخر.',
   noMatch: 'لا توجد رحلات تطابق التصفية',
