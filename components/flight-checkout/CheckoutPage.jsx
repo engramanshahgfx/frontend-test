@@ -255,6 +255,8 @@ export default function CheckoutPage({ lang: langProp }) {
       // "The airline requires the visa type of passenger 2 ..." marks that traveller's field.
       const visaFor = /visa type of passenger (\d+)/i.exec(err?.message || "");
       if (visaFor) setErrors({ [`${Number(visaFor[1]) - 1}.visaType`]: L.visaRequired });
+      const issueFor = /passport issue date of passenger (\d+)/i.exec(err?.message || "");
+      if (issueFor) setErrors({ [`${Number(issueFor[1]) - 1}.passportIssueDate`]: L.issueDateRequired });
       setError(friendlyError(err, lang));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {

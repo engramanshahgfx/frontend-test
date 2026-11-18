@@ -143,11 +143,14 @@ function AirportResults({ lang, q, rows, active, setActive, onPick }) {
   );
 }
 
-/** From / To box: shows the chosen airport, and becomes a text input while it is open. */
-function AirportField({ lang, open, ap, icon, label, placeholder, onOpen, onClose, onPick }) {
+/**
+ * From / To box: shows the chosen airport, and becomes a text input while it is open.
+ * `exclude` is the code chosen in the opposite box, which a route cannot use twice.
+ */
+function AirportField({ lang, open, ap, exclude, icon, label, placeholder, onOpen, onClose, onPick }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
-  const found = useAirportSearch(q);
+  const found = useAirportSearch(q).filter((a) => a.code !== exclude);
   // Popular airports are one per city already, so they are listed flat.
   const rows = q.trim() ? groupByCity(found) : found.map((a) => ({ kind: "popular", ap: a }));
 
@@ -234,6 +237,7 @@ function RouteFields({ lang, from, to, onFrom, onTo, onSwap }) {
         lang={lang}
         open={open === "from"}
         ap={from}
+        exclude={to?.code}
         icon={<FaPlaneDeparture />}
         label={L.from}
         placeholder={L.origin}
@@ -248,6 +252,7 @@ function RouteFields({ lang, from, to, onFrom, onTo, onSwap }) {
         lang={lang}
         open={open === "to"}
         ap={to}
+        exclude={from?.code}
         icon={<FaPlaneArrival />}
         label={L.to}
         placeholder={L.destination}
@@ -516,8 +521,8 @@ export default function SearchForm({ lang, initial, compact = false, busy = fals
             lang={lang}
             from={from}
             to={to}
-            onFrom={(ap) => (ap.code === to?.code ? (setTo(from), setFrom(ap)) : setFrom(ap))}
-            onTo={(ap) => (ap.code === from?.code ? (setFrom(to), setTo(ap)) : setTo(ap))}
+            onFrom={setFrom}
+            onTo={setTo}
             onSwap={() => {
               setFrom(to);
               setTo(from);

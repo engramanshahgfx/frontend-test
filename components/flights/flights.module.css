@@ -2207,11 +2207,6 @@
   font-size: 1rem;
 }
 
-.fareClass {
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
 .radio {
   width: 20px;
   height: 20px;

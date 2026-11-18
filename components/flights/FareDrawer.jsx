@@ -26,8 +26,8 @@ function fromBundle(b, lang) {
   return {
     id: b.offer_id,
     price: Number(b.price?.total) || 0,
-    name: b.group ? titleCase(b.group) : null,
-    fareClass: b.name,
+    // b.group is only Akbar's "Branded" marker, the same on every fare; b.name is the fare's own name.
+    name: b.name ? titleCase(b.name) : null,
     checkedBag: bagLabel(b.baggage),
     checkedKnown: Boolean(b.baggage?.check_in || b.baggage?.check_in_kg || b.baggage?.check_in_pieces) || noBag(b.baggage),
     cabinBag: ltr(b.baggage?.cabin || (b.inclusions?.cabin_kg ? `${b.inclusions.cabin_kg} kg` : null)),
@@ -41,8 +41,7 @@ function fromBundle(b, lang) {
 const fromSearch = (o) => ({
   id: o.id,
   price: o.price,
-  name: o.fareGroup ? titleCase(o.fareGroup) : null,
-  fareClass: o.fareClass,
+  name: o.fareClass ? titleCase(o.fareClass) : null,
   checkedBag: o.checkedBag,
   checkedKnown: Boolean(o.checkedBag),
   cabinBag: o.cabinBag,
@@ -163,7 +162,6 @@ export default function FareDrawer({ lang, flight, searchId, extra, isRoundTripT
                   <div className={s.fareTop}>
                     <div>
                       <div className={s.fareName}>{f.name || `${L.fare} ${i + 1}`}</div>
-                      {f.fareClass && <div className={s.fareClass}>{L.bookingClass(f.fareClass)}</div>}
                     </div>
                     <span className={s.radio} />
                   </div>

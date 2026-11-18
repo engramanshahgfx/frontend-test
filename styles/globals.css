@@ -31,10 +31,16 @@
 html,
 body {
   max-width: 100%;
+}
+
+html {
   overflow-x: hidden !important;
 }
 
 body {
+  /* clip, not hidden: hidden makes body a scroll container, and every position: sticky on the site
+     then sticks to body (which never scrolls) instead of the screen. */
+  overflow-x: clip !important;
   color: var(--foreground);
   background: #FAF6F0;
   -webkit-font-smoothing: antialiased;

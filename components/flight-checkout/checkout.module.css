@@ -168,6 +168,68 @@
   box-shadow: 0 0 0 3px var(--teal-50);
 }
 
+.select {
+  position: relative;
+}
+
+.selectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: start;
+}
+
+.selectBtn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectBtn svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.selectBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.selectList {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline: 0;
+  z-index: 30;
+  max-height: 240px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 29, 43, 0.14);
+}
+
+.selectOption {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.selectActive {
+  background: var(--teal-50);
+}
+
+.selectOption[aria-selected="true"] {
+  color: var(--teal);
+  font-weight: 600;
+}
+
 .invalid .input,
 .invalid :global(input),
 .invalid :global(button) {
@@ -432,8 +494,10 @@
 
 .amountBox {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 14px 16px;
   border-radius: 10px;
   background: var(--bg);
@@ -441,8 +505,19 @@
   font-size: 0.9rem;
 }
 
-.amountBox strong {
+/* The amount only: the booking reference beside it is a <strong> too. */
+.amountBox > strong {
+  flex-shrink: 0;
   font-size: 1.4rem;
+  white-space: nowrap;
+}
+
+/* Moves to its own line on a phone, whole. */
+.amountBox small strong {
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .mysr {

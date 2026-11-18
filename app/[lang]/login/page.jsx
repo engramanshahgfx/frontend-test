@@ -219,40 +219,22 @@ export default function LoginPage({ params }) {
   // OTP Verification Form
   if (showOtp) {
     return (
-      <div
-        className="d-flex align-items-center"
-        style={{ minHeight: "calc(100vh - 88px)", backgroundColor: "#acaaaa" }}
-      >
+      <div className={styles.authPage}>
         <div className="container py-5">
           <div className="d-flex flex-column align-items-center">
             <div
-              className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.formWidth}`}
-              style={{
-                borderRadius: "25px",
-                border: "1px solid rgba(202, 218, 231, 1)",
-                background:
-                  "linear-gradient(180deg, #E2F2FF 0%,",
-              }}
+              className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.authCard}`}
             >
-              <div
-                className="d-flex justify-content-center align-items-center mb-4"
-                style={{
-                  width: "61px",
-                  height: "61px",
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  boxShadow: "0px 0px 16.15px 0px rgba(0, 0, 0, 0.07)",
-                }}
-              >
-                <FiShield style={{ width: "30px", height: "30px", color: "#0d6efd" }} />
+              <div className={styles.authIcon}>
+                <FiShield />
               </div>
-              <div className="fs-4 text-center mb-2" style={{ fontWeight: "600" }}>
+              <div className={styles.authTitle}>
                 {t.otpTitle}
               </div>
-              <div className="text-secondary text-center mb-2" style={{ fontSize: "14px" }}>
+              <div className={`${styles.authSubtitle} mb-2`}>
                 {t.otpSubtitle}
               </div>
-              <div className="text-center mb-4" style={{ fontSize: "14px", color: "#0d6efd" }}>
+              <div className={`${styles.authSubtitle} mb-4`}>
                 {t.codeSentTo}: <strong>{userData.identifier}</strong>
               </div>
               
@@ -300,7 +282,7 @@ export default function LoginPage({ params }) {
                   className="btn btn-link w-100"
                   onClick={handleResendOtp}
                   disabled={resendCooldown > 0 || loading}
-                  style={{ color: resendCooldown > 0 ? "#999" : "#0d6efd" }}
+                  style={{ color: resendCooldown > 0 ? "#999" : "var(--primary-color)" }}
                 >
                   {resendCooldown > 0 ? `${t.resendCode} (${resendCooldown}s)` : t.resendCode}
                 </button>
@@ -323,43 +305,19 @@ export default function LoginPage({ params }) {
 
   // Otherwise show login form
   return (
-    <div
-      className="d-flex align-items-center"
-      style={{ minHeight: "calc(100vh - 88px)", backgroundColor: "#7b7b7b" }}
-    >
+    <div className={styles.authPage}>
       <div className="container py-5">
         <div className="d-flex flex-column align-items-center">
           <div
-            className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.formWidth}`}
-            style={{
-              borderRadius: "25px",
-              border: "1px solid rgba(202, 218, 231, 1)",
-              background:
-                "linear-gradient(180deg, #E2F2FF 0%, rgba(255, 255, 255, 0) 78.01%)",
-            }}
+            className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.authCard}`}
           >
-            <div
-              className="d-flex justify-content-center align-items-center mb-4"
-              style={{
-                width: "61px",
-                height: "61px",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                boxShadow: " 0px 0px 16.15px 0px rgba(0, 0, 0, 0.07)",
-              }}
-            >
-              <FiLogIn style={{ width: "30px", height: "30px" }} />
+            <div className={styles.authIcon}>
+              <FiLogIn />
             </div>
-            <div
-              className="fs-4 text-center mb-2"
-              style={{ fontWeight: "600" }}
-            >
+            <div className={styles.authTitle}>
               {t.title}
             </div>
-            <div
-              className="text-secondary text-center mb-4"
-              style={{ fontSize: "14px" }}
-            >
+            <div className={`${styles.authSubtitle} mb-4`}>
               {t.subtitle}
             </div>
             <form className="w-100" onSubmit={handleLogin}>
@@ -455,7 +413,7 @@ export default function LoginPage({ params }) {
 
               <div className="text-center mt-3" style={{ fontSize: "14px" }}>
                 {t.newHere}{" "}
-                <Link href={`/${lang}/register`} style={{ color: "#0d6efd", fontWeight: "500" }}>
+                <Link href={`/${lang}/register`} className={styles.authLink}>
                   {t.createAccount}
                 </Link>
               </div>

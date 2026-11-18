@@ -144,25 +144,25 @@ const translations = {
   };
 
   return (
-    <div className="d-flex align-items-center" style={{ minHeight: "calc(100vh - 88px)", backgroundColor: "#000" }}>
+    <div className={styles.authPage}>
       <div className="container py-5">
         <div className="d-flex flex-column align-items-center">
-          <div className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.formWidth}`} style={{ borderRadius: "25px", border: "1px solid rgba(202, 218, 231, 1)", background: "linear-gradient(180deg, #E2F2FF 0%, rgba(255, 255, 255, 0) 78.01%)" }}>
+          <div className={`px-2 px-sm-4 py-4 d-flex flex-column align-items-center ${styles.authCard}`}>
             
             {/* Icon */}
-            <div className="d-flex justify-content-center align-items-center mb-4" style={{ width: "61px", height: "61px", backgroundColor: "white", borderRadius: "12px", boxShadow: "0px 0px 16.15px 0px rgba(0, 0, 0, 0.07)" }}>
-              {step === 1 && <LuAtSign style={{ width: "30px", height: "30px" }} />}
-              {step === 2 && <FiShield style={{ width: "30px", height: "30px" }} />}
-              {step === 3 && <GoLock style={{ width: "30px", height: "30px" }} />}
+            <div className={styles.authIcon}>
+              {step === 1 && <LuAtSign />}
+              {step === 2 && <FiShield />}
+              {step === 3 && <GoLock />}
             </div>
 
             {/* Title & Subtitle */}
-            <div className="fs-4 text-center mb-2" style={{ fontWeight: 600 }}>
+            <div className={styles.authTitle}>
               {step === 1 && t.step1Title}
               {step === 2 && t.step2Title}
               {step === 3 && t.step3Title}
             </div>
-            <div className="text-secondary text-center mb-4" style={{ fontSize: "14px" }}>
+            <div className={`${styles.authSubtitle} mb-4`}>
               {step === 1 && t.step1Subtitle}
               {step === 2 && t.step2Subtitle}
               {step === 3 && t.step3Subtitle}
@@ -175,7 +175,7 @@ const translations = {
                   <input 
                     type="text"
                     className="form-control" 
-                    style={{ borderRadius: "15px", paddingLeft: lang === "ar" ? "" : "40px", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }} 
+                    style={{ borderRadius: "15px", height: "50px" }} 
                     placeholder={t.identifierPlaceholder}
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
@@ -227,7 +227,7 @@ const translations = {
                   <input 
                     type="password" 
                     className="form-control" 
-                    style={{ borderRadius: "15px", paddingLeft: lang === "ar" ? "" : "40px", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }} 
+                    style={{ borderRadius: "15px", height: "50px" }} 
                     placeholder={t.passwordPlaceholder} 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
@@ -240,7 +240,7 @@ const translations = {
                   <input 
                     type="password" 
                     className="form-control" 
-                    style={{ borderRadius: "15px", paddingLeft: lang === "en" ? "40px" : "", paddingRight: lang === "ar" ? "40px" : "", height: "50px" }} 
+                    style={{ borderRadius: "15px", height: "50px" }} 
                     placeholder={t.confirmPasswordPlaceholder} 
                     value={passwordConfirmation} 
                     onChange={(e) => setPasswordConfirmation(e.target.value)} 

@@ -1,6 +1,7 @@
 "use client";
 
-import { FaUser, FaEnvelope } from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
+import { FaUser, FaEnvelope, FaChevronDown } from "react-icons/fa";
 import CountryField from "@/components/CountryField";
 import { t as dict } from "./i18n";
 import c from "./checkout.module.css";
@@ -12,7 +13,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export const emptyTraveller = (type) => ({
   type, title: TITLES[type][0], gender: "M", firstName: "", lastName: "", dateOfBirth: "",
-  nationality: "SA", passportNumber: "", passportExpiry: "", issuingCountry: "SA", visaType: "",
+  nationality: "SA", passportNumber: "", passportExpiry: "", passportIssueDate: "", issuingCountry: "SA", visaType: "",
 });
 
 // Akbar's VisaType is free text (its own sandbox booking sends "Visiting Visa"). Asked by some
@@ -20,6 +21,8 @@ export const emptyTraveller = (type) => ({
 export const VISA_TYPES = ["Visiting Visa", "Tourist Visa", "Business Visa", "Employment Visa", "Residence Visa", "Umrah Visa", "Hajj Visa", "Student Visa", "Transit Visa"];
 
 export const emptyContact = () => ({ email: "", dialCode: "+966", phone: "" });
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 const yearsOn = (dob, onDate) => {
   const a = new Date(dob);
@@ -58,6 +61,7 @@ export function validateCheckout(contact, travellers, { firstDate, lastDate }, l
     passports.add(passport);
     if (!p.passportExpiry) e[k("passportExpiry")] = L.required;
     else if (p.passportExpiry <= lastDate) e[k("passportExpiry")] = L.expiryAfterTrip;
+    if (p.passportIssueDate && (p.passportIssueDate > today() || (p.passportExpiry && p.passportIssueDate >= p.passportExpiry))) e[k("passportIssueDate")] = L.badIssueDate;
   });
   return e;
 }
@@ -70,6 +74,68 @@ function Field({ label, error, hint, children, className = "", as: Tag = "label"
       {children}
       {error ? <span className={c.err}>{error}</span> : hint ? <span className={c.hint}>{hint}</span> : null}
     </Tag>
+  );
+}
+
+/** Opens inside the page at the field's width, like the country picker; a native <select> list does not. */
+function Select({ label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const ref = useRef(null);
+  const listRef = useRef(null);
+  const selected = Math.max(options.findIndex((o) => o.value === value), 0);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setActive(selected);
+    listRef.current?.scrollIntoView({ block: "nearest" });
+    const outside = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    document.addEventListener("mousedown", outside);
+    return () => document.removeEventListener("mousedown", outside);
+  }, [open, selected]);
+
+  useEffect(() => {
+    if (open) listRef.current?.children[active]?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const pick = (v) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  const onKey = (e) => {
+    if (e.key === "Escape" || e.key === "Tab") setOpen(false);
+    if (!["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) return;
+    e.preventDefault();
+    if (!open) setOpen(true);
+    else if (e.key === "ArrowDown") setActive((i) => Math.min(i + 1, options.length - 1));
+    else if (e.key === "ArrowUp") setActive((i) => Math.max(i - 1, 0));
+    else pick(options[active].value);
+  };
+
+  return (
+    <div className={c.select} ref={ref}>
+      <button type="button" className={`${c.input} ${c.selectBtn}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)} onKeyDown={onKey}>
+        <span>{options[selected]?.label}</span>
+        <FaChevronDown size={11} />
+      </button>
+      {open && (
+        <ul className={c.selectList} role="listbox" aria-label={label} ref={listRef}>
+          {options.map((o, i) => (
+            <li
+              key={o.value}
+              role="option"
+              aria-selected={o.value === value}
+              className={`${c.selectOption} ${i === active ? c.selectActive : ""}`}
+              onMouseEnter={() => setActive(i)}
+              onClick={() => pick(o.value)}
+            >
+              {o.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -117,14 +183,13 @@ export default function TravellerForm({ lang, contact, travellers, errors, disab
             </div>
             <div className={c.cardBody}>
               <div className={`${c.grid} ${c.gridTitle}`}>
-                <Field label={L.title}>
-                  <select className={c.input} value={p.title} onChange={(e) => set({ title: e.target.value, gender: FEMALE.includes(e.target.value) ? "F" : "M" })}>
-                    {TITLES[p.type].map((tt) => (
-                      <option key={tt} value={tt}>
-                        {L.titles[tt]}
-                      </option>
-                    ))}
-                  </select>
+                <Field as="div" label={L.title}>
+                  <Select
+                    label={L.title}
+                    value={p.title}
+                    options={TITLES[p.type].map((tt) => ({ value: tt, label: L.titles[tt] }))}
+                    onChange={(title) => set({ title, gender: FEMALE.includes(title) ? "F" : "M" })}
+                  />
                 </Field>
                 <Field label={L.firstName} error={err("firstName")}>
                   <input className={c.input} dir="ltr" autoComplete={i === 0 ? "given-name" : "off"} value={p.firstName} onChange={(e) => set({ firstName: e.target.value })} />
@@ -136,7 +201,7 @@ export default function TravellerForm({ lang, contact, travellers, errors, disab
 
               <div className={c.grid} style={{ marginTop: 14 }}>
                 <Field label={L.dob} error={err("dateOfBirth")}>
-                  <input className={c.input} type="date" max={new Date().toISOString().slice(0, 10)} value={p.dateOfBirth} onChange={(e) => set({ dateOfBirth: e.target.value })} />
+                  <input className={c.input} type="date" max={today()} value={p.dateOfBirth} onChange={(e) => set({ dateOfBirth: e.target.value })} />
                 </Field>
                 <Field as="div" label={L.nationality} error={err("nationality")} className={c.countryWrap}>
                   <CountryField valueMode="code" value={p.nationality} placeholder={L.selectCountry} onChange={(e) => set({ nationality: e.target.value })} />
@@ -151,18 +216,19 @@ export default function TravellerForm({ lang, contact, travellers, errors, disab
                 >
                   <input className={c.input} type="date" min={lastDate} value={p.passportExpiry} onChange={(e) => set({ passportExpiry: e.target.value })} />
                 </Field>
+                <Field label={L.passportIssueDate} error={err("passportIssueDate")} hint={L.issueDateHint}>
+                  <input className={c.input} type="date" max={today()} value={p.passportIssueDate} onChange={(e) => set({ passportIssueDate: e.target.value })} />
+                </Field>
                 <Field as="div" label={L.issuingCountry} error={err("issuingCountry")} className={c.countryWrap}>
                   <CountryField valueMode="code" value={p.issuingCountry} placeholder={L.selectCountry} onChange={(e) => set({ issuingCountry: e.target.value })} />
                 </Field>
-                <Field label={L.visaType} error={err("visaType")} hint={L.visaHint}>
-                  <select className={c.input} value={p.visaType} onChange={(e) => set({ visaType: e.target.value })}>
-                    <option value="">{L.visaNone}</option>
-                    {VISA_TYPES.map((v) => (
-                      <option key={v} value={v}>
-                        {L.visaTypes[v] || v}
-                      </option>
-                    ))}
-                  </select>
+                <Field as="div" label={L.visaType} error={err("visaType")} hint={L.visaHint}>
+                  <Select
+                    label={L.visaType}
+                    value={p.visaType}
+                    options={[{ value: "", label: L.visaNone }, ...VISA_TYPES.map((v) => ({ value: v, label: L.visaTypes[v] || v }))]}
+                    onChange={(visaType) => set({ visaType })}
+                  />
                 </Field>
               </div>
             </div>

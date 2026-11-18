@@ -1,15 +1,133 @@
-.formWidth {
+/* Shared by the login, register and forgot password pages. */
+
+.authPage {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    background: #FAF6F0;
+    /* The site header is fixed: 35px top bar + 72px nav. */
+    padding-top: 107px;
+    /* The footer's wave (components/Footer.jsx) rises 100px above the footer. */
+    padding-bottom: 84px;
+}
+
+.authCard {
     width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid #EDE5DA;
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(28, 0, 82, 0.08);
 }
 
-@media (min-width:992px) {
-    .formWidth {
-        width: 50%;
-    }
+.authIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    font-size: 26px;
 }
 
-@media (min-width:768px) and (max-width:991px) {
-    .formWidth {
-        width: 75%;
-    }
+.authTitle {
+    margin-bottom: 8px;
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.authSubtitle {
+    color: #6B6478;
+    font-size: 14px;
+    text-align: center;
+}
+
+.authSubtitle strong {
+    color: var(--primary-color);
+}
+
+.authLink {
+    color: var(--accent-hover-color);
+    font-weight: 600;
+}
+
+.authLink:hover {
+    color: var(--primary-color);
+}
+
+.authCard :global(.form-label) {
+    color: var(--primary-color);
+}
+
+.authCard :global(.form-control),
+.authCard :global(.form-control:focus) {
+    background-color: #fff;
+    color: #1F1A2E;
+}
+
+.authCard :global(.form-control) {
+    border: 1px solid #DDD6E6;
+}
+
+.authCard :global(.form-control:focus) {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(28, 0, 82, 0.12);
+}
+
+/* Room for the show/hide eye at the end of password boxes. */
+.authCard :global(.form-control)[name^="password"] {
+    padding-inline-end: 44px;
+}
+
+/* The OTP box types large spaced digits; its hint stays ordinary text. */
+.authCard :global(.form-control)::placeholder {
+    color: #8A8496;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+/* Chrome paints saved logins pale blue otherwise. */
+.authCard :global(.form-control):-webkit-autofill {
+    -webkit-text-fill-color: #1F1A2E;
+    box-shadow: 0 0 0 1000px #fff inset;
+}
+
+.authCard :global(.primaryButton):disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.authCard :global(.btn-primary) {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.authCard :global(.btn-primary):hover {
+    background-color: var(--primary-hover-color);
+    border-color: var(--primary-hover-color);
+}
+
+.authCard :global(.btn-outline-secondary) {
+    background-color: transparent;
+    border-color: #DDD6E6;
+    color: var(--primary-color);
+}
+
+.authCard :global(.btn-outline-secondary):hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-hover-color);
+    color: var(--primary-color);
+}
+
+.authCard :global(.btn-link) {
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
 }
