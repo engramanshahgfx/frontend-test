@@ -263,6 +263,13 @@ function GuestForm({ sel, lang, onHeld }) {
         tracing_key: sel.tracingKey || undefined,
         hotel_id: sel.hotel.id,
         hotel_name: sel.hotel.name,
+        // Shown on the emailed voucher and in admin; display only.
+        hotel_address: sel.hotel.address || undefined,
+        hotel_image: /^https:\/\//i.test(sel.hotel.image || "") ? sel.hotel.image : undefined,
+        star_rating: sel.hotel.stars || undefined,
+        check_in_time: sel.hotel.checkInTime || undefined,
+        check_out_time: sel.hotel.checkOutTime || undefined,
+        lang: lang === "ar" ? "ar" : "en",
         provider_id: sel.offer.provider_id,
         recommendation_id: sel.offer.recommendation_id,
         special_request: special.trim() || undefined,
