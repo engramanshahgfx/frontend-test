@@ -17,6 +17,7 @@ import {
   storage, searchKey, guestCount, starCount, ratingWord,
 } from "@/lib/hotels/hotelModel";
 import HotelSearchForm from "./HotelSearchForm";
+import StaleDialog, { useStaleResults } from "./StaleDialog";
 import { t as dict, friendlyError } from "./i18n";
 import fs from "@/components/flights/flights.module.css";
 import s from "./hotels.module.css";
@@ -364,7 +365,7 @@ function useHotelResults(search, query) {
             const res = await hotelApi.results(cached.searchId, cached.tracingKey, ctrl.signal);
             if (cancelled) return;
             const done = res.completed || polls >= MAX_POLLS;
-            setState({ status: "ready", hotels: res.hotels || [], completed: done, nights: res.nights || 1, searchId: cached.searchId, error: null });
+            setState({ status: "ready", hotels: res.hotels || [], completed: done, nights: res.nights || 1, searchId: cached.searchId, searchedAt: cached.at, error: null });
             if (!done) timer = setTimeout(poll, POLL_MS);
           } catch (err) {
             if (cancelled || err?.name === "AbortError") return;
@@ -396,7 +397,9 @@ function useHotelResults(search, query) {
 
 function Results({ lang, search, query, router }) {
   const L = dict(lang);
-  const { status, hotels, completed, nights, searchId, error, retry } = useHotelResults(search, query);
+  const { status, hotels, completed, nights, searchId, searchedAt, error, retry } = useHotelResults(search, query);
+  // Counted from when the supplier search ran, so a reload of an old search is caught at once.
+  const stale = useStaleResults(status === "ready" ? searchedAt : null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [sort, setSort] = useState("recommended");
   const [shown, setShown] = useState(PAGE);
@@ -555,6 +558,10 @@ function Results({ lang, search, query, router }) {
                 <HotelCard key={h.id} hotel={h} nights={nights} lang={lang} onOpen={() => open(h)} />
               ))}
             </div>
+          )}
+
+          {stale && (
+            <StaleDialog lang={lang} onRefresh={retry} onNewSearch={() => router.push(`/${lang}/hotels`)} />
           )}
 
           {status === "ready" && list.length > shown && (

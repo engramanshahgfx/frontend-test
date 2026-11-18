@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/flights/offerModel";
 import hotelApi from "@/lib/hotels/hotelApi";
 import { parseSearch, searchQuery, searchKey, storage, SELECTION_KEY, guestCount } from "@/lib/hotels/hotelModel";
 import { Stars, RatingBadge } from "./HotelSearchPage";
+import StaleDialog, { useStaleResults } from "./StaleDialog";
 import { t as dict, friendlyError } from "./i18n";
 import fs from "@/components/flights/flights.module.css";
 import s from "./hotels.module.css";
@@ -254,6 +255,9 @@ export default function HotelDetailsPage({ lang = "en", hotelId }) {
     });
     return [...m.entries()];
   }, [data]);
+  // Room prices come from the search run on the results page; they age with it.
+  const searchedAt = useMemo(() => (state.status === "ready" && query ? storage.get(searchKey(query))?.at || null : null), [state.status, query]);
+  const stale = useStaleResults(searchedAt);
   const cheapest = data?.offers?.[0];
   const nights = data?.nights || 1;
   const backUrl = `/${lang}/hotels?${query}`;
@@ -540,6 +544,17 @@ export default function HotelDetailsPage({ lang = "en", hotelId }) {
           </>
         )}
       </div>
+      {stale && (
+        <StaleDialog
+          lang={lang}
+          onRefresh={() => {
+            // A fresh supplier search: the old search ID cannot be re-priced.
+            storage.remove(searchKey(query));
+            router.push(backUrl);
+          }}
+          onNewSearch={() => router.push(`/${lang}/hotels`)}
+        />
+      )}
       {lightbox != null && images.length > 0 && <Lightbox images={images} index={lightbox} onIndex={setLightbox} onClose={() => setLightbox(null)} lang={lang} />}
     </div>
   );

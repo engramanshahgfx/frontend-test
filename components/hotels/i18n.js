@@ -102,6 +102,10 @@ const en = {
   searchExpired: 'This search has expired. Please search again for the latest prices.',
   retry: 'Try again',
   searchAgain: 'Search again',
+  staleTitle: 'Still looking?',
+  staleText: 'Hotel prices and availability change often. Refresh to see the latest rates for your stay.',
+  staleRefresh: 'Refresh results',
+  staleNew: 'Start a new search',
 
   // Hotel details
   backToResults: 'Back to results',
@@ -314,6 +318,10 @@ const ar = {
   searchExpired: 'انتهت صلاحية هذا البحث. يرجى البحث مجدداً للحصول على أحدث الأسعار.',
   retry: 'حاول مرة أخرى',
   searchAgain: 'ابحث مجدداً',
+  staleTitle: 'هل ما زلت تبحث؟',
+  staleText: 'تتغير أسعار الفنادق وتوفر الغرف باستمرار. حدّث النتائج لرؤية أحدث الأسعار لإقامتك.',
+  staleRefresh: 'تحديث النتائج',
+  staleNew: 'بحث جديد',
 
   backToResults: 'العودة إلى النتائج',
   photos: (n) => `${n} صورة`,
