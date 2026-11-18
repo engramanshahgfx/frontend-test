@@ -325,7 +325,7 @@ function HotelCard({ hotel, nights, lang, onOpen }) {
           <div className={s.priceTotal}>
             <Price value={hotel.price_sar} /> {L.totalFor(nights)}
           </div>
-          <div className={s.priceSmall}>{L.inclTaxes}</div>
+          <div className={s.priceSmall}>{L.feeAtCheckout}</div>
         </div>
         <button type="button" className={`${fs.btn} ${fs.btnCta} ${s.priceBtn}`} onClick={onOpen}>
           {L.viewRooms}

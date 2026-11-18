@@ -149,7 +149,7 @@ function Offer({ offer, nights, lang, onReserve }) {
           <small>
             <Price value={Math.round(offer.price_per_night_sar)} /> {L.perNight} · {L.nightsN(nights)}
           </small>
-          <small>{L.inclTaxes}</small>
+          <small>{L.feeAtCheckout}</small>
         </div>
         <button type="button" className={`${fs.btn} ${fs.btnCta}`} onClick={() => onReserve(offer)}>
           {L.reserve}
@@ -386,7 +386,7 @@ export default function HotelDetailsPage({ lang = "en", hotelId }) {
                 <section ref={refs.rooms} className={s.block}>
                   <h2>{L.chooseRoom}</h2>
                   <p style={{ fontSize: "0.86rem", color: "var(--muted)", marginTop: -6 }}>
-                    {L.roomsFor(nights, guestCount(search?.rooms || []))} · {L.inclTaxes}
+                    {L.roomsFor(nights, guestCount(search?.rooms || []))} · {L.feeAtCheckout}
                   </p>
                   {groups.length === 0 ? (
                     <div className={`${s.alert} ${s.alertWarn}`}>

@@ -93,8 +93,12 @@ function Summary({ sel, booking, lang }) {
   const L = dict(lang);
   const offer = sel?.offer;
   const hotel = sel?.hotel || {};
-  const pricing = booking?.pricing;
-  const total = booking?.amount_sar ?? offer?.price_sar;
+  // After the hold the server's own pricing; before it, the offer's room price, fee and total.
+  const held = booking?.pricing;
+  const roomPrice = held ? held.room_price_sar ?? (held.supplier_subtotal_sar || 0) + (held.admin_markup_sar || 0) : offer?.price_sar;
+  const fee = held ? held.service_fee_sar ?? held.progressive_service_fee_sar : offer?.service_fee_sar;
+  const feePct = held?.service_fee_percent ?? offer?.service_fee_percent;
+  const total = booking?.amount_sar ?? offer?.total_sar ?? offer?.price_sar;
   const roomsCount = booking?.rooms || sel?.rooms?.length || 1;
   const nights = booking?.nights || sel?.nights || 1;
   const checkIn = booking?.check_in || sel?.checkIn;
@@ -137,22 +141,22 @@ function Summary({ sel, booking, lang }) {
 
           <div style={{ marginTop: 14 }}>
             <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: 4 }}>{L.priceSummary}</div>
-            {pricing ? (
-              <>
-                <div className={s.sumLine}>
-                  <span>{L.roomPrice}</span>
-                  <span>
-                    <Price value={(pricing.supplier_subtotal_sar || 0) + (pricing.admin_markup_sar || 0)} />
-                  </span>
-                </div>
-                <div className={s.sumLine}>
-                  <span>{L.serviceFee}</span>
-                  <span>
-                    <Price value={pricing.progressive_service_fee_sar || 0} />
-                  </span>
-                </div>
-              </>
-            ) : null}
+            {roomPrice != null && (
+              <div className={s.sumLine}>
+                <span>{L.roomPrice}</span>
+                <span>
+                  <Price value={roomPrice} />
+                </span>
+              </div>
+            )}
+            {fee != null && (
+              <div className={s.sumLine}>
+                <span>{feePct ? L.serviceFeePct(feePct) : L.serviceFee}</span>
+                <span>
+                  <Price value={fee} />
+                </span>
+              </div>
+            )}
             {total != null && (
               <div className={`${s.sumLine} ${s.sumTotal}`}>
                 <span>{L.total}</span>
@@ -777,7 +781,7 @@ export default function HotelCheckoutPage({ lang = "en" }) {
                   )}
                   <PaymentStep
                     booking={booking}
-                    searchPrice={shownSel?.offer?.price_sar}
+                    searchPrice={shownSel?.offer?.total_sar ?? shownSel?.offer?.price_sar}
                     lang={lang}
                     onPaid={onPaid}
                     onExpired={() => storage.remove(bookingKey(booking.transaction_id))}
