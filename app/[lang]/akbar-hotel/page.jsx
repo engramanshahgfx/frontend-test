@@ -1,17 +1,7 @@
-import React from 'react';
-import AkbarHotelBookingSystem from '@/components/akbarhotel/AkbarHotelBookingSystem';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'Hotels & Resorts Engine — Tilal Rimal Tourism',
-  description: 'Search and book luxury hotels, resorts, and executive suites across Saudi Arabia and worldwide with instant confirmation and live rates.',
-};
-
-export default function AkbarHotelAliasPage({ params }) {
-  const lang = params?.lang || 'en';
-
-  return (
-    <main className="min-h-screen bg-slate-50">
-      <AkbarHotelBookingSystem lang={lang} />
-    </main>
-  );
+// The hotel search moved to /{lang}/hotels.
+export default async function AkbarHotelAliasPage({ params }) {
+  const { lang } = await params;
+  redirect(`/${lang || 'en'}/hotels`);
 }

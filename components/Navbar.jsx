@@ -238,6 +238,7 @@ export default function Navbar({ lang }) {
 
   const menuItems = [
     { href: "/flights", label: lang === "ar" ? "الطيران" : "Flights" },
+    { href: "/hotels", label: lang === "ar" ? "الفنادق" : "Hotels" },
     {
       href: "#",
       label: lang === "ar" ? "الرحلات " : " Trips",
