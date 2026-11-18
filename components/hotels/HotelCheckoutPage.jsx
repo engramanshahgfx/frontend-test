@@ -19,7 +19,7 @@ import { getMoyasarPublishableKey } from "@/lib/moyasarClientKey";
 import hotelApi from "@/lib/hotels/hotelApi";
 import { storage, SELECTION_KEY, bookingKey, searchUrl, parseSearch } from "@/lib/hotels/hotelModel";
 import { Stars } from "./HotelSearchPage";
-import { formatDeadline } from "./HotelDetailsPage";
+import { formatDeadline, titleCase } from "./HotelDetailsPage";
 import { t as dict, friendlyError } from "./i18n";
 import fs from "@/components/flights/flights.module.css";
 import s from "./hotels.module.css";
@@ -125,12 +125,12 @@ function Summary({ sel, booking, lang }) {
             <span>{L.stay(nights, roomsCount)}</span>
             {offer?.rooms?.length > 0 && (
               <span>
-                <FaBed size={12} /> {offer.rooms.map((r) => r.name).join(" + ")}
+                <FaBed size={12} /> {offer.rooms.map((r) => titleCase(r.name)).join(" + ")}
               </span>
             )}
             {offer && (
               <span>
-                {breakfast ? <FaCoffee size={12} /> : <FaBed size={12} />} {offer.board || L.roomOnly}
+                {breakfast ? <FaCoffee size={12} /> : <FaBed size={12} />} {offer.board ? titleCase(offer.board) : L.roomOnly}
               </span>
             )}
           </div>
@@ -651,6 +651,8 @@ export default function HotelCheckoutPage({ lang = "en" }) {
   const [outcome, setOutcome] = useState(null);
   const [error, setError] = useState(null);
   const paying = useRef(false);
+  // The hold we just placed: the URL then gains ?txn=, which must not reload what we already have.
+  const heldTxn = useRef(null);
 
   const tokenFor = (txn) => storage.get(bookingKey(txn))?.token;
 
@@ -689,6 +691,8 @@ export default function HotelCheckoutPage({ lang = "en" }) {
     const stored = storage.get(SELECTION_KEY);
     if (stored) setSel(stored);
 
+    if (txnParam && txnParam === heldTxn.current && !paymentParam) return;
+
     if (txnParam) {
       const token = tokenFor(txnParam);
       if (!token) {
@@ -726,6 +730,7 @@ export default function HotelCheckoutPage({ lang = "en" }) {
 
   const onHeld = (res) => {
     storage.set(bookingKey(res.transaction_id), { token: res.token, at: Date.now() });
+    heldTxn.current = String(res.transaction_id);
     setBooking(res);
     setPhase("pay");
     router.replace(`/${lang}/hotels/booking?txn=${encodeURIComponent(res.transaction_id)}`, { scroll: false });

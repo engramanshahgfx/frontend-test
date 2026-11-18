@@ -159,7 +159,7 @@ function Offer({ offer, nights, lang, onReserve }) {
   );
 }
 
-function titleCase(text) {
+export function titleCase(text) {
   const t = String(text || "").trim();
   if (!t || t !== t.toUpperCase()) return t;
   return t.toLowerCase().replace(/(^|[\s,(/-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
