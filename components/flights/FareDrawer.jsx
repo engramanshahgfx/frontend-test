@@ -25,7 +25,9 @@ function fromBundle(b, lang) {
   const ar = lang === "ar";
   return {
     id: b.offer_id,
-    price: Number(b.price?.total) || 0,
+    // fare without our service fee (added at checkout); older responses only have the total.
+    price: Number(b.price?.fare ?? b.price?.total) || 0,
+    serviceFee: b.price?.fare != null ? Number(b.price?.service_fee) || 0 : 0,
     // b.group is only Akbar's "Branded" marker, the same on every fare; b.name is the fare's own name.
     name: b.name ? titleCase(b.name) : null,
     checkedBag: bagLabel(b.baggage),
@@ -41,6 +43,7 @@ function fromBundle(b, lang) {
 const fromSearch = (o) => ({
   id: o.id,
   price: o.price,
+  serviceFee: o.serviceFee || 0,
   name: o.fareClass ? titleCase(o.fareClass) : null,
   checkedBag: o.checkedBag,
   checkedKnown: Boolean(o.checkedBag),

@@ -13,11 +13,20 @@ const legLabel = (L, selection, i) => {
 
 /**
  * @param confirmedTotal the order total after the airline confirmed the fare, or null before that.
+ * @param confirmedBreakdown the order's price_breakdown (fare, service_fee, extras) once confirmed.
  */
-export default function TripSummary({ lang, selection, confirmedTotal }) {
+export default function TripSummary({ lang, selection, confirmedTotal, confirmedBreakdown }) {
   const L = dict(lang);
   const pax = selection.passengerCount || 1;
   const total = confirmedTotal ?? selection.price;
+  // Fare and our service fee on their own lines, as on Almosafer. The server's split wins once the
+  // airline has confirmed the fare; before that it is the search's.
+  const bd = confirmedTotal != null && confirmedBreakdown ? confirmedBreakdown : null;
+  const fare = bd ? Number(bd.fare) : selection.fare;
+  const fee = bd ? Number(bd.service_fee) : selection.serviceFee;
+  const extras = bd ? Number(bd.extras) || 0 : 0;
+  const feePct = bd?.service_fee_percent ?? selection.serviceFeePercent;
+  const showSplit = fare != null && fee > 0;
 
   return (
     <div className={c.card} style={{ marginBottom: 0 }}>
@@ -76,6 +85,24 @@ export default function TripSummary({ lang, selection, confirmedTotal }) {
               .join(" · ")}
           </span>
         </div>
+        {showSplit && (
+          <>
+            <div className={c.priceRow}>
+              <span>{L.fareLine}</span>
+              <Price value={fare} />
+            </div>
+            <div className={c.priceRow}>
+              <span>{feePct ? L.serviceFeePct(feePct) : L.serviceFee}</span>
+              <Price value={fee} />
+            </div>
+            {extras > 0 && (
+              <div className={c.priceRow}>
+                <span>{L.extrasLine}</span>
+                <Price value={extras} />
+              </div>
+            )}
+          </>
+        )}
         <div className={`${c.priceRow} ${c.priceTotal}`}>
           <span>{L.total}</span>
           <Price value={total} />

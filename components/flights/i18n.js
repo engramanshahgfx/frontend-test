@@ -83,7 +83,7 @@ const en = {
 
   selectLeg: ['Select departure flight', 'Select return flight'],
   selectLegN: (n) => `Select flight ${n}`,
-  totalNote: (rt) => (rt ? 'Prices are the round-trip total for all travellers, taxes and fees included' : 'Prices are the total for all travellers, taxes and fees included'),
+  totalNote: (rt) => (rt ? 'Prices are the round-trip total for all travellers, taxes included · service fee added at checkout' : 'Prices are the total for all travellers, taxes included · service fee added at checkout'),
   chosen: ['Departure', 'Return'],
   change: 'Change',
   cheapest: 'Cheapest',
@@ -259,7 +259,7 @@ const ar = {
 
   selectLeg: ['اختر رحلة الذهاب', 'اختر رحلة العودة'],
   selectLegN: (n) => `اختر الرحلة ${n}`,
-  totalNote: (rt) => (rt ? 'الأسعار هي إجمالي الذهاب والعودة لجميع المسافرين شاملة الضرائب والرسوم' : 'الأسعار هي الإجمالي لجميع المسافرين شاملة الضرائب والرسوم'),
+  totalNote: (rt) => (rt ? 'الأسعار هي إجمالي الذهاب والعودة لجميع المسافرين شاملة الضرائب · تُضاف رسوم الخدمة عند الدفع' : 'الأسعار هي الإجمالي لجميع المسافرين شاملة الضرائب · تُضاف رسوم الخدمة عند الدفع'),
   chosen: ['الذهاب', 'العودة'],
   change: 'تغيير',
   cheapest: 'الأرخص',

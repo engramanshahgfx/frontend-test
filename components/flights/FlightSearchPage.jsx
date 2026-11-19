@@ -443,7 +443,10 @@ export default function FlightSearchPage({ initialParams }) {
   const finish = (picks) => {
     const first = picks[0];
     const lastFlight = picks[picks.length - 1].flight;
-    const total = picks.reduce((sum, p) => sum + p.fare.price, 0);
+    const round2 = (n) => Math.round(n * 100) / 100;
+    const fare = round2(picks.reduce((sum, p) => sum + p.fare.price, 0));
+    const serviceFee = round2(picks.reduce((sum, p) => sum + (p.fare.serviceFee || 0), 0));
+    const total = fare + serviceFee;
     const rt = search.tripType === "roundtrip";
     const bags = describeFare(first.fare, lang);
     const passengerCount = search.adults + search.children + search.infants;
@@ -464,10 +467,14 @@ export default function FlightSearchPage({ initialParams }) {
       depTime: clock(first.flight.departure),
       arrTime: clock(first.flight.arrival),
       duration: first.flight.durationText,
-      // CustomerTotalSAR already covers every traveller and our service fee. The server recomputes
-      // the amount from the selected offers before charging; this is for display only.
-      price: Math.round(total * 100) / 100,
+      // Fare + our service fee for every traveller. The server recomputes the amount from the
+      // selected offers before charging; this is for display only. fare and serviceFee are the
+      // two lines of the checkout summary.
+      price: round2(total),
       priceIsTotal: true,
+      fare,
+      serviceFee,
+      serviceFeePercent: first.flight.serviceFeePercent ?? null,
       currency: "SAR",
       cabin: search.cabin,
       checkedBaggage: bags.checked,

@@ -409,7 +409,7 @@ export default function CheckoutPage({ lang: langProp }) {
 
         {selection && (
           <aside className={c.aside}>
-            <TripSummary lang={lang} selection={selection} confirmedTotal={confirmedTotal} />
+            <TripSummary lang={lang} selection={selection} confirmedTotal={confirmedTotal} confirmedBreakdown={booking?.price_breakdown} />
           </aside>
         )}
       </div>
